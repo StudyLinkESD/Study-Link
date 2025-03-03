@@ -49,3 +49,51 @@ model Student {
   jobRequests         JobRequest[]
   recommendations     Recommendation[]
 }
+
+model CompanyOwner {
+  id        String      @id @default(cuid())
+  user      User        @relation(fields: [userId], references: [id])
+  userId    String      @unique
+  company   Company     @relation(fields: [companyId], references: [id])
+  companyId String
+}
+
+model Recommendation {
+  id            String    @id @default(cuid())
+  student       Student   @relation(fields: [studentId], references: [id])
+  studentId     String
+  company       Company   @relation(fields: [companyId], references: [id])
+  companyId     String
+  recommendation String
+}
+
+model Company {
+  id              String            @id @default(cuid())
+  name            String
+  logo            UploadFile?       @relation(fields: [logoId], references: [uuid])
+  logoId          String?
+  
+  companyOwners   CompanyOwner[]
+  jobs            Job[]
+  recommendations Recommendation[]
+}
+
+model VerificationToken {
+  identifier  String
+  token       String    @unique
+  expires     DateTime
+  user        User      @relation(fields: [identifier], references: [email])
+
+  @@id([identifier, token])
+}
+
+model UploadFile {
+  uuid            String          @id
+  fileUrl         String
+  
+  userProfiles    User[]
+  studentCVs      Student[]
+  companyLogos    Company[]
+  schoolLogos     School[]
+  jobImages       Job[]
+}
