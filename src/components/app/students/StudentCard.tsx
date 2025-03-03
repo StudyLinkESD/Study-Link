@@ -1,16 +1,13 @@
-// src/components/StudentCard.tsx
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-// Définition du type pour les compétences
 type Skill = {
   id: string;
   name: string;
 };
 
-// Définition du type pour les props du composant StudentCard
 export type StudentCardProps = {
   id: string;
   firstName: string;
