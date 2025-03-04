@@ -1,6 +1,3 @@
-// FilterSelector.tsx
-// À placer dans @/components/app/common/FilterSelector.tsx
-
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
