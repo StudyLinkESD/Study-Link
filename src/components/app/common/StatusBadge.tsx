@@ -1,35 +1,56 @@
+// StatusBadge.tsx
+// À placer dans @/components/app/common/StatusBadge.tsx
+
+import { FC } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { cva, type VariantProps } from 'class-variance-authority';
 
-const statusVariants = cva('', {
-  variants: {
-    variant: {
-      default: 'bg-primary',
-      alternant: 'bg-blue-500 hover:bg-blue-600',
-      stagiaire: 'bg-green-500 hover:bg-green-600',
-      pending: 'bg-yellow-500 hover:bg-yellow-600',
-      closed: 'bg-gray-500 hover:bg-gray-600',
-      active: 'bg-emerald-500 hover:bg-emerald-600',
-    },
-  },
-  defaultVariants: {
-    variant: 'default',
-  },
-});
+type StatusBadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
-interface StatusBadgeProps extends VariantProps<typeof statusVariants> {
+type StatusBadgeProps = {
   status: string;
+  variant?: StatusBadgeVariant;
   className?: string;
-  icon?: React.ReactNode;
-}
+};
 
-function StatusBadge({ status, variant, className, icon }: StatusBadgeProps) {
+/**
+ * Composant pour afficher un badge de statut avec des variantes différentes selon le contenu
+ */
+const StatusBadge: FC<StatusBadgeProps> = ({ status, variant: forcedVariant, className = '' }) => {
+  // Détermine automatiquement la variante du badge en fonction du statut
+  // si aucune variante n'est explicitement fournie
+  let variant: StatusBadgeVariant = forcedVariant || 'default';
+
+  if (!forcedVariant) {
+    switch (status) {
+      case 'Alternant':
+        variant = 'default';
+        break;
+      case 'Stagiaire':
+        variant = 'secondary';
+        break;
+      case 'En attente':
+        variant = 'outline';
+        break;
+      case 'Accepté':
+        variant = 'default';
+        break;
+      case 'Refusé':
+        variant = 'destructive';
+        break;
+      case 'Terminé':
+        variant = 'secondary';
+        break;
+      // Pour les badges de compétences, on utilise outline par défaut
+      default:
+        variant = 'outline';
+    }
+  }
+
   return (
-    <Badge className={statusVariants({ variant, className })}>
-      {icon && <span className="mr-1">{icon}</span>}
+    <Badge variant={variant} className={className}>
       {status}
     </Badge>
   );
-}
+};
 
 export default StatusBadge;

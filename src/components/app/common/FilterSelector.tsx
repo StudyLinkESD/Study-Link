@@ -1,3 +1,7 @@
+// FilterSelector.tsx
+// À placer dans @/components/app/common/FilterSelector.tsx
+
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,10 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
 
 type FilterSelectorProps = {
-  options: string[];
+  options: { value: string; label: string }[];
   selectedValues: string[];
   onSelect: (value: string) => void;
   onRemove: (value: string) => void;
@@ -33,7 +36,7 @@ function FilterSelector({
 }: FilterSelectorProps) {
   const [selectKey, setSelectKey] = useState(0);
 
-  const availableOptions = options.filter((option) => !selectedValues.includes(option));
+  const availableOptions = options.filter((option) => !selectedValues.includes(option.value));
 
   const handleValueChange = (value: string) => {
     if (value) {
@@ -67,6 +70,27 @@ function FilterSelector({
             ))
           )}
         </div>
+      </div>
+
+      <div className="flex flex-row items-center gap-4">
+        <Select key={selectKey} onValueChange={handleValueChange} value="">
+          <SelectTrigger className="w-full sm:w-[210px]">
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {availableOptions.length === 0 ? (
+              <div className="p-2 text-center text-sm text-muted-foreground">
+                Tous les filtres sont sélectionnés
+              </div>
+            ) : (
+              availableOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
 
         {showResetButton && selectedValues.length > 0 && onReset && (
           <Button
@@ -74,31 +98,11 @@ function FilterSelector({
             size="sm"
             onClick={onReset}
             aria-label="Réinitialiser les filtres"
-            className="self-start"
           >
             Réinitialiser les filtres
           </Button>
         )}
       </div>
-
-      <Select key={selectKey} onValueChange={handleValueChange} value="">
-        <SelectTrigger className="w-full sm:w-[210px]">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {availableOptions.length === 0 ? (
-            <div className="p-2 text-center text-sm text-muted-foreground">
-              Tous les filtres sont sélectionnés
-            </div>
-          ) : (
-            availableOptions.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
     </div>
   );
 }

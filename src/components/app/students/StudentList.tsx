@@ -5,119 +5,16 @@ import StudentCard, { StudentCardProps } from './StudentCard';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Loader2, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
-// Nouveaux composants communs
+// Importation des composants communs réutilisables
 import SearchBar from '@/components/app/common/SearchBar';
+import FilterSelector from '@/components/app/common/FilterSelector';
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
+import SectionCard from '@/components/app/common/SectionCard';
 
-// Définition du composant FilterSelector
-type FilterSelectorProps = {
-  options: { value: string; label: string }[];
-  selectedValues: string[];
-  onSelect: (value: string) => void;
-  onRemove: (value: string) => void;
-  onReset?: () => void;
-  placeholder?: string;
-  className?: string;
-  showResetButton?: boolean;
-};
-
-function FilterSelector({
-  options,
-  selectedValues,
-  onSelect,
-  onRemove,
-  onReset,
-  placeholder = 'Sélectionner...',
-  className = '',
-  showResetButton = false,
-}: FilterSelectorProps) {
-  const [selectKey, setSelectKey] = useState(0);
-
-  const availableOptions = options.filter((option) => !selectedValues.includes(option.value));
-
-  const handleValueChange = (value: string) => {
-    if (value) {
-      onSelect(value);
-      setSelectKey((prev) => prev + 1);
-    }
-  };
-
-  return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap gap-2 min-h-[38px] max-h-[76px] overflow-y-auto p-1">
-          {selectedValues.length === 0 ? (
-            <div className="text-muted-foreground text-sm italic">Aucun filtre sélectionné</div>
-          ) : (
-            selectedValues.map((value) => (
-              <Badge
-                key={value}
-                variant="secondary"
-                className="px-2 py-1 h-[30px] flex items-center"
-              >
-                {value}
-                <button
-                  onClick={() => onRemove(value)}
-                  className="ml-2 hover:text-destructive"
-                  aria-label={`Supprimer le filtre ${value}`}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-row items-center gap-4">
-        <Select key={selectKey} onValueChange={handleValueChange} value="">
-          <SelectTrigger className="w-full sm:w-[210px]">
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent>
-            {availableOptions.length === 0 ? (
-              <div className="p-2 text-center text-sm text-muted-foreground">
-                Tous les filtres sont sélectionnés
-              </div>
-            ) : (
-              availableOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-
-        {showResetButton && selectedValues.length > 0 && onReset && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onReset}
-            aria-label="Réinitialiser les filtres"
-          >
-            Réinitialiser les filtres
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Constantes et types (inchangés)
+// Constantes et types
 const STUDENTS_PER_PAGE = 9;
 const STATUS_OPTIONS = {
   ALL: 'all',
@@ -135,7 +32,7 @@ type StudentListProps = {
   isLoading?: boolean;
 };
 
-// Définition de l'état et du reducer (inchangée)
+// Définition de l'état et du reducer
 type FilterState = {
   statusFilter: string;
   searchTerm: string;
@@ -159,7 +56,6 @@ const initialFilterState: FilterState = {
 };
 
 function filterReducer(state: FilterState, action: FilterAction): FilterState {
-  // Logique du reducer inchangée
   switch (action.type) {
     case 'SET_STATUS_FILTER':
       return { ...state, statusFilter: action.payload, currentPage: 1 };
@@ -189,7 +85,7 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Composant pour les filtres extraits (refactorisé)
+// Composant pour les filtres extraits
 function StudentFilters({
   state,
   dispatch,
@@ -240,7 +136,7 @@ function StudentFilters({
           <TabsTrigger value={STATUS_OPTIONS.STAGIAIRE}>Stagiaires</TabsTrigger>
         </TabsList>
 
-        {/* Utilisation du nouveau composant SearchBar */}
+        {/* Utilisation du composant SearchBar */}
         <SearchBar
           onSearch={(term) => dispatch({ type: 'SET_SEARCH_TERM', payload: term })}
           placeholder="Rechercher..."
@@ -255,7 +151,7 @@ function StudentFilters({
         </Label>
 
         {/* Utilisation du composant FilterSelector */}
-        <div className="flex ">
+        <div className="flex">
           <FilterSelector
             options={skillOptions}
             selectedValues={selectedSkills}
@@ -270,6 +166,7 @@ function StudentFilters({
   );
 }
 
+// Composant principal de liste d'étudiants
 export default function StudentList({
   students,
   title = 'Liste des étudiants',
@@ -285,7 +182,7 @@ export default function StudentList({
     [students],
   );
 
-  // Logique de filtrage (inchangée)
+  // Logique de filtrage
   const filteredStudents = useMemo(() => {
     let result = [...students];
 
@@ -362,9 +259,8 @@ export default function StudentList({
               studentsCount={filteredStudents.length}
             />
 
-            {/* Utilisation des tabs avec contenu unifié */}
+            {/* Contenu des onglets unifié en un seul élément */}
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
-              {/* Utilisation du nouveau composant ItemGrid */}
               <ItemGrid
                 items={currentStudents}
                 renderItem={(student) => <StudentCard {...student} />}
@@ -401,7 +297,7 @@ export default function StudentList({
         </CardContent>
       </Card>
 
-      {/* Utilisation du nouveau composant Pagination */}
+      {/* Composant de pagination */}
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
