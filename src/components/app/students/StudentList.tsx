@@ -1,46 +1,131 @@
-"use client";
+'use client';
 
-import { useRef, useMemo, useCallback, useReducer, useState } from "react";
-import StudentCard, { StudentCardProps } from "./StudentCard";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useRef, useMemo, useReducer } from 'react';
+import StudentCard, { StudentCardProps } from './StudentCard';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Loader2, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Search, X, Loader2 } from "lucide-react";
+} from '@/components/ui/select';
+import { useState } from 'react';
 
-// Constantes nommées pour éviter les valeurs magiques
-const STUDENTS_PER_PAGE = 9;
-const STATUS_OPTIONS = {
-  ALL: "all",
-  ALTERNANT: "Alternant",
-  STAGIAIRE: "Stagiaire",
+// Nouveaux composants communs
+import SearchBar from '@/components/app/common/SearchBar';
+import ItemGrid from '@/components/app/common/ItemGrid';
+import Pagination from '@/components/app/common/Pagination';
+
+// Définition du composant FilterSelector
+type FilterSelectorProps = {
+  options: { value: string; label: string }[];
+  selectedValues: string[];
+  onSelect: (value: string) => void;
+  onRemove: (value: string) => void;
+  onReset?: () => void;
+  placeholder?: string;
+  className?: string;
+  showResetButton?: boolean;
 };
 
-// Helper pour debounce
-function debounce<T extends (...args: any[]) => any>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timer: ReturnType<typeof setTimeout> | undefined;
+function FilterSelector({
+  options,
+  selectedValues,
+  onSelect,
+  onRemove,
+  onReset,
+  placeholder = 'Sélectionner...',
+  className = '',
+  showResetButton = false,
+}: FilterSelectorProps) {
+  const [selectKey, setSelectKey] = useState(0);
 
-  return function (this: any, ...args: Parameters<T>): void {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      fn.apply(this, args);
-    }, delay);
+  const availableOptions = options.filter((option) => !selectedValues.includes(option.value));
+
+  const handleValueChange = (value: string) => {
+    if (value) {
+      onSelect(value);
+      setSelectKey((prev) => prev + 1);
+    }
   };
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap gap-2 min-h-[38px] max-h-[76px] overflow-y-auto p-1">
+          {selectedValues.length === 0 ? (
+            <div className="text-muted-foreground text-sm italic">Aucun filtre sélectionné</div>
+          ) : (
+            selectedValues.map((value) => (
+              <Badge
+                key={value}
+                variant="secondary"
+                className="px-2 py-1 h-[30px] flex items-center"
+              >
+                {value}
+                <button
+                  onClick={() => onRemove(value)}
+                  className="ml-2 hover:text-destructive"
+                  aria-label={`Supprimer le filtre ${value}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-row items-center gap-4">
+        <Select key={selectKey} onValueChange={handleValueChange} value="">
+          <SelectTrigger className="w-full sm:w-[210px]">
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {availableOptions.length === 0 ? (
+              <div className="p-2 text-center text-sm text-muted-foreground">
+                Tous les filtres sont sélectionnés
+              </div>
+            ) : (
+              availableOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+
+        {showResetButton && selectedValues.length > 0 && onReset && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onReset}
+            aria-label="Réinitialiser les filtres"
+          >
+            Réinitialiser les filtres
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 }
 
-type Student = Omit<StudentCardProps, "skills"> & {
+// Constantes et types (inchangés)
+const STUDENTS_PER_PAGE = 9;
+const STATUS_OPTIONS = {
+  ALL: 'all',
+  ALTERNANT: 'Alternant',
+  STAGIAIRE: 'Stagiaire',
+};
+
+type Student = Omit<StudentCardProps, 'skills'> & {
   skills: { id: string; name: string }[];
 };
 
@@ -50,7 +135,7 @@ type StudentListProps = {
   isLoading?: boolean;
 };
 
-// Définition de l'état initial et du reducer pour useReducer
+// Définition de l'état et du reducer (inchangée)
 type FilterState = {
   statusFilter: string;
   searchTerm: string;
@@ -59,28 +144,28 @@ type FilterState = {
 };
 
 type FilterAction =
-  | { type: "SET_STATUS_FILTER"; payload: string }
-  | { type: "SET_SEARCH_TERM"; payload: string }
-  | { type: "ADD_SKILL"; payload: string }
-  | { type: "REMOVE_SKILL"; payload: string }
-  | { type: "SET_PAGE"; payload: number }
-  | { type: "RESET_FILTERS" };
+  | { type: 'SET_STATUS_FILTER'; payload: string }
+  | { type: 'SET_SEARCH_TERM'; payload: string }
+  | { type: 'ADD_SKILL'; payload: string }
+  | { type: 'REMOVE_SKILL'; payload: string }
+  | { type: 'SET_PAGE'; payload: number }
+  | { type: 'RESET_FILTERS' };
 
 const initialFilterState: FilterState = {
   statusFilter: STATUS_OPTIONS.ALL,
-  searchTerm: "",
+  searchTerm: '',
   selectedSkills: [],
   currentPage: 1,
 };
 
 function filterReducer(state: FilterState, action: FilterAction): FilterState {
+  // Logique du reducer inchangée
   switch (action.type) {
-    case "SET_STATUS_FILTER":
+    case 'SET_STATUS_FILTER':
       return { ...state, statusFilter: action.payload, currentPage: 1 };
-    case "SET_SEARCH_TERM":
+    case 'SET_SEARCH_TERM':
       return { ...state, searchTerm: action.payload, currentPage: 1 };
-    case "ADD_SKILL":
-      // Si la compétence est vide ou déjà incluse, ne pas la traiter
+    case 'ADD_SKILL':
       if (!action.payload || state.selectedSkills.includes(action.payload)) {
         return state;
       }
@@ -89,30 +174,28 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
         selectedSkills: [...state.selectedSkills, action.payload],
         currentPage: 1,
       };
-    case "REMOVE_SKILL":
+    case 'REMOVE_SKILL':
       return {
         ...state,
-        selectedSkills: state.selectedSkills.filter(
-          (skill) => skill !== action.payload
-        ),
+        selectedSkills: state.selectedSkills.filter((skill) => skill !== action.payload),
         currentPage: 1,
       };
-    case "SET_PAGE":
+    case 'SET_PAGE':
       return { ...state, currentPage: action.payload };
-    case "RESET_FILTERS":
-      // Garantir que nous revenons bien à l'état initial
+    case 'RESET_FILTERS':
       return { ...initialFilterState };
     default:
       return state;
   }
 }
 
-// Composant pour les filtres extraits
+// Composant pour les filtres extraits (refactorisé)
 function StudentFilters({
   state,
   dispatch,
   allSkills,
   tabsRef,
+  studentsCount,
 }: {
   state: FilterState;
   dispatch: React.Dispatch<FilterAction>;
@@ -120,128 +203,67 @@ function StudentFilters({
   tabsRef: React.RefObject<HTMLDivElement>;
   studentsCount: number;
 }) {
-  // Création d'un debounce pour la recherche
-  const debouncedSearch = useCallback(
-    debounce((value: string) => {
-      dispatch({ type: "SET_SEARCH_TERM", payload: value });
-    }, 300),
-    []
-  );
+  const { selectedSkills } = state;
 
-  const resetFilters = () => {
-    dispatch({ type: "RESET_FILTERS" });
-
-    // Force programmatiquement le changement d'onglet
-    if (tabsRef.current) {
-      // Trouver le TabsTrigger qui correspond à "all" et simuler un clic
-      const allTab = tabsRef.current.querySelector('button[value="all"]');
-      if (allTab) {
-        (allTab as HTMLElement).click();
-      }
-    }
+  // Fonctions de gestion des skills
+  const handleSelectSkill = (skill: string) => {
+    dispatch({ type: 'ADD_SKILL', payload: skill });
   };
 
-  const [selectKey, setSelectKey] = useState(0);
+  const handleRemoveSkill = (skill: string) => {
+    dispatch({ type: 'REMOVE_SKILL', payload: skill });
+  };
+
+  const resetFilters = () => {
+    // Récupérer le statut actuel avant la réinitialisation
+    const currentStatus = state.statusFilter;
+
+    // Réinitialiser tous les filtres
+    dispatch({ type: 'RESET_FILTERS' });
+
+    // Rétablir le statut d'onglet précédent
+    dispatch({ type: 'SET_STATUS_FILTER', payload: currentStatus });
+  };
+
+  // Convertir les skills en options pour le FilterSelector
+  const skillOptions = allSkills.map((skill) => ({
+    value: skill,
+    label: skill,
+  }));
 
   return (
     <>
       <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
         <TabsList>
-          <TabsTrigger value={STATUS_OPTIONS.ALL}>
-            Tous {state.statusFilter === STATUS_OPTIONS.ALL}
-          </TabsTrigger>
-          <TabsTrigger value={STATUS_OPTIONS.ALTERNANT}>
-            Alternants {state.statusFilter === STATUS_OPTIONS.ALTERNANT}
-          </TabsTrigger>
-          <TabsTrigger value={STATUS_OPTIONS.STAGIAIRE}>
-            Stagiaires {state.statusFilter === STATUS_OPTIONS.STAGIAIRE}
-          </TabsTrigger>
+          <TabsTrigger value={STATUS_OPTIONS.ALL}>Tous</TabsTrigger>
+          <TabsTrigger value={STATUS_OPTIONS.ALTERNANT}>Alternants</TabsTrigger>
+          <TabsTrigger value={STATUS_OPTIONS.STAGIAIRE}>Stagiaires</TabsTrigger>
         </TabsList>
 
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            type="search"
-            placeholder="Rechercher..."
-            defaultValue={state.searchTerm}
-            onChange={(e) => debouncedSearch(e.target.value)}
-            className="pl-8"
-            aria-label="Rechercher..."
-          />
-        </div>
+        {/* Utilisation du nouveau composant SearchBar */}
+        <SearchBar
+          onSearch={(term) => dispatch({ type: 'SET_SEARCH_TERM', payload: term })}
+          placeholder="Rechercher..."
+          initialValue={state.searchTerm}
+          className="w-full sm:max-w-xs"
+        />
       </div>
 
       <div className="flex flex-col gap-5 mb-4">
         <Label className="block" htmlFor="skills-filter">
           Filtrer par compétences
         </Label>
-        {/* Conteneur à hauteur fixe avec défilement au besoin */}
-        <div className="flex flex-wrap gap-2 min-h-[38px] max-h-[76px] overflow-y-auto p-1">
-          {state.selectedSkills.length === 0 && (
-            <div className="text-muted-foreground text-sm italic">
-              Aucun filtre sélectionné
-            </div>
-          )}
-          {state.selectedSkills.map((skill) => (
-            <Badge
-              key={skill}
-              variant="secondary"
-              className="px-2 py-1 h-[30px] flex items-center"
-            >
-              {skill}
-              <button
-                onClick={() =>
-                  dispatch({ type: "REMOVE_SKILL", payload: skill })
-                }
-                className="ml-2 hover:text-destructive"
-                aria-label={`Supprimer le filtre ${skill}`}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-        <div className="flex items-center content-center gap-4">
-          <Select
-            key={selectKey} // La clé force un re-rendu complet quand elle change
-            onValueChange={(value) => {
-              if (value) {
-                dispatch({ type: "ADD_SKILL", payload: value });
-                // Forcer le Select à se réinitialiser en changeant sa clé
-                setSelectKey((prev) => prev + 1);
-              }
-            }}
-            value=""
-          >
-            <SelectTrigger className="w-full sm:w-[210px]">
-              <SelectValue placeholder="Ajouter une compétence" />
-            </SelectTrigger>
-            <SelectContent>
-              {allSkills
-                .filter((skill) => !state.selectedSkills.includes(skill))
-                .map((skill) => (
-                  <SelectItem key={skill} value={skill}>
-                    {skill}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
 
-          {(state.selectedSkills.length > 0 ||
-            state.searchTerm ||
-            state.statusFilter !== STATUS_OPTIONS.ALL) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetFilters}
-              aria-label="Réinitialiser les filtres"
-            >
-              Réinitialiser les filtres
-            </Button>
-          )}
+        {/* Utilisation du composant FilterSelector */}
+        <div className="flex ">
+          <FilterSelector
+            options={skillOptions}
+            selectedValues={selectedSkills}
+            onSelect={handleSelectSkill}
+            onRemove={handleRemoveSkill}
+            onReset={resetFilters}
+            showResetButton={true}
+          />
         </div>
       </div>
     </>
@@ -250,28 +272,20 @@ function StudentFilters({
 
 export default function StudentList({
   students,
-  title = "Liste des étudiants",
+  title = 'Liste des étudiants',
   isLoading = false,
 }: StudentListProps) {
-  // Utilisation de useReducer pour la gestion d'état
   const [state, dispatch] = useReducer(filterReducer, initialFilterState);
   const { statusFilter, searchTerm, selectedSkills, currentPage } = state;
-
-  // Référence aux Tabs pour pouvoir forcer la valeur programmatiquement
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  // Utilisation de useMemo pour optimiser les calculs coûteux
   const allSkills = useMemo(
     () =>
-      Array.from(
-        new Set(
-          students.flatMap((student) => student.skills.map((s) => s.name))
-        )
-      ).sort(),
-    [students]
+      Array.from(new Set(students.flatMap((student) => student.skills.map((s) => s.name)))).sort(),
+    [students],
   );
 
-  // Optimisation du filtrage avec useMemo
+  // Logique de filtrage (inchangée)
   const filteredStudents = useMemo(() => {
     let result = [...students];
 
@@ -285,17 +299,15 @@ export default function StudentList({
         (student) =>
           student.firstName.toLowerCase().includes(searchLower) ||
           student.lastName.toLowerCase().includes(searchLower) ||
-          (student.school && student.school.toLowerCase().includes(searchLower))
+          (student.school && student.school.toLowerCase().includes(searchLower)),
       );
     }
 
     if (selectedSkills.length > 0) {
       result = result.filter((student) =>
         selectedSkills.every((skill) =>
-          student.skills.some(
-            (s) => s.name.toLowerCase() === skill.toLowerCase()
-          )
-        )
+          student.skills.some((s) => s.name.toLowerCase() === skill.toLowerCase()),
+        ),
       );
     }
 
@@ -310,7 +322,7 @@ export default function StudentList({
     return filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
   }, [filteredStudents, currentPage]);
 
-  // Gestion de l'affichage pendant le chargement
+  // État de chargement
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[400px]">
@@ -327,9 +339,9 @@ export default function StudentList({
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground" aria-live="polite">
-          {`${filteredStudents.length} étudiant${
-            filteredStudents.length !== 1 ? "s" : ""
-          } trouvé${filteredStudents.length !== 1 ? "s" : ""}`}
+          {`${filteredStudents.length} étudiant${filteredStudents.length !== 1 ? 's' : ''} trouvé${
+            filteredStudents.length !== 1 ? 's' : ''
+          }`}
         </p>
       </div>
 
@@ -340,9 +352,7 @@ export default function StudentList({
             defaultValue={STATUS_OPTIONS.ALL}
             value={statusFilter}
             className="w-full"
-            onValueChange={(value) =>
-              dispatch({ type: "SET_STATUS_FILTER", payload: value })
-            }
+            onValueChange={(value) => dispatch({ type: 'SET_STATUS_FILTER', payload: value })}
           >
             <StudentFilters
               state={state}
@@ -352,110 +362,53 @@ export default function StudentList({
               studentsCount={filteredStudents.length}
             />
 
+            {/* Utilisation des tabs avec contenu unifié */}
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
-              {renderStudentGrid()}
+              {/* Utilisation du nouveau composant ItemGrid */}
+              <ItemGrid
+                items={currentStudents}
+                renderItem={(student) => <StudentCard {...student} />}
+                keyExtractor={(student) => student.id}
+                emptyState={{
+                  title: 'Aucun étudiant trouvé',
+                  description: 'Aucun étudiant ne correspond à vos critères de recherche.',
+                }}
+              />
             </TabsContent>
             <TabsContent value={STATUS_OPTIONS.ALTERNANT} className="mt-0">
-              {renderStudentGrid()}
+              <ItemGrid
+                items={currentStudents}
+                renderItem={(student) => <StudentCard {...student} />}
+                keyExtractor={(student) => student.id}
+                emptyState={{
+                  title: 'Aucun étudiant trouvé',
+                  description: 'Aucun étudiant ne correspond à vos critères de recherche.',
+                }}
+              />
             </TabsContent>
             <TabsContent value={STATUS_OPTIONS.STAGIAIRE} className="mt-0">
-              {renderStudentGrid()}
+              <ItemGrid
+                items={currentStudents}
+                renderItem={(student) => <StudentCard {...student} />}
+                keyExtractor={(student) => student.id}
+                emptyState={{
+                  title: 'Aucun étudiant trouvé',
+                  description: 'Aucun étudiant ne correspond à vos critères de recherche.',
+                }}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
+      {/* Utilisation du nouveau composant Pagination */}
       {totalPages > 1 && (
-        <nav className="flex justify-center mt-6" aria-label="Pagination">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                dispatch({
-                  type: "SET_PAGE",
-                  payload: Math.max(currentPage - 1, 1),
-                })
-              }
-              disabled={currentPage === 1}
-              aria-label="Précédent"
-            >
-              Précédent
-            </Button>
-
-            <div className="flex items-center space-x-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <Button
-                    key={page}
-                    variant={page === currentPage ? "default" : "outline"}
-                    size="sm"
-                    onClick={() =>
-                      dispatch({ type: "SET_PAGE", payload: page })
-                    }
-                    className="w-8 h-8 p-0"
-                    aria-label={`Page ${page}`}
-                    aria-current={page === currentPage ? "page" : undefined}
-                  >
-                    {page}
-                  </Button>
-                )
-              )}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                dispatch({
-                  type: "SET_PAGE",
-                  payload: Math.min(currentPage + 1, totalPages),
-                })
-              }
-              disabled={currentPage === totalPages}
-              aria-label="Suivant"
-            >
-              Suivant
-            </Button>
-          </div>
-        </nav>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => dispatch({ type: 'SET_PAGE', payload: page })}
+        />
       )}
     </div>
   );
-
-  function renderStudentGrid() {
-    if (currentStudents.length === 0) {
-      return (
-        <div
-          className="flex flex-col items-center justify-center py-12 text-center"
-          role="status"
-        >
-          <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-4">
-            <Search
-              className="h-10 w-10 text-muted-foreground"
-              aria-hidden="true"
-            />
-          </div>
-          <h3 className="text-lg font-medium mb-2">Aucun étudiant trouvé</h3>
-          <p className="text-muted-foreground">
-            Aucun étudiant ne correspond à vos critères de recherche.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
-        role="list"
-        aria-label="Liste des étudiants"
-      >
-        {currentStudents.map((student) => (
-          <div key={student.id} role="listitem">
-            <StudentCard {...student} />
-          </div>
-        ))}
-      </div>
-    );
-  }
 }
