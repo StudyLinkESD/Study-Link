@@ -105,7 +105,6 @@ export default async function StudentProfilePage({ params }: { params: { id: str
               <StatusBadge status={student.status} className="mt-2" />
 
               <div className="w-full mt-6 space-y-4">
-                {/* Utilisation du composant InfoItem */}
                 {student.school && <InfoItem icon={School}>{student.school}</InfoItem>}
 
                 {student.alternanceRhythm && (
