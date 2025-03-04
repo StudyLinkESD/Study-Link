@@ -1,6 +1,5 @@
-// ProfilePreview.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ProfileAvatar from '@/components/app/common/ProfileAvatar';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
 import InfoItem from '@/components/app/common/InfoItems';
 import { School, Calendar, Clock } from 'lucide-react';
