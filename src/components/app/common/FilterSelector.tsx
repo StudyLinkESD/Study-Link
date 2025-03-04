@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -9,19 +10,15 @@ import {
 } from '@/components/ui/select';
 import { useState } from 'react';
 
-type Option = {
-  value: string;
-  label: string;
-};
-
 type FilterSelectorProps = {
-  options: Option[];
+  options: string[];
   selectedValues: string[];
   onSelect: (value: string) => void;
   onRemove: (value: string) => void;
+  onReset?: () => void;
   placeholder?: string;
   className?: string;
-  emptyMessage?: string;
+  showResetButton?: boolean;
 };
 
 function FilterSelector({
@@ -29,13 +26,14 @@ function FilterSelector({
   selectedValues,
   onSelect,
   onRemove,
+  onReset,
   placeholder = 'Sélectionner...',
   className = '',
-  emptyMessage = 'Aucun filtre sélectionné',
+  showResetButton = false,
 }: FilterSelectorProps) {
   const [selectKey, setSelectKey] = useState(0);
 
-  const availableOptions = options.filter((option) => !selectedValues.includes(option.value));
+  const availableOptions = options.filter((option) => !selectedValues.includes(option));
 
   const handleValueChange = (value: string) => {
     if (value) {
@@ -46,34 +44,45 @@ function FilterSelector({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="flex flex-wrap gap-2 min-h-[38px] max-h-[76px] overflow-y-auto p-1">
-        {selectedValues.length === 0 ? (
-          <div className="text-muted-foreground text-sm italic">{emptyMessage}</div>
-        ) : (
-          selectedValues.map((value) => {
-            const option = options.find((o) => o.value === value);
-            return (
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap gap-2 min-h-[38px] max-h-[76px] overflow-y-auto p-1">
+          {selectedValues.length === 0 ? (
+            <div className="text-muted-foreground text-sm italic">Aucun filtre sélectionné</div>
+          ) : (
+            selectedValues.map((value) => (
               <Badge
                 key={value}
                 variant="secondary"
                 className="px-2 py-1 h-[30px] flex items-center"
               >
-                {option?.label || value}
+                {value}
                 <button
                   onClick={() => onRemove(value)}
                   className="ml-2 hover:text-destructive"
-                  aria-label={`Supprimer le filtre ${option?.label || value}`}
+                  aria-label={`Supprimer le filtre ${value}`}
                 >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
-            );
-          })
+            ))
+          )}
+        </div>
+
+        {showResetButton && selectedValues.length > 0 && onReset && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onReset}
+            aria-label="Réinitialiser les filtres"
+            className="self-start"
+          >
+            Réinitialiser les filtres
+          </Button>
         )}
       </div>
 
       <Select key={selectKey} onValueChange={handleValueChange} value="">
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full sm:w-[210px]">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -83,8 +92,8 @@ function FilterSelector({
             </div>
           ) : (
             availableOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
+              <SelectItem key={option} value={option}>
+                {option}
               </SelectItem>
             ))
           )}
