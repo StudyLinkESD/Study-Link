@@ -1,13 +1,12 @@
-interface IUser {
+import { Timestamps } from './timestamps.type';
+
+interface IUser extends Timestamps {
   id: string;
   firstname: string;
   lastname: string;
   email: string;
   profile_picture: string;
   email_verified: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string;
 }
 
 interface IUserDTO {
