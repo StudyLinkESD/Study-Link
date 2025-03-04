@@ -78,7 +78,7 @@ export default function StudentCard({
         </div>
       </CardContent>
 
-      <CardFooter className="bg-muted/50 p-3">
+      <CardFooter className="p-3">
         <Link
           href={`/students/${id}`}
           className="text-sm text-primary hover:underline flex ml-auto items-center"
