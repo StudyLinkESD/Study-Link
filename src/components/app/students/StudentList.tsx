@@ -4,7 +4,13 @@ import { useState, useEffect } from "react";
 import StudentCard, { StudentCardProps } from "./StudentCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +26,10 @@ type StudentListProps = {
   title?: string;
 };
 
-export default function StudentList({ students, title = "Liste des étudiants" }: StudentListProps) {
+export default function StudentList({
+  students,
+  title = "Liste des étudiants",
+}: StudentListProps) {
   const [filteredStudents, setFilteredStudents] = useState<Student[]>(students);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -29,16 +38,16 @@ export default function StudentList({ students, title = "Liste des étudiants" }
   const studentsPerPage = 9;
 
   const allSkills = Array.from(
-    new Set(students.flatMap((student) => student.skills.map(s => s.name)))
+    new Set(students.flatMap((student) => student.skills.map((s) => s.name)))
   ).sort();
-  
+
   useEffect(() => {
     let result = [...students];
-    
+
     if (statusFilter !== "all") {
       result = result.filter((student) => student.status === statusFilter);
     }
-    
+
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
@@ -48,22 +57,27 @@ export default function StudentList({ students, title = "Liste des étudiants" }
           (student.school && student.school.toLowerCase().includes(searchLower))
       );
     }
-    
+
     if (selectedSkills.length > 0) {
       result = result.filter((student) =>
         selectedSkills.every((skill) =>
-          student.skills.some((s) => s.name.toLowerCase() === skill.toLowerCase())
+          student.skills.some(
+            (s) => s.name.toLowerCase() === skill.toLowerCase()
+          )
         )
       );
     }
-    
+
     setFilteredStudents(result);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   }, [statusFilter, searchTerm, selectedSkills, students]);
-  
+
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
-  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+  const currentStudents = filteredStudents.slice(
+    indexOfFirstStudent,
+    indexOfLastStudent
+  );
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
 
   const addSkillFilter = (skill: string) => {
@@ -71,36 +85,42 @@ export default function StudentList({ students, title = "Liste des étudiants" }
       setSelectedSkills([...selectedSkills, skill]);
     }
   };
-  
+
   const removeSkillFilter = (skill: string) => {
     setSelectedSkills(selectedSkills.filter((s) => s !== skill));
   };
-  
+
   const resetFilters = () => {
     setStatusFilter("all");
     setSearchTerm("");
     setSelectedSkills([]);
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground">
-          {filteredStudents.length} étudiant{filteredStudents.length !== 1 ? "s" : ""} trouvé{filteredStudents.length !== 1 ? "s" : ""}
+          {filteredStudents.length} étudiant
+          {filteredStudents.length !== 1 ? "s" : ""} trouvé
+          {filteredStudents.length !== 1 ? "s" : ""}
         </p>
       </div>
-      
+
       <Card>
         <CardContent className="p-6">
-          <Tabs defaultValue="all" className="w-full" onValueChange={setStatusFilter}>
+          <Tabs
+            defaultValue="all"
+            className="w-full"
+            onValueChange={setStatusFilter}
+          >
             <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
               <TabsList>
                 <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="Alternant">Alternants</TabsTrigger>
                 <TabsTrigger value="Stagiaire">Stagiaires</TabsTrigger>
               </TabsList>
-              
+
               <div className="relative w-full sm:max-w-xs">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -143,8 +163,10 @@ export default function StudentList({ students, title = "Liste des étudiants" }
                 </SelectContent>
               </Select>
             </div>
-            
-            {selectedSkills.length > 0 || searchTerm || statusFilter !== "all" ? (
+
+            {selectedSkills.length > 0 ||
+            searchTerm ||
+            statusFilter !== "all" ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -154,7 +176,7 @@ export default function StudentList({ students, title = "Liste des étudiants" }
                 Réinitialiser les filtres
               </Button>
             ) : null}
-            
+
             <TabsContent value="all" className="mt-0">
               {renderStudentGrid()}
             </TabsContent>
@@ -174,30 +196,34 @@ export default function StudentList({ students, title = "Liste des étudiants" }
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
               Précédent
             </Button>
-            
+
             <div className="flex items-center space-x-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  variant={page === currentPage ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                  className="w-8 h-8 p-0"
-                >
-                  {page}
-                </Button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className="w-8 h-8 p-0"
+                  >
+                    {page}
+                  </Button>
+                )
+              )}
             </div>
-            
+
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
             >
               Suivant
@@ -207,7 +233,7 @@ export default function StudentList({ students, title = "Liste des étudiants" }
       )}
     </div>
   );
-  
+
   function renderStudentGrid() {
     if (currentStudents.length === 0) {
       return (
@@ -222,14 +248,11 @@ export default function StudentList({ students, title = "Liste des étudiants" }
         </div>
       );
     }
-    
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {currentStudents.map((student) => (
-          <StudentCard
-            key={student.id}
-            {...student}
-          />
+          <StudentCard key={student.id} {...student} />
         ))}
       </div>
     );
