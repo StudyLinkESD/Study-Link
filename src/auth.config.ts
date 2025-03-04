@@ -2,6 +2,7 @@ import { NextAuthConfig } from 'next-auth';
 import Resend from 'next-auth/providers/resend';
 import SignupEmail from './emails/signup';
 import { render } from '@react-email/render';
+import { prisma } from '@/lib/prisma';
 
 export default {
   providers: [
@@ -10,9 +11,23 @@ export default {
       from: 'StudyLink <onboarding@resend.dev>',
       async sendVerificationRequest({ identifier, url, provider }) {
         try {
-          const emailHtml = render(SignupEmail({ url }));
+          const user = await prisma.user.findUnique({
+            where: { email: identifier },
+            select: { firstname: true },
+          });
 
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/resend`, {
+          const emailHtml = await render(
+            SignupEmail({
+              url,
+              firstname: user?.firstname || undefined,
+            }),
+          );
+
+          if (!emailHtml) {
+            console.error('Erreur lors de la génération du HTML de l\'email');
+          }
+
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/resend`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -26,8 +41,14 @@ export default {
               url,
             }),
           });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            console.error(data.error || 'Erreur lors de l\'envoi de l\'email');
+          }
         } catch (error) {
-          console.log(error);
+          throw error;
         }
       },
     }),
