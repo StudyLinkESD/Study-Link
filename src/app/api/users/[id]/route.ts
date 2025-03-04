@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<UserResponseDTO | { error: string }>> {
   try {
-    const userCheck = await checkUserExists(params.id);
+    const id = (await params).id;
+    const userCheck = await checkUserExists(id);
 
     if (!userCheck.exists) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
@@ -32,10 +33,11 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<UserResponseDTO | { error: string }>> {
   try {
-    const userCheck = await checkUserExists(params.id);
+    const id = (await params).id;
+    const userCheck = await checkUserExists(id);
 
     if (!userCheck.exists) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
@@ -57,7 +59,7 @@ export async function PUT(
       );
     }
 
-    const validationResult = await validateUserData(body, true, params.id);
+    const validationResult = await validateUserData(body, true, id);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
@@ -70,7 +72,7 @@ export async function PUT(
 
     const user = await prisma.user.update({
       where: {
-        id: params.id,
+        id: id,
         deletedAt: null,
       },
       data: {
@@ -91,10 +93,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
-    const userCheck = await checkUserExists(params.id);
+    const id = (await params).id;
+    const userCheck = await checkUserExists(id);
 
     if (!userCheck.exists) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
@@ -106,7 +109,7 @@ export async function DELETE(
 
     await prisma.user.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: {
         deletedAt: new Date(),

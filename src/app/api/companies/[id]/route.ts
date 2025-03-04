@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<CompanyResponseDTO | { error: string }>> {
   try {
-    const companyCheck = await checkCompanyExists(params.id);
+    const id = (await params).id;
+    const companyCheck = await checkCompanyExists(id);
 
     if (!companyCheck.exists) {
       return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
@@ -28,10 +29,11 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<CompanyResponseDTO | { error: string }>> {
   try {
-    const companyCheck = await checkCompanyExists(params.id);
+    const id = (await params).id;
+    const companyCheck = await checkCompanyExists(id);
 
     if (!companyCheck.exists) {
       return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
@@ -59,7 +61,7 @@ export async function PUT(
 
     const company = await prisma.company.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: body,
     });
@@ -76,10 +78,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
-    const companyCheck = await checkCompanyExists(params.id);
+    const id = (await params).id;
+    const companyCheck = await checkCompanyExists(id);
 
     if (!companyCheck.exists) {
       return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
@@ -87,7 +90,7 @@ export async function DELETE(
 
     await prisma.company.delete({
       where: {
-        id: params.id,
+        id: id,
       },
     });
 
