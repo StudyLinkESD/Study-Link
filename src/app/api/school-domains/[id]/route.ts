@@ -5,20 +5,15 @@ import { validateSchoolDomainData } from '@/utils/validation/school-domain.valid
 
 const prisma = new PrismaClient();
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 export async function GET(
   request: Request,
-  { params }: RouteParams,
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<SchoolDomainResponseDTO | { error: string }>> {
   try {
+    const id = (await params).id;
     const domain = await prisma.authorizedSchoolDomain.findUnique({
       where: {
-        id: params.id,
+        id: id,
       },
     });
 
@@ -38,14 +33,15 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: RouteParams,
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<
   NextResponse<SchoolDomainResponseDTO | { error: string; details?: Record<string, string> }>
 > {
   try {
+    const id = (await params).id;
     const body = (await request.json()) as UpdateSchoolDomainDTO;
 
-    const validationResult = await validateSchoolDomainData(body, params.id);
+    const validationResult = await validateSchoolDomainData(body, id);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
@@ -58,7 +54,7 @@ export async function PUT(
 
     const domain = await prisma.authorizedSchoolDomain.update({
       where: {
-        id: params.id,
+        id: id,
       },
       data: {
         domain: body.domain,
@@ -77,13 +73,14 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: RouteParams,
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
+    const id = (await params).id;
     // Vérifier si le domaine est utilisé par des écoles
     const schoolsUsingDomain = await prisma.school.count({
       where: {
-        domainId: params.id,
+        domainId: id,
         deletedAt: null,
       },
     });
@@ -99,7 +96,7 @@ export async function DELETE(
 
     await prisma.authorizedSchoolDomain.delete({
       where: {
-        id: params.id,
+        id: id,
       },
     });
 

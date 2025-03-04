@@ -5,20 +5,15 @@ import { validateSchoolData } from '../../../../utils/validation/school.validati
 
 const prisma = new PrismaClient();
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 export async function GET(
   request: Request,
-  { params }: RouteParams,
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<SchoolResponseDTO | { error: string }>> {
   try {
+    const id = (await params).id;
     const school = await prisma.school.findUnique({
       where: {
-        id: params.id,
+        id: id,
         deletedAt: null,
       },
       include: {
@@ -43,9 +38,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: RouteParams,
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<SchoolResponseDTO | { error: string; details?: Record<string, string> }>> {
   try {
+    const id = (await params).id;
     const body = (await request.json()) as UpdateSchoolDTO;
 
     const validationResult = await validateSchoolData(body);
@@ -61,7 +57,7 @@ export async function PUT(
 
     const school = await prisma.school.update({
       where: {
-        id: params.id,
+        id: id,
         deletedAt: null,
       },
       data: {
@@ -87,12 +83,13 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: RouteParams,
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
+    const id = (await params).id;
     await prisma.school.update({
       where: {
-        id: params.id,
+        id: id,
         deletedAt: null,
       },
       data: {
