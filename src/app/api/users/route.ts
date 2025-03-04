@@ -27,31 +27,25 @@ export async function POST(
   request: Request,
 ): Promise<NextResponse<UserResponseDTO | { error: string; details?: any }>> {
   try {
-    const body = (await request.json()) as CreateUserDTO;
+    const { email, firstname, lastname } = await request.json();
 
-    const validationResult = await validateUserData(body);
-    if (!validationResult.isValid) {
-      return NextResponse.json(
-        {
-          error: 'Données invalides',
-          details: validationResult.errors,
-        },
-        { status: 400 },
-      );
+    if (!email || !firstname || !lastname) {
+      return NextResponse.json({ error: 'Email, prénom et nom sont requis' }, { status: 400 });
     }
 
     const user = await prisma.user.create({
       data: {
-        ...body,
-        email: body.email.toLowerCase()
+        email: email.toLowerCase(),
+        firstname,
+        lastname,
       },
     });
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
-    console.error('Erreur lors de la création de l\'utilisateur:', error);
+    console.error("Erreur lors de la création de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la création de l\'utilisateur' },
+      { error: "Erreur lors de la création de l'utilisateur" },
       { status: 500 },
     );
   }

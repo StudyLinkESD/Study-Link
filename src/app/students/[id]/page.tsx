@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import BackButton from '@/components/app/common/BackButton';
-import ProfileAvatar from '@/components/app/common/ProfileAvatar';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
 import InfoItem from '@/components/app/common/InfoItems';
 import SectionCard from '@/components/app/common/SectionCard';
@@ -105,7 +105,6 @@ export default async function StudentProfilePage({ params }: { params: { id: str
               <StatusBadge status={student.status} className="mt-2" />
 
               <div className="w-full mt-6 space-y-4">
-                {/* Utilisation du composant InfoItem */}
                 {student.school && <InfoItem icon={School}>{student.school}</InfoItem>}
 
                 {student.alternanceRhythm && (

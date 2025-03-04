@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ChevronRight } from 'lucide-react';
 
 // Import des composants communs
-import ProfileAvatar from '@/components/app/common/ProfileAvatar';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
 
 export type StudentCardProps = {

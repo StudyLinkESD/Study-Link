@@ -6,13 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-
-// Importation des composants communs réutilisables
 import SearchBar from '@/components/app/common/SearchBar';
 import FilterSelector from '@/components/app/common/FilterSelector';
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
-import SectionCard from '@/components/app/common/SectionCard';
 
 // Constantes et types
 const STUDENTS_PER_PAGE = 9;
@@ -230,6 +227,7 @@ export default function StudentList({
       </div>
     );
   }
+
 
   return (
     <div className="container mx-auto px-4 py-4 space-y-6">
