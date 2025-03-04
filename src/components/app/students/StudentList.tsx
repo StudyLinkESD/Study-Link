@@ -1,4 +1,3 @@
-// src/components/StudentList.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -29,21 +28,17 @@ export default function StudentList({ students, title = "Liste des étudiants" }
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 9;
 
-  // Extraire toutes les compétences uniques pour le filtre
   const allSkills = Array.from(
     new Set(students.flatMap((student) => student.skills.map(s => s.name)))
   ).sort();
   
-  // Appliquer les filtres
   useEffect(() => {
     let result = [...students];
     
-    // Filtre par statut
     if (statusFilter !== "all") {
       result = result.filter((student) => student.status === statusFilter);
     }
     
-    // Filtre par terme de recherche (prénom, nom ou école)
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
@@ -54,7 +49,6 @@ export default function StudentList({ students, title = "Liste des étudiants" }
       );
     }
     
-    // Filtre par compétences sélectionnées
     if (selectedSkills.length > 0) {
       result = result.filter((student) =>
         selectedSkills.every((skill) =>
@@ -64,28 +58,24 @@ export default function StudentList({ students, title = "Liste des étudiants" }
     }
     
     setFilteredStudents(result);
-    setCurrentPage(1); // Réinitialiser à la première page après chaque filtre
+    setCurrentPage(1); 
   }, [statusFilter, searchTerm, selectedSkills, students]);
   
-  // Calculer la pagination
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
-  
-  // Ajouter une compétence au filtre
+
   const addSkillFilter = (skill: string) => {
     if (!selectedSkills.includes(skill)) {
       setSelectedSkills([...selectedSkills, skill]);
     }
   };
   
-  // Retirer une compétence du filtre
   const removeSkillFilter = (skill: string) => {
     setSelectedSkills(selectedSkills.filter((s) => s !== skill));
   };
   
-  // Réinitialiser tous les filtres
   const resetFilters = () => {
     setStatusFilter("all");
     setSearchTerm("");
@@ -122,8 +112,7 @@ export default function StudentList({ students, title = "Liste des étudiants" }
                 />
               </div>
             </div>
-            
-            {/* Filtres de compétences */}
+
             <div className="mb-4">
               <Label className="mb-2 block">Filtrer par compétences</Label>
               <div className="flex flex-wrap gap-2 mb-2">
@@ -178,8 +167,7 @@ export default function StudentList({ students, title = "Liste des étudiants" }
           </Tabs>
         </CardContent>
       </Card>
-      
-      {/* Pagination */}
+
       {totalPages > 1 && (
         <div className="flex justify-center mt-6">
           <nav className="flex items-center space-x-2">
