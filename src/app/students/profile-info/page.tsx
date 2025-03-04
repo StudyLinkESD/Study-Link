@@ -20,11 +20,11 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SectionCard from '@/components/app/common/SectionCard';
-import FormField from '@/components/app/form/FormField';
-import ProfilePreview from '@/components/app/form/ProfilePreview';
-import FileUploadField from '@/components/app/common/FileUploadInput';
-import SkillsSelector from '@/components/app/form/SkillsSelector';
-import NavigationButtons from '@/components/app/form/NavigationButton';
+import FormField from '@/components/app/profileForm/FormField';
+import ProfilePreview from '@/components/app/profileForm/ProfilePreview';
+import FileUploadInput from '@/components/app/common/FileUploadInput';
+import SkillsSelector from '@/components/app/profileForm/SkillsSelector';
+import NavigationButtons from '@/components/app/profileForm/NavigationButton';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, { message: 'Le prénom doit contenir au moins 2 caractères' }),
@@ -94,23 +94,27 @@ export default function StudentProfileForm() {
   });
 
   const formValues = watch();
-  const handlePhotoUpload = (file: File | null) => {
+  const handlePhotoUpload = (file: File | null, url?: string) => {
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
+      const imageUrl = url || URL.createObjectURL(file);
       setPhotoUrl(imageUrl);
     }
   };
 
-  const handleCvUpload = (file: File | null) => {
+  const handleCvUpload = (file: File | null, url?: string) => {
     if (file) {
       setUploadedCv(file);
+      // Vous pourriez également stocker l'URL du CV si nécessaire
+      if (url) {
+        // Stocker l'URL du CV dans votre état de formulaire si besoin
+        // Par exemple pour l'inclure dans les données soumises
+      }
     }
   };
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
       const completeData = {
         ...data,
         photoUrl,
@@ -195,7 +199,7 @@ export default function StudentProfileForm() {
                     className="mt-4"
                     hint="Format recommandé : JPG ou PNG, 500x500px minimum"
                   >
-                    <FileUploadField
+                    <FileUploadInput
                       id="photoUpload"
                       accept="image/*"
                       onChange={handlePhotoUpload}
@@ -307,13 +311,9 @@ export default function StudentProfileForm() {
                     <FormField
                       label="CV (facultatif)"
                       htmlFor="cvUpload"
-                      hint="Format accepté : PDF, Word (.doc, .docx)"
+                      hint="Format accepté : PDF"
                     >
-                      <FileUploadField
-                        id="cvUpload"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleCvUpload}
-                      />
+                      <FileUploadInput id="cvUpload" accept=".pdf" onChange={handleCvUpload} />
                     </FormField>
                   </div>
                 </SectionCard>
