@@ -32,4 +32,15 @@ export interface StudentResponseDTO {
   curriculumVitaeId?: string;
   previousCompanies: string;
   availability: boolean;
+  user?: {
+    id: string;
+    email: string;
+    firstname: string;
+    lastname: string;
+    profilePictureId?: string | null;
+  };
+  school?: {
+    id: string;
+    name: string;
+  };
 }
