@@ -20,6 +20,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
   pages: {
     verifyRequest: `${process.env.NEXT_PUBLIC_MAIN_URL}/verify-request`,
+    signIn: '/login',
+    error: '/auth/error',
   },
   callbacks: {
     async jwt({ token, user, account }) {
@@ -36,6 +38,33 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
     async redirect({ baseUrl }) {
       return baseUrl;
+    },
+    async signIn({ account, profile }) {
+      if (account?.provider === 'google' && profile?.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: profile.email },
+        });
+
+        if (!existingUser && profile.name) {
+          const nameParts = profile.name.split(' ');
+          const firstname = nameParts[0] || '';
+          const lastname = nameParts.slice(1).join(' ') || '';
+
+          try {
+            await prisma.user.create({
+              data: {
+                email: profile.email,
+                firstname,
+                lastname,
+              },
+            });
+          } catch (error) {
+            console.error("Erreur lors de la création de l'utilisateur:", error);
+            return false;
+          }
+        }
+      }
+      return true;
     },
   },
   events: {
