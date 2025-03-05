@@ -225,7 +225,7 @@ export default function JobsList({
   }
 
   return (
-    <div className="container mx-auto px-4 py-4 space-y-6">
+    <div className="container max-w-3/6 mx-auto px-4 py-4 space-y-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground" aria-live="polite">

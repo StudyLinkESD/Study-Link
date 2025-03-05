@@ -1,7 +1,10 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ChevronRight } from 'lucide-react';
+import { useJob } from '@/context/job.context';
 
 // Import des composants communs
 import ProfileAvatar from '@/components/app/common/ProfileAvatar';
@@ -18,18 +21,16 @@ export type JobCardProps = {
   availability?: string;
 };
 
-export default function JobCard({
-  id,
-  offerTitle,
-  companyName,
-  logoUrl,
-  status,
-  skills,
-  availability,
-  description,
-}: JobCardProps) {
+export default function JobCard(props: JobCardProps) {
+  const { setSelectedJob } = useJob();
+  const { id, offerTitle, companyName, logoUrl, status, skills, availability, description } = props;
+
+  const handleClick = () => {
+    setSelectedJob(props);
+  };
+
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden cursor-pointer" onClick={handleClick}>
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           {/* Utilisation du composant ProfileAvatar */}

@@ -1,4 +1,6 @@
 import JobsList from '@/components/app/jobs/JobsList';
+import JobView from '@/components/app/jobs/JobView';
+import { JobProvider } from '@/context/job.context';
 
 const exampleJobs = [
   {
@@ -28,11 +30,13 @@ const exampleJobs = [
     availability: 'Septembre 2025',
   },
 ];
-
 export default function JobsPage() {
   return (
-    <main>
-      <JobsList jobs={exampleJobs} title="Découvrez nos offres" />
-    </main>
+    <JobProvider>
+      <main className="flex flex-row items-start justify-start w-full flex-1 px-20">
+        <JobsList jobs={exampleJobs} title="Découvrez nos offres" />
+        <JobView />
+      </main>
+    </JobProvider>
   );
 }
