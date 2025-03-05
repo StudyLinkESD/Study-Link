@@ -28,25 +28,41 @@ import ProfileCompletion from '@/components/app/profileForm/ProfileCompletion';
 import FileUploadInput from '@/components/app/common/FileUploadInput';
 import SkillsSelector from '@/components/app/profileForm/SkillsSelector';
 import NavigationButtons from '@/components/app/profileForm/NavigationButton';
+import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
-  firstName: z.string().min(2, { message: 'Le prénom doit contenir au moins 2 caractères' }),
-  lastName: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
+  firstName: z.string()
+    .min(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
+    .max(50, { message: 'Le prénom ne doit pas dépasser 50 caractères' })
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le prénom ne doit contenir que des lettres, espaces et tirets' }),
+  lastName: z.string()
+    .min(2, { message: 'Le nom doit contenir au moins 2 caractères' })
+    .max(50, { message: 'Le nom ne doit pas dépasser 50 caractères' })
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le nom ne doit contenir que des lettres, espaces et tirets' }),
   status: z.enum(['Alternant', 'Stagiaire'], {
     required_error: 'Veuillez sélectionner votre statut',
   }),
-  school: z.string().min(2, { message: 'Veuillez indiquer votre école' }),
-  availability: z.string().optional(),
-  alternanceRhythm: z.string().optional(),
-  description: z
-    .string()
-    .max(500, {
-      message: 'La description ne doit pas dépasser 500 caractères',
+  school: z.string()
+    .min(1, { message: 'Veuillez sélectionner votre école' }),
+  availability: z.string()
+    .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, { 
+      message: 'Format attendu : MM/YYYY (ex: 09/2024)' 
     })
-    .optional(),
-  skills: z.array(z.string()).min(1, {
-    message: 'Veuillez sélectionner au moins une compétence',
-  }),
+    .optional()
+    .or(z.literal('')),
+  alternanceRhythm: z.string()
+    .min(5, { message: "Veuillez décrire votre rythme d'alternance" })
+    .max(100, { message: "La description du rythme est trop longue" })
+    .optional()
+    .or(z.literal('')),
+  description: z.string()
+    .min(100, { message: 'La description doit contenir au moins 100 caractères' })
+    .max(500, { message: 'La description ne doit pas dépasser 500 caractères' })
+    .optional()
+    .or(z.literal('')),
+  skills: z.array(z.string())
+    .min(3, { message: 'Veuillez sélectionner au moins 3 compétences' })
+    .max(10, { message: 'Vous ne pouvez pas sélectionner plus de 10 compétences' }),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -104,9 +120,10 @@ export default function StudentProfileForm() {
     handleSubmit,
     watch,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
+    mode: "onChange",
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -452,8 +469,19 @@ export default function StudentProfileForm() {
                       htmlFor="firstName"
                       required
                       error={errors.firstName?.message}
+                      touched={!!touchedFields.firstName}
+                      isValid={!!dirtyFields.firstName && !errors.firstName}
+                      helpText="Utilisez votre prénom légal tel qu'il apparaît sur vos documents officiels"
                     >
-                      <Input id="firstName" placeholder="Votre prénom" {...register('firstName')} />
+                      <Input 
+                        id="firstName" 
+                        placeholder="Votre prénom" 
+                        {...register('firstName')}
+                        className={cn(
+                          errors.firstName && "border-destructive",
+                          !errors.firstName && touchedFields.firstName && "border-green-500"
+                        )}
+                      />
                     </FormField>
 
                     <FormField
@@ -461,8 +489,19 @@ export default function StudentProfileForm() {
                       htmlFor="lastName"
                       required
                       error={errors.lastName?.message}
+                      touched={!!touchedFields.lastName}
+                      isValid={!!dirtyFields.lastName && !errors.lastName}
+                      helpText="Utilisez votre nom de famille légal"
                     >
-                      <Input id="lastName" placeholder="Votre nom" {...register('lastName')} />
+                      <Input 
+                        id="lastName" 
+                        placeholder="Votre nom" 
+                        {...register('lastName')}
+                        className={cn(
+                          errors.lastName && "border-destructive",
+                          !errors.lastName && touchedFields.lastName && "border-green-500"
+                        )}
+                      />
                     </FormField>
                   </div>
 
@@ -518,11 +557,18 @@ export default function StudentProfileForm() {
                     className="mt-4"
                     hint={`${formValues.description?.length || 0}/500 caractères`}
                     error={errors.description?.message}
+                    touched={!!touchedFields.description}
+                    isValid={!!dirtyFields.description && !errors.description}
+                    helpText="Décrivez votre parcours, vos projets et ce que vous recherchez. Une bonne description augmente vos chances d'être contacté."
                   >
                     <Textarea
                       id="description"
                       placeholder="Décrivez votre parcours, vos projets et vos aspirations professionnelles..."
-                      className="min-h-[120px]"
+                      className={cn(
+                        "min-h-[120px]",
+                        errors.description && "border-destructive",
+                        !errors.description && touchedFields.description && "border-green-500"
+                      )}
                       {...register('description')}
                     />
                   </FormField>
@@ -572,12 +618,20 @@ export default function StudentProfileForm() {
                     <FormField
                       label="Disponibilité"
                       htmlFor="availability"
-                      hint="Indiquez à partir de quand vous êtes disponible pour commencer"
+                      hint="Format : MM/YYYY"
+                      error={errors.availability?.message}
+                      touched={!!touchedFields.availability}
+                      isValid={!!dirtyFields.availability && !errors.availability}
+                      helpText="Indiquez le mois et l'année à partir desquels vous serez disponible"
                     >
                       <Input
                         id="availability"
-                        placeholder="Ex: Septembre 2025"
+                        placeholder="09/2024"
                         {...register('availability')}
+                        className={cn(
+                          errors.availability && "border-destructive",
+                          !errors.availability && touchedFields.availability && "border-green-500"
+                        )}
                       />
                     </FormField>
 
