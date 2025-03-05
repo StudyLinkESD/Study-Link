@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { useJob } from '@/context/job.context';
-import ProfileAvatar from '@/components/app/common/ProfileAvatar';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
 
 const JobView = () => {
