@@ -21,11 +21,25 @@ export async function GET(
       return NextResponse.json({ error: 'Cet utilisateur a été supprimé' }, { status: 410 });
     }
 
-    return NextResponse.json(userCheck.user);
+    if (!userCheck.user) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
+
+    const userResponse: UserResponseDTO = {
+      id: userCheck.user.id,
+      email: userCheck.user.email,
+      firstname: userCheck.user.firstname,
+      lastname: userCheck.user.lastname,
+      profilePictureId: userCheck.user.profilePictureId,
+      createdAt: userCheck.user.createdAt,
+      updatedAt: userCheck.user.updatedAt,
+    };
+
+    return NextResponse.json(userResponse);
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération de l\'utilisateur' },
+      { error: "Erreur lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
@@ -70,7 +84,7 @@ export async function PUT(
       );
     }
 
-    const user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: {
         id: id,
         deletedAt: null,
@@ -81,11 +95,21 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(user, { status: 200 });
+    const userResponse: UserResponseDTO = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstname: updatedUser.firstname,
+      lastname: updatedUser.lastname,
+      profilePictureId: updatedUser.profilePictureId,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+    };
+
+    return NextResponse.json(userResponse, { status: 200 });
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'utilisateur' },
+      { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { status: 500 },
     );
   }

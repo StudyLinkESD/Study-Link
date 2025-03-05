@@ -17,7 +17,6 @@ type NavigationButtonsProps = {
 export default function NavigationButtons({
   onBack,
   onNext,
-  onSubmit,
   isSubmitting = false,
   showBackButton = false,
   showNextButton = false,

@@ -1,5 +1,5 @@
 import { CreateUserDTO } from '@/dto/user.dto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -16,7 +16,7 @@ export type ValidationResult = {
 export type UserCheckResult = {
   exists: boolean;
   isDeleted: boolean;
-  user: any | null;
+  user: User | null;
 };
 
 export const checkUserExists = async (userId: string): Promise<UserCheckResult> => {
@@ -52,12 +52,12 @@ export const validateUserData = async (
     if (!data.email) {
       errors.push({
         field: 'email',
-        message: 'L\'email est requis',
+        message: "L'email est requis",
       });
     } else if (!data.email.includes('@')) {
       errors.push({
         field: 'email',
-        message: 'L\'adresse email n\'est pas valide',
+        message: "L'adresse email n'est pas valide",
       });
     } else {
       const normalizedEmail = data.email.toLowerCase();

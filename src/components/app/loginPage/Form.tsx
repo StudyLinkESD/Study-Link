@@ -84,7 +84,7 @@ const LoginForm = () => {
       });
 
       if (!createUserResponse.ok) {
-        toast.error('Une erreur est survenue lors de l\'inscription');
+        toast.error("Une erreur est survenue lors de l'inscription");
         return;
       }
 
@@ -97,7 +97,7 @@ const LoginForm = () => {
         toast.error(signInResult.error || 'Une erreur est survenue');
       }
     } catch (error) {
-      toast.error('Une erreur est survenue lors de l\'inscription');
+      toast.error("Une erreur est survenue lors de l'inscription" + error);
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +115,7 @@ const LoginForm = () => {
         toast.error(result.error || 'Une erreur est survenue');
       }
     } catch (error) {
-      toast.error('Une erreur est survenue lors de la connexion');
+      toast.error('Une erreur est survenue lors de la connexion' + error);
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +123,7 @@ const LoginForm = () => {
 
   return (
     <>
-      <h2 className="text-2xl font-medium ml-1 mb-2">{isLogin ? 'Se connecter' : 'S\'inscrire'}</h2>
+      <h2 className="text-2xl font-medium ml-1 mb-2">{isLogin ? 'Se connecter' : "S'inscrire"}</h2>
 
       <Card className="w-full px-4 py-8 space-y-6">
         <CardContent className="px-0">
@@ -217,7 +217,7 @@ const LoginForm = () => {
                         name="companyName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nom de l'entreprise</FormLabel>
+                            <FormLabel>Nom de l&apos;entreprise</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
@@ -265,7 +265,7 @@ const LoginForm = () => {
                   )}
                   <div className="flex justify-between items-center mt-4">
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading ? 'Envoi en cours...' : 'S\'inscrire'}
+                      {isLoading ? 'Envoi en cours...' : "S'inscrire"}
                     </Button>
                     <Button
                       variant="link"

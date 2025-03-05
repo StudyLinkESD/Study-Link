@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateUserDTO, UserResponseDTO } from '@/dto/user.dto';
-import { validateUserData } from '@/utils/validation/user.validation';
+import { UserResponseDTO } from '@/dto/user.dto';
+import { ValidationError } from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +25,7 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<UserResponseDTO | { error: string; details?: any }>> {
+): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {
   try {
     const { email, firstname, lastname } = await request.json();
 
