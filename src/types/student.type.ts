@@ -1,4 +1,4 @@
-import { IUser } from "@/types/user";
+import { IUser } from '@/types/user.type';
 
 interface IStudent extends IUser {
   user_id: string;

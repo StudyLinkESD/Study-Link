@@ -82,7 +82,7 @@ export default function FileUploadInput({
     }
   };
 
-  const handleCropperSave = (croppedFile: File, previewUrl: string) => {
+  const handleCropperSave = (croppedFile: File) => {
     // Close the editor
     setShowCropper(false);
     setSelectedFile(null);

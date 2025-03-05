@@ -23,7 +23,7 @@ import SkillsList from '@/components/app/common/SkillsList';
 import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
 import RecommendationsList from '@/components/app/common/RecommendationsList';
 
-const getStudentById = (id: string) => {
+const getStudentById = async (id: string) => {
   const students = [
     {
       id: '1',
@@ -72,8 +72,18 @@ const getStudentById = (id: string) => {
   return students.find((student) => student.id === id);
 };
 
-export default async function StudentProfilePage({ params }: { params: { id: string } }) {
-  const student = await getStudentById(params.id);
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export async function generateStaticParams() {
+  return [{ id: '1' }];
+}
+
+export default async function Page({ params }: PageProps) {
+  const resolvedParams = await params;
+  const student = await getStudentById(resolvedParams.id);
 
   if (!student) {
     notFound();

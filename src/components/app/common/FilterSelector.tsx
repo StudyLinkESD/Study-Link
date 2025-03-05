@@ -27,7 +27,7 @@ function FilterSelector({
   onSelect,
   onRemove,
   onReset,
-  placeholder = 'Sélectionner...',
+  placeholder = 'Filtres',
   className = '',
   showResetButton = false,
 }: FilterSelectorProps) {

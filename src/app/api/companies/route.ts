@@ -20,7 +20,7 @@ export async function GET(): Promise<NextResponse<CompanyResponseDTO[] | { error
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<CompanyResponseDTO | { error: string; details?: any }>> {
+): Promise<NextResponse<CompanyResponseDTO | { error: string; details?: string[] }>> {
   try {
     const body = (await request.json()) as CreateCompanyDTO;
 

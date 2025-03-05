@@ -17,7 +17,17 @@ export async function GET(
       return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
     }
 
-    return NextResponse.json(companyCheck.company);
+    if (!companyCheck.company) {
+      return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
+    }
+
+    const companyResponse: CompanyResponseDTO = {
+      id: companyCheck.company.id,
+      name: companyCheck.company.name,
+      logoId: companyCheck.company.logoId,
+    };
+
+    return NextResponse.json(companyResponse);
   } catch (error) {
     console.error('Erreur lors de la récupération de la compagnie:', error);
     return NextResponse.json(
@@ -59,14 +69,19 @@ export async function PUT(
       );
     }
 
-    const company = await prisma.company.update({
+    const updatedCompany = await prisma.company.update({
       where: {
         id: id,
       },
       data: body,
+      select: {
+        id: true,
+        name: true,
+        logoId: true,
+      },
     });
 
-    return NextResponse.json(company);
+    return NextResponse.json(updatedCompany);
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la compagnie:', error);
     return NextResponse.json(
