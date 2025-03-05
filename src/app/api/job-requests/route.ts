@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, JobRequest } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { CreateJobRequestDTO, JobRequestResponseDTO } from '@/dto/job-request.dto';
 import { validateJobRequestData } from '@/utils/validation/job-request.validation';
 
