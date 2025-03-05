@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { CreateUserDTO, UserResponseDTO } from '@/dto/user.dto';
-import { validateUserData, ValidationError } from '@/utils/validation/user.validation';
+import { validateUserCreation, ValidationError } from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -29,7 +29,7 @@ export async function POST(
   try {
     const body = (await request.json()) as CreateUserDTO;
 
-    const validationResult = await validateUserData(body);
+    const validationResult = await validateUserCreation(body);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
