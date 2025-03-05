@@ -10,7 +10,8 @@
 !.yarn/releases
 !.yarn/
 package-lock.json
-
+.env
+.env.*
 # testing
 /coverage
 
