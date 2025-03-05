@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { CreateCompanyDTO, UpdateCompanyDTO } from '@/dto/company.dto';
+import { Company } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,7 @@ interface ValidationResult {
 interface CompanyCheckResult {
   exists: boolean;
   isDeleted: boolean;
-  company?: any;
+  company?: Company;
 }
 
 export async function validateCompanyData(

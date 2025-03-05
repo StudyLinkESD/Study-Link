@@ -15,14 +15,14 @@ export default function VerifyRequestPage() {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Vérifiez votre boîte mail</h1>
           <p className="text-muted-foreground">
-            Un lien de connexion vous a été envoyé. Cliquez sur le lien dans l'email pour vous
+            Un lien de connexion vous a été envoyé. Cliquez sur le lien dans l&apos;email pour vous
             connecter à votre compte.
           </p>
         </div>
 
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Si vous ne trouvez pas l'email, vérifiez votre dossier spam.
+            Si vous ne trouvez pas l&apos;email, vérifiez votre dossier spam.
           </p>
 
           <Button variant="outline" asChild>

@@ -7,7 +7,6 @@ const prisma = new PrismaClient();
 export const validateStudentData = async (
   data: Partial<CreateStudentDTO>,
   isUpdate: boolean = false,
-  studentId?: string,
 ): Promise<ValidationResult> => {
   const errors: ValidationError[] = [];
 
