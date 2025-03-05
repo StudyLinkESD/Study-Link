@@ -39,6 +39,24 @@ export default async function Page({ params }: PageProps) {
       notFound();
     }
 
+    // Convertir les compétences en tableau
+    const skillsArray = studentData.skills
+      .split(',')
+      .map((s) => ({ id: s.trim(), name: s.trim() }));
+
+    // Déterminer le statut en fonction des compétences
+    let status: 'Alternant' | 'Stagiaire' = 'Stagiaire'; // Par défaut
+
+    // Si l'étudiant a des compétences liées à l'alternance, il est alternant
+    const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
+    if (
+      skillsArray.some((skill) =>
+        alternanceKeywords.some((keyword) => skill.name.toLowerCase().includes(keyword)),
+      )
+    ) {
+      status = 'Alternant';
+    }
+
     // Formatter les données pour correspondre à ce qu'attend la page
     const student = {
       id: studentData.id,
@@ -48,12 +66,9 @@ export default async function Page({ params }: PageProps) {
         ? `/api/files/${studentData.user.profilePictureId}`
         : '',
       email: studentData.user?.email || '',
-      status: studentData.status as 'Alternant' | 'Stagiaire',
+      status,
       school: studentData.school?.name || '',
-      skills: studentData.skills.split(',').map((skill) => ({
-        id: skill.trim(),
-        name: skill.trim(),
-      })),
+      skills: skillsArray,
       alternanceRhythm: studentData.apprenticeshipRythm || '',
       description: studentData.description,
       cvUrl: studentData.curriculumVitaeId
@@ -97,7 +112,9 @@ export default async function Page({ params }: PageProps) {
                   )}
 
                   {student.availability && (
-                    <InfoItem icon={Clock}>Disponible à partir de {student.availability}</InfoItem>
+                    <InfoItem icon={Clock}>
+                      {student.availability === 'Disponible' ? 'Disponible' : 'Indisponible'}
+                    </InfoItem>
                   )}
 
                   {student.email && (
@@ -108,10 +125,17 @@ export default async function Page({ params }: PageProps) {
                 </div>
 
                 {student.cvUrl && (
-                  <Button className="w-full mt-6">
-                    <Download className="mr-2 h-4 w-4" />
-                    Télécharger le CV
-                  </Button>
+                  <a
+                    href={student.cvUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full"
+                  >
+                    <Button className="w-full mt-6">
+                      <Download className="mr-2 h-4 w-4" />
+                      Télécharger le CV
+                    </Button>
+                  </a>
                 )}
 
                 <Button className="w-full mt-4">Contacter</Button>
