@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { CreateCompanyOwnerDTO, CompanyOwnerResponseDTO } from '@/dto/company-owner.dto';
 import { validateCompanyOwnerData } from '@/utils/validation/company-owner.validation';
+import { ValidationError } from '@/utils/validation/company-owner.validation';
 
 const prisma = new PrismaClient();
 
@@ -32,7 +33,7 @@ export async function GET(): Promise<NextResponse<CompanyOwnerResponseDTO[] | { 
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<CompanyOwnerResponseDTO | { error: string; details?: any }>> {
+): Promise<NextResponse<CompanyOwnerResponseDTO | { error: string; details?: ValidationError[] }>> {
   try {
     const body = (await request.json()) as CreateCompanyOwnerDTO;
 
