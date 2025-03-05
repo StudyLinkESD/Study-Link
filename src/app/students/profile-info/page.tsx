@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SectionCard from '@/components/app/common/SectionCard';
 import FormField from '@/components/app/profileForm/FormField';
 import ProfilePreview from '@/components/app/profileForm/ProfilePreview';
+import ProfileCompletion from '@/components/app/profileForm/ProfileCompletion';
 import FileUploadInput from '@/components/app/common/FileUploadInput';
 import SkillsSelector from '@/components/app/profileForm/SkillsSelector';
 import NavigationButtons from '@/components/app/profileForm/NavigationButton';
@@ -340,6 +341,56 @@ export default function StudentProfileForm() {
     }
   };
 
+  const getProfileCompletionFields = () => {
+    return [
+      {
+        name: "Nom et prénom",
+        completed: !!(formValues.firstName && formValues.lastName),
+        required: true
+      },
+      {
+        name: "Photo de profil",
+        completed: !!photoUrl,
+        required: false
+      },
+      {
+        name: "Statut",
+        completed: !!formValues.status,
+        required: true
+      },
+      {
+        name: "École",
+        completed: !!formValues.school,
+        required: true
+      },
+      {
+        name: "Rythme d'alternance",
+        completed: !!formValues.alternanceRhythm,
+        required: formValues.status === 'Alternant'
+      },
+      {
+        name: "Description",
+        completed: !!(formValues.description && formValues.description.length >= 100),
+        required: false
+      },
+      {
+        name: "Compétences",
+        completed: !!(formValues.skills && formValues.skills.length >= 3),
+        required: true
+      },
+      {
+        name: "CV",
+        completed: !!uploadedCv,
+        required: false
+      },
+      {
+        name: "Disponibilité",
+        completed: !!formValues.availability,
+        required: false
+      }
+    ];
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 max-w-4xl flex justify-center items-center min-h-[400px]">
@@ -355,6 +406,8 @@ export default function StudentProfileForm() {
         Ces informations seront visibles par les entreprises et vous permettront de recevoir des
         offres correspondant à votre profil.
       </p>
+
+      <ProfileCompletion fields={getProfileCompletionFields()} />
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
