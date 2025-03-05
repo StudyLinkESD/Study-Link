@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                String              @id @default(cuid())
+  email             String              @unique
+  firstname         String
+  lastname          String
+  profilePicture    UploadFile?         @relation(fields: [profilePictureId], references: [uuid])
+  profilePictureId  String?
+  emailVerified     DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+  student           Student?
+  schoolOwner       SchoolOwner?
+  companyOwner      CompanyOwner?
+  admin             Admin?
+  verificationToken VerificationToken[]
+}
+
+model Student {
+  id                      String           @id @default(cuid())
+  user                    User             @relation(fields: [userId], references: [id])
+  userId                  String           @unique
+  school                  School           @relation(fields: [schoolId], references: [id])
+  schoolId                String
+  primaryRecommendation   Recommendation?  @relation("PrimaryRecommendation", fields: [primaryRecommendationId], references: [id])
+  primaryRecommendationId String?          @unique
+  status                  String
+  skills                  String
+  apprenticeshipRythm     String?
+  description             String
+  curriculumVitae         UploadFile?      @relation(fields: [curriculumVitaeId], references: [uuid])
+  curriculumVitaeId       String?
+  previousCompanies       String
+  availability            Boolean
+  jobRequests             JobRequest[]
+  recommendations         Recommendation[] @relation("StudentRecommendations")
+}
+
+model CompanyOwner {
+  id        String  @id @default(cuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @unique
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+}
+
+model Recommendation {
+  id                String   @id @default(cuid())
+  student           Student  @relation("StudentRecommendations", fields: [studentId], references: [id])
+  studentId         String
+  primaryForStudent Student? @relation("PrimaryRecommendation")
+  company           Company  @relation(fields: [companyId], references: [id])
+  companyId         String
+  recommendation    String
+}
+
+model Company {
+  id        String      @id @default(cuid())
+  name      String
+  logo      UploadFile? @relation(fields: [logoId], references: [uuid])
+  logoId    String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
+
+  companyOwners   CompanyOwner[]
+  jobs            Job[]
+  recommendations Recommendation[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  user       User     @relation(fields: [identifier], references: [email])
+
+  @@id([identifier, token])
+}
+
+model UploadFile {
+  uuid    String @id
+  fileUrl String
+
+  userProfiles User[]
+  studentCVs   Student[]
+  companyLogos Company[]
+  schoolLogos  School[]
+  jobImages    Job[]
+}
+
+model SchoolOwner {
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String @unique
+  school   School @relation(fields: [schoolId], references: [id])
+  schoolId String
+}
+
+model School {
+  id        String                 @id @default(cuid())
+  domain    AuthorizedSchoolDomain @relation(fields: [domainId], references: [id])
+  domainId  String
+  name      String
+  logo      UploadFile?            @relation(fields: [logoId], references: [uuid])
+  logoId    String?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  deletedAt DateTime?
+
+  students     Student[]
+  schoolOwners SchoolOwner[]
+}
+
+model Admin {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+}
+
+model AuthorizedSchoolDomain {
+  id     String @id @default(cuid())
+  domain String
+
+  schools School[]
+}
+
+model Job {
+  id              String      @id @default(cuid())
+  company         Company     @relation(fields: [companyId], references: [id])
+  companyId       String
+  name            String
+  featuredImage   UploadFile? @relation(fields: [featuredImageId], references: [uuid])
+  featuredImageId String?
+  description     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  jobRequests JobRequest[]
+}
+
+model JobRequest {
+  id        String    @id @default(cuid())
+  student   Student   @relation(fields: [studentId], references: [id])
+  studentId String
+  job       Job       @relation(fields: [jobId], references: [id])
+  jobId     String
+  status    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
