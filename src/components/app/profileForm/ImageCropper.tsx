@@ -37,7 +37,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   const updatePreviews = () => {
     if (editorRef.current) {
       const canvas = editorRef.current.getImageScaledToCanvas();
-      const fullSizeUrl = canvas.toDataURL('image/jpeg', 0.95);
       
       // Créer différentes tailles de prévisualisation
       const sizes = {
@@ -128,7 +127,12 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
               size === 'md' && 'w-16 h-16',
               size === 'lg' && 'w-24 h-24'
             )}>
-              <img src={url} alt={`Aperçu ${size}`} className="w-full h-full object-cover" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={url} 
+                alt={`Aperçu ${size}`} 
+                className="w-full h-full object-cover"
+              />
             </Avatar>
           </div>
         ))}
