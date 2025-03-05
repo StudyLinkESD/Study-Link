@@ -1,56 +1,41 @@
-// StatusBadge.tsx
-// À placer dans @/components/app/common/StatusBadge.tsx
+import React from 'react';
+import { Badge, badgeVariants } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { VariantProps } from 'class-variance-authority';
 
-import { FC } from 'react';
-import { Badge } from '@/components/ui/badge';
+// Créer un type pour les props du Badge basé sur les variantes disponibles
+type BadgeProps = React.ComponentProps<'span'> &
+  VariantProps<typeof badgeVariants> & { asChild?: boolean };
 
-type StatusBadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
-
-type StatusBadgeProps = {
+interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
   status: string;
-  variant?: StatusBadgeVariant;
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success';
   className?: string;
-};
+}
 
-/**
- * Composant pour afficher un badge de statut avec des variantes différentes selon le contenu
- */
-const StatusBadge: FC<StatusBadgeProps> = ({ status, variant: forcedVariant, className = '' }) => {
-  // Détermine automatiquement la variante du badge en fonction du statut
-  // si aucune variante n'est explicitement fournie
-  let variant: StatusBadgeVariant = forcedVariant || 'default';
-
-  if (!forcedVariant) {
-    switch (status) {
-      case 'Alternant':
-        variant = 'default';
-        break;
-      case 'Stagiaire':
-        variant = 'secondary';
-        break;
-      case 'En attente':
-        variant = 'outline';
-        break;
-      case 'Accepté':
-        variant = 'default';
-        break;
-      case 'Refusé':
-        variant = 'destructive';
-        break;
-      case 'Terminé':
-        variant = 'secondary';
-        break;
-      // Pour les badges de compétences, on utilise outline par défaut
-      default:
-        variant = 'outline';
-    }
-  }
+export default function StatusBadge({
+  status,
+  variant = 'default',
+  className,
+  ...props
+}: StatusBadgeProps) {
+  // Définition des variantes personnalisées
+  const variantClasses = {
+    default: '',
+    success:
+      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100/80 dark:hover:bg-green-900/80',
+    destructive: '',
+    secondary: '',
+    outline: '',
+  };
 
   return (
-    <Badge variant={variant} className={className}>
+    <Badge
+      variant={variant === 'success' ? 'secondary' : variant} // Fallback to standard variants
+      className={cn(variant === 'success' ? variantClasses.success : '', className)}
+      {...props}
+    >
       {status}
     </Badge>
   );
-};
-
-export default StatusBadge;
+}
