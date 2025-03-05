@@ -22,34 +22,38 @@ export default function SignupEmail({ url, firstname = 'étudiant' }: EmailTempl
   return (
     <Html>
       <Head />
-      <Preview>Bienvenue sur StudyLink - Votre lien de connexion</Preview>
+      <Preview>Votre lien de connexion StudyLink</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Section style={logo}>
-            <Heading style={{ ...heading, textAlign: 'center' }}>StudyLink</Heading>
+          <Section style={logoSection}>
+            <Heading style={logoText}>StudyLink</Heading>
           </Section>
-          <Section style={section}>
-            <Heading style={heading}>Bonjour {firstname} 👋</Heading>
-            <Text style={text}>
-              Merci de rejoindre StudyLink ! Pour finaliser votre connexion, cliquez sur le bouton
-              ci-dessous.
+
+          <Section style={contentSection}>
+            <Heading style={greeting}>Bonjour {firstname} 👋</Heading>
+            <Text style={paragraph}>
+              Cliquez sur le bouton ci-dessous pour vous connecter à StudyLink. Ce lien est valable
+              pendant 24 heures.
             </Text>
+
             <Button style={button} href={url}>
-              Se connecter à StudyLink
+              Se connecter
             </Button>
-            <Text style={text}>
-              Si le bouton ne fonctionne pas, vous pouvez aussi copier et coller ce lien dans votre
-              navigateur :
+
+            <Text style={smallText}>
+              Si le bouton ne fonctionne pas, vous pouvez copier et coller ce lien :
             </Text>
             <Text style={link}>
               <Link href={url} style={link}>
                 {url}
               </Link>
             </Text>
+
             <Hr style={hr} />
+
             <Text style={footer}>
-              Ce lien expirera dans 24 heures. Si vous n'avez pas demandé cette connexion, vous
-              pouvez ignorer cet email.
+              Si vous n&apos;avez pas demandé cette connexion, vous pouvez ignorer cet email en
+              toute sécurité.
             </Text>
           </Section>
         </Container>
@@ -59,70 +63,86 @@ export default function SignupEmail({ url, firstname = 'étudiant' }: EmailTempl
 }
 
 const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  backgroundColor: '#f5f5f5',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
 };
 
 const container = {
-  backgroundColor: '#ffffff',
-  margin: '0 auto',
+  margin: '40px auto',
   padding: '20px 0 48px',
-  marginBottom: '64px',
-  borderRadius: '8px',
-  maxWidth: '600px',
+  maxWidth: '560px',
+  backgroundColor: '#ffffff',
+  borderRadius: '12px',
+  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
 };
 
-const logo = {
-  margin: '0 auto',
+const logoSection = {
+  padding: '0 48px',
+  marginBottom: '40px',
 };
 
-const section = {
+const logoText = {
+  fontSize: '32px',
+  fontWeight: '700',
+  color: '#000000',
+  textAlign: 'center' as const,
+  margin: '0',
+};
+
+const contentSection = {
   padding: '0 48px',
 };
 
-const heading = {
+const greeting = {
   fontSize: '24px',
-  letterSpacing: '-0.5px',
   lineHeight: '1.3',
-  fontWeight: '400',
-  color: '#484848',
-  padding: '17px 0 0',
+  fontWeight: '700',
+  color: '#1a1a1a',
+  margin: '0 0 20px',
 };
 
-const text = {
-  margin: '0 0 16px',
+const paragraph = {
   fontSize: '16px',
   lineHeight: '24px',
-  color: '#484848',
+  color: '#4b5563',
+  margin: '0 0 24px',
 };
 
 const button = {
   backgroundColor: '#000000',
   borderRadius: '6px',
-  color: '#fff',
+  color: '#ffffff',
   fontSize: '16px',
+  fontWeight: '500',
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'block',
-  width: '100%',
-  marginBottom: '20px',
   padding: '12px 20px',
+  marginBottom: '32px',
+  border: 'none',
+  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+};
+
+const smallText = {
+  fontSize: '14px',
+  color: '#6b7280',
+  margin: '0 0 8px',
 };
 
 const link = {
-  color: '#2754C5',
+  color: '#2563eb',
   fontSize: '14px',
-  textDecoration: 'underline',
+  textDecoration: 'none',
 };
 
 const hr = {
-  borderColor: '#e6ebf1',
-  margin: '20px 0',
+  borderColor: '#e5e7eb',
+  margin: '32px 0',
 };
 
 const footer = {
-  color: '#8898aa',
   fontSize: '12px',
   lineHeight: '16px',
+  color: '#6b7280',
+  margin: '0',
 };

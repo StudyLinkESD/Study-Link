@@ -37,7 +37,7 @@ function Pagination({
     // Calcul pour afficher les boutons de page autour de la page courante
     const halfMax = Math.floor(maxPageButtons / 2);
     let start = Math.max(currentPage - halfMax, 1);
-    let end = Math.min(start + maxPageButtons - 1, totalPages);
+    const end = Math.min(start + maxPageButtons - 1, totalPages);
 
     if (end - start + 1 < maxPageButtons) {
       start = Math.max(end - maxPageButtons + 1, 1);

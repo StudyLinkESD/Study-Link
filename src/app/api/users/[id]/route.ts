@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<UserResponseDTO | { error: string }>> {
   try {
-    const userCheck = await checkUserExists(params.id);
+    const id = (await params).id;
+    const userCheck = await checkUserExists(id);
 
     if (!userCheck.exists) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
@@ -20,11 +21,25 @@ export async function GET(
       return NextResponse.json({ error: 'Cet utilisateur a été supprimé' }, { status: 410 });
     }
 
-    return NextResponse.json(userCheck.user);
+    if (!userCheck.user) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
+
+    const userResponse: UserResponseDTO = {
+      id: userCheck.user.id,
+      email: userCheck.user.email,
+      firstname: userCheck.user.firstname,
+      lastname: userCheck.user.lastname,
+      profilePictureId: userCheck.user.profilePictureId,
+      createdAt: userCheck.user.createdAt,
+      updatedAt: userCheck.user.updatedAt,
+    };
+
+    return NextResponse.json(userResponse);
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération de l\'utilisateur' },
+      { error: "Erreur lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
@@ -32,10 +47,11 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<UserResponseDTO | { error: string }>> {
   try {
-    const userCheck = await checkUserExists(params.id);
+    const id = (await params).id;
+    const userCheck = await checkUserExists(id);
 
     if (!userCheck.exists) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
@@ -57,7 +73,7 @@ export async function PUT(
       );
     }
 
-    const validationResult = await validateUserData(body, true, params.id);
+    const validationResult = await validateUserData(body, true, id);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
@@ -68,9 +84,9 @@ export async function PUT(
       );
     }
 
-    const user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: {
-        id: params.id,
+        id: id,
         deletedAt: null,
       },
       data: {
@@ -79,11 +95,21 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(user, { status: 200 });
+    const userResponse: UserResponseDTO = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstname: updatedUser.firstname,
+      lastname: updatedUser.lastname,
+      profilePictureId: updatedUser.profilePictureId,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+    };
+
+    return NextResponse.json(userResponse, { status: 200 });
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'utilisateur' },
+      { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { status: 500 },
     );
   }
@@ -91,33 +117,85 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
-    const userCheck = await checkUserExists(params.id);
+    const id = (await params).id;
 
-    if (!userCheck.exists) {
-      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
-    }
-
-    if (userCheck.isDeleted) {
-      return NextResponse.json({ error: 'Cet utilisateur est déjà supprimé' }, { status: 410 });
-    }
-
-    await prisma.user.update({
-      where: {
-        id: params.id,
-      },
-      data: {
-        deletedAt: new Date(),
+    const existingUser = await prisma.user.findUnique({
+      where: { id: id },
+      include: {
+        student: true,
+        schoolOwner: true,
+        companyOwner: true,
+        admin: true,
       },
     });
 
-    return NextResponse.json({ message: 'Utilisateur supprimé avec succès' });
+    if (!existingUser) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
+
+    // Transaction is used to cascade values
+    // Used here to delete all information related to the user
+    // If one transaction fail, other tx are not executed and a rollback is executed
+    await prisma.$transaction(async (tx) => {
+      if (existingUser.student) {
+        await tx.recommendation.deleteMany({
+          where: {
+            OR: [
+              { studentId: existingUser.student.id },
+              { primaryForStudent: { id: existingUser.student.id } },
+            ],
+          },
+        });
+
+        await tx.jobRequest.deleteMany({
+          where: { studentId: existingUser.student.id },
+        });
+
+        await tx.student.delete({
+          where: { id: existingUser.student.id },
+        });
+      }
+
+      if (existingUser.schoolOwner) {
+        await tx.schoolOwner.delete({
+          where: { id: existingUser.schoolOwner.id },
+        });
+      }
+
+      if (existingUser.companyOwner) {
+        await tx.companyOwner.delete({
+          where: { id: existingUser.companyOwner.id },
+        });
+      }
+
+      if (existingUser.admin) {
+        await tx.admin.delete({
+          where: { id: existingUser.admin.id },
+        });
+      }
+
+      await tx.verificationToken.deleteMany({
+        where: { identifier: existingUser.email },
+      });
+
+      await tx.user.update({
+        where: { id: id },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+    });
+
+    return NextResponse.json({
+      message: 'Compte utilisateur et toutes les données associées supprimés avec succès',
+    });
   } catch (error) {
-    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    console.error('Erreur lors de la suppression du compte utilisateur:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression de l\'utilisateur' },
+      { error: 'Erreur lors de la suppression du compte utilisateur' },
       { status: 500 },
     );
   }
