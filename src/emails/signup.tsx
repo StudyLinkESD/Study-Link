@@ -52,8 +52,8 @@ export default function SignupEmail({ url, firstname = 'étudiant' }: EmailTempl
             <Hr style={hr} />
 
             <Text style={footer}>
-              Si vous n'avez pas demandé cette connexion, vous pouvez ignorer cet email en toute
-              sécurité.
+              Si vous n&apos;avez pas demandé cette connexion, vous pouvez ignorer cet email en
+              toute sécurité.
             </Text>
           </Section>
         </Container>

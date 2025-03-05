@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const { email } = await req.json();
 
     if (!email) {
-      return Response.json({ error: 'L\'email est requis' }, { status: 400 });
+      return Response.json({ error: "L'email est requis" }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({
@@ -15,6 +15,6 @@ export async function POST(req: NextRequest) {
 
     return Response.json({ exists: !!user });
   } catch (error) {
-    return Response.json({ error: 'Une erreur est survenue' }, { status: 500 });
+    return Response.json({ error: 'Une erreur est survenue' + error }, { status: 500 });
   }
 }

@@ -14,7 +14,7 @@ export default function HomePage() {
       toast.success('Connexion réussie !');
       setIsLoggedIn(true);
     }
-  }, [status]);
+  }, [status, isLoggedIn]);
 
   if (status === 'loading') {
     return <div>Chargement...</div>;

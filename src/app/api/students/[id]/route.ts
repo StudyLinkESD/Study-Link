@@ -66,7 +66,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Étudiant non trouvé' }, { status: 404 });
     }
 
-    const validationResult = await validateStudentData(body, true, id);
+    const validationResult = await validateStudentData(body, true);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
