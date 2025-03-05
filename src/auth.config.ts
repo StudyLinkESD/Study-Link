@@ -1,4 +1,3 @@
-// src/auth.config.ts
 import { NextAuthConfig } from 'next-auth';
 import Resend from 'next-auth/providers/resend';
 import Google from 'next-auth/providers/google';
@@ -66,39 +65,4 @@ export default {
       },
     }),
   ],
-  callbacks: {
-    async signIn({ account, profile }) {
-      if (account?.provider === 'google' && profile?.email) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: profile.email },
-        });
-
-        if (!existingUser && profile.name) {
-          const nameParts = profile.name.split(' ');
-          const firstname = nameParts[0] || '';
-          const lastname = nameParts.slice(1).join(' ') || '';
-
-          try {
-            await prisma.user.create({
-              data: {
-                email: profile.email,
-                firstname,
-                lastname,
-                profilePictureId: profile.image ? undefined : null,
-              },
-            });
-          } catch (error) {
-            console.error("Erreur lors de la création de l'utilisateur:", error);
-            return false;
-          }
-        }
-      }
-      return true;
-    },
-  },
-  pages: {
-    signIn: '/login',
-    verifyRequest: '/verify-request',
-    error: '/auth/error',
-  },
 } satisfies NextAuthConfig;
