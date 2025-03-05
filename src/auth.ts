@@ -36,7 +36,23 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       session.user.id = token.id as string;
       return session;
     },
-    async redirect({ baseUrl }) {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('http')) return url;
+
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      
+      const userId = url.split('user=')[1]?.split('&')[0];
+      if (userId) {
+        const student = await prisma.student.findUnique({
+          where: { userId },
+          select: { status: true }
+        });
+        
+        if (student && student.status === 'PENDING') {
+          return `${baseUrl}/students/profile-info`;
+        }
+      }
+      
       return baseUrl;
     },
     async signIn({ account, profile }) {
