@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 import BackButton from '@/components/app/common/BackButton';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
@@ -22,72 +21,45 @@ import SectionCard from '@/components/app/common/SectionCard';
 import SkillsList from '@/components/app/common/SkillsList';
 import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
 import RecommendationsList from '@/components/app/common/RecommendationsList';
-
-const getStudentById = async (id: string) => {
-  const students = [
-    {
-      id: '1',
-      firstName: 'Thomas',
-      lastName: 'Dubois',
-      photoUrl: '',
-      email: 'thomas.dubois@ecole-dev.fr',
-      status: 'Alternant' as const,
-      school: 'École Supérieure de Développement Web',
-      skills: [
-        { id: 'react', name: 'React' },
-        { id: 'javascript', name: 'JavaScript' },
-        { id: 'typescript', name: 'TypeScript' },
-        { id: 'nodejs', name: 'Node.js' },
-        { id: 'nextjs', name: 'Next.js' },
-        { id: 'tailwind', name: 'TailwindCSS' },
-      ],
-      alternanceRhythm: '3 semaines entreprise / 1 semaine école',
-      description:
-        "Passionné de développement web, je suis particulièrement intéressé par les technologies JavaScript modernes. J'ai réalisé plusieurs projets personnels et cherche une alternance pour approfondir mes connaissances.",
-      cvUrl: '/cv/thomas-dubois-cv.pdf',
-      availability: 'Septembre 2025',
-      recommendations: [
-        {
-          id: 'rec1',
-          authorName: 'Marie Lefevre',
-          authorTitle: 'Responsable RH chez WebAgency',
-          content:
-            "Thomas a réalisé un stage de 2 mois dans notre entreprise. Très motivé et compétent, il s'est parfaitement intégré à l'équipe.",
-        },
-      ],
-      experiences: [
-        {
-          id: 'exp1',
-          company: 'WebAgency',
-          position: 'Développeur Front-end (Stage)',
-          startDate: 'Mai 2024',
-          endDate: 'Juillet 2024',
-          description:
-            "Développement d'interfaces utilisateur avec React et mise en place d'une application d'administration.",
-        },
-      ],
-    },
-  ];
-
-  return students.find((student) => student.id === id);
-};
+import { getStudentById } from '@/services/student.service';
 
 interface PageProps {
-  params: Promise<{ id: string }>;
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export async function generateStaticParams() {
-  return [{ id: '1' }];
+  params: { id: string };
 }
 
 export default async function Page({ params }: PageProps) {
-  const resolvedParams = await params;
-  const student = await getStudentById(resolvedParams.id);
+  const id = params.id;
+  const studentData = await getStudentById(id);
 
-  if (!student) {
+  if (!studentData) {
     notFound();
   }
+
+  // Formatter les données pour correspondre à ce qu'attend la page
+  const student = {
+    id: studentData.id,
+    firstName: studentData.user.firstname,
+    lastName: studentData.user.lastname,
+    photoUrl: studentData.user.profilePictureId
+      ? `/api/files/${studentData.user.profilePictureId}`
+      : '',
+    email: studentData.user.email,
+    status: studentData.status,
+    school: studentData.school.name,
+    skills: studentData.skills.split(',').map((skill) => ({
+      id: skill.trim(),
+      name: skill.trim(),
+    })),
+    alternanceRhythm: studentData.apprenticeshipRythm,
+    description: studentData.description,
+    cvUrl: studentData.curriculumVitaeId
+      ? `/api/files/${studentData.curriculumVitaeId}`
+      : undefined,
+    availability: studentData.availability ? 'Disponible' : 'Non disponible',
+    // Ajouter les recommandations et expériences si disponibles
+    recommendations: [],
+    experiences: [],
+  };
 
   return (
     <main className="container mx-auto py-4 px-4 max-w-4xl">

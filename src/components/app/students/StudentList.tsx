@@ -264,6 +264,7 @@ export default function StudentList({
                   title: 'Aucun étudiant trouvé',
                   description: 'Aucun étudiant ne correspond à vos critères de recherche.',
                 }}
+                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               />
             </TabsContent>
             <TabsContent value={STATUS_OPTIONS.ALTERNANT} className="mt-0">
@@ -275,6 +276,7 @@ export default function StudentList({
                   title: 'Aucun étudiant trouvé',
                   description: 'Aucun étudiant ne correspond à vos critères de recherche.',
                 }}
+                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               />
             </TabsContent>
             <TabsContent value={STATUS_OPTIONS.STAGIAIRE} className="mt-0">
@@ -286,6 +288,7 @@ export default function StudentList({
                   title: 'Aucun étudiant trouvé',
                   description: 'Aucun étudiant ne correspond à vos critères de recherche.',
                 }}
+                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               />
             </TabsContent>
           </Tabs>

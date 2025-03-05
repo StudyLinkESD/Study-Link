@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { User, School, Briefcase, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -48,11 +50,32 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+interface School {
+  id: string;
+  name: string;
+}
+
+interface CreateStudentData {
+  userId: string;
+  schoolId: string;
+  status: 'Alternant' | 'Stagiaire';
+  skills: string;
+  apprenticeshipRythm: string | null;
+  description: string;
+  curriculumVitaeId: string | null;
+  previousCompanies: string;
+  availability: boolean;
+}
+
 export default function StudentProfileForm() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [photoUrl, setPhotoUrl] = useState('');
   const [uploadedCv, setUploadedCv] = useState<File | null>(null);
   const [selectedTab, setSelectedTab] = useState('personal');
+  const [isLoading, setIsLoading] = useState(true);
+  const [studentId, setStudentId] = useState<string | null>(null);
+
   const availableSkills = [
     { id: 'react', name: 'React' },
     { id: 'nextjs', name: 'Next.js' },
@@ -65,19 +88,21 @@ export default function StudentProfileForm() {
     { id: 'php', name: 'PHP' },
     { id: 'csharp', name: 'C#' },
   ];
-  const schools = [
+
+  const [schools, setSchools] = useState([
     { id: 'esgi', name: 'ESGI' },
     { id: 'epita', name: 'EPITA' },
     { id: 'epitech', name: 'Epitech' },
     { id: 'hetic', name: 'HETIC' },
     { id: 'supinfo', name: 'Supinfo' },
-  ];
+  ]);
 
   const {
     control,
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -93,7 +118,151 @@ export default function StudentProfileForm() {
     },
   });
 
+  const getStudentByUserId = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/students/students/${userId}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'étudiant:", error);
+      return null;
+    }
+  };
+
+  const createStudent = async (data: CreateStudentData) => {
+    const response = await fetch(`/api/students`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Erreur lors de la création du profil étudiant');
+    }
+
+    return response.json();
+  };
+
+  const updateStudent = async (id: string, data: CreateStudentData) => {
+    const response = await fetch(`/api/students/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Erreur lors de la mise à jour du profil étudiant');
+    }
+
+    return response.json();
+  };
+
+  useEffect(() => {
+    // Rediriger si non connecté
+    if (status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    }
+
+    // Charger les écoles depuis l'API
+    const fetchSchools = async () => {
+      try {
+        const response = await fetch('/api/schools');
+        if (response.ok) {
+          const schoolsData = await response.json();
+          setSchools(
+            schoolsData.map((school: School) => ({
+              id: school.id,
+              name: school.name,
+            })),
+          );
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des écoles:', error);
+      }
+    };
+
+    fetchSchools();
+
+    // Charger les données du profil si l'utilisateur est connecté
+    if (status === 'authenticated' && session?.user?.id) {
+      const loadStudentProfile = async () => {
+        try {
+          const studentData = await getStudentByUserId(session.user.id);
+
+          if (studentData) {
+            setStudentId(studentData.id);
+
+            // Précharger les valeurs du formulaire avec les données de l'utilisateur et de l'étudiant
+            reset({
+              firstName: session.user.name?.split(' ')[0] || '',
+              lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
+              status: studentData.status as 'Alternant' | 'Stagiaire',
+              school: studentData.schoolId,
+              availability: studentData.availability ? 'Disponible' : '',
+              alternanceRhythm: studentData.apprenticeshipRythm || '',
+              description: studentData.description,
+              skills: studentData.skills.split(',').map((s: string) => s.trim()),
+            });
+
+            // Charger la photo de profil si disponible
+            if (session.user.image) {
+              setPhotoUrl(session.user.image);
+            } else if (studentData.user?.profilePictureId) {
+              setPhotoUrl(`/api/files/${studentData.user.profilePictureId}`);
+            }
+
+            // Charger le CV si disponible
+            if (studentData.curriculumVitaeId) {
+              // Nous ne chargeons pas vraiment le fichier ici, juste l'URL
+              console.log('CV déjà chargé:', studentData.curriculumVitaeId);
+            }
+          } else {
+            // Si l'étudiant n'existe pas encore, on initialise avec les infos de la session
+            if (session.user.name) {
+              const names = session.user.name.split(' ');
+              reset({
+                firstName: names[0] || '',
+                lastName: names.slice(1).join(' ') || '',
+                status: 'Alternant',
+                school: '',
+                skills: [],
+              });
+            }
+
+            if (session.user.image) {
+              setPhotoUrl(session.user.image);
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement du profil:', error);
+          toast.error('Impossible de charger votre profil');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadStudentProfile();
+    } else {
+      setIsLoading(false);
+    }
+  }, [status, session, router, reset]);
+
   const formValues = watch();
+
   const handlePhotoUpload = (file: File | null, url?: string) => {
     if (file) {
       const imageUrl = url || URL.createObjectURL(file);
@@ -107,26 +276,77 @@ export default function StudentProfileForm() {
       // Vous pourriez également stocker l'URL du CV si nécessaire
       if (url) {
         // Stocker l'URL du CV dans votre état de formulaire si besoin
-        // Par exemple pour l'inclure dans les données soumises
       }
     }
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    if (!session?.user?.id) {
+      toast.error('Vous devez être connecté pour enregistrer votre profil');
+      return;
+    }
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const completeData = {
-        ...data,
-        photoUrl,
-        cvUrl: uploadedCv ? uploadedCv.name : null,
+      // Mise à jour des informations utilisateur si nécessaire
+      if (data.firstName || data.lastName) {
+        try {
+          await fetch(`/api/users/${session.user.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              firstname: data.firstName,
+              lastname: data.lastName,
+              // Si vous avez uploadé une photo de profil, vous devriez envoyer son ID ici
+            }),
+          });
+        } catch (error) {
+          console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+          // Continuer malgré l'erreur
+        }
+      }
+
+      const studentData = {
+        userId: session.user.id,
+        schoolId: data.school,
+        status: data.status,
+        skills: data.skills.join(', '),
+        apprenticeshipRythm: data.alternanceRhythm || null,
+        description: data.description || '',
+        curriculumVitaeId: uploadedCv ? uploadedCv.name : null, // Idéalement, l'ID du fichier après upload
+        previousCompanies: '', // Vous pourriez ajouter ce champ au formulaire
+        availability: !!data.availability,
       };
 
-      console.log('Données du profil soumises:', completeData);
-      router.push('/students/profile');
+      if (studentId) {
+        // Mise à jour d'un profil existant
+        await updateStudent(studentId, studentData);
+        toast.success('Profil mis à jour avec succès');
+      } else {
+        // Création d'un nouveau profil
+        const newStudent = await createStudent(studentData);
+        setStudentId(newStudent.id);
+        toast.success('Profil créé avec succès');
+      }
+
+      // Rediriger vers la page du profil étudiant
+      router.push(`/students/${studentId || 'profile'}`);
     } catch (error) {
       console.error('Erreur lors de la soumission du profil:', error);
+      toast.error(
+        error instanceof Error ? error.message : "Erreur lors de l'enregistrement du profil",
+      );
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-4xl flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -276,7 +496,7 @@ export default function StudentProfileForm() {
                             </SelectTrigger>
                             <SelectContent>
                               {schools.map((school) => (
-                                <SelectItem key={school.id} value={school.name}>
+                                <SelectItem key={school.id} value={school.id}>
                                   {school.name}
                                 </SelectItem>
                               ))}
