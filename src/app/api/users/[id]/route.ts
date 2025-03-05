@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
-import { validateUserData, checkUserExists } from '@/utils/validation/user.validation';
+import { checkUserExists, validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -48,32 +48,12 @@ export async function GET(
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<UserResponseDTO | { error: string }>> {
+): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {
   try {
-    const id = (await params).id;
-    const userCheck = await checkUserExists(id);
-
-    if (!userCheck.exists) {
-      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
-    }
-
-    if (userCheck.isDeleted) {
-      return NextResponse.json(
-        { error: 'Impossible de modifier un utilisateur supprimé' },
-        { status: 410 },
-      );
-    }
-
+    const userId = (await params).id;
     const body = (await request.json()) as UpdateUserDTO;
 
-    if (Object.keys(body).length === 0) {
-      return NextResponse.json(
-        { error: 'Aucune donnée fournie pour la mise à jour' },
-        { status: 400 },
-      );
-    }
-
-    const validationResult = await validateUserData(body, true, id);
+    const validationResult = await validateUserUpdate(body, userId);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
@@ -85,27 +65,16 @@ export async function PUT(
     }
 
     const updatedUser = await prisma.user.update({
-      where: {
-        id: id,
-        deletedAt: null,
-      },
+      where: { id: userId },
       data: {
-        ...body,
-        email: body.email?.toLowerCase(),
+        ...(body.email && { email: body.email.toLowerCase() }),
+        ...(body.firstname && { firstname: body.firstname }),
+        ...(body.lastname && { lastname: body.lastname }),
+        ...(body.profilePictureId !== undefined && { profilePictureId: body.profilePictureId }),
       },
     });
 
-    const userResponse: UserResponseDTO = {
-      id: updatedUser.id,
-      email: updatedUser.email,
-      firstname: updatedUser.firstname,
-      lastname: updatedUser.lastname,
-      profilePictureId: updatedUser.profilePictureId,
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt,
-    };
-
-    return NextResponse.json(userResponse, { status: 200 });
+    return NextResponse.json(updatedUser);
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
