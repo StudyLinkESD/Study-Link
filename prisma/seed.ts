@@ -97,12 +97,21 @@ async function main() {
 
   const student = await prisma.student.create({
     data: {
-      user: {
+      email: 'student@test.com',
+      firstname: 'Étudiant',
+      lastname: 'Test',
+      emailVerified: new Date(),
+      student: {
         create: {
-          email: 'student@ecole-test.fr',
-          firstname: 'Étudiant',
-          lastname: 'Test',
-          emailVerified: new Date(),
+          schoolId: school.id,
+          studentEmail: 'student@ecole-test.fr',
+          status: 'ACTIVE',
+          skills: 'JavaScript, React, Node.js',
+          apprenticeshipRythm: '3 semaines entreprise / 1 semaine école',
+          description: 'Étudiant motivé en recherche d\'alternance',
+          previousCompanies: 'Stage chez Company X',
+          availability: true,
+          curriculumVitaeId: cvFile.uuid,
         },
       },
       school: {

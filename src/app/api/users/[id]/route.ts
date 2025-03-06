@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
-import { checkUserExists, validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
+import {
+  checkUserExists,
+  validateUserUpdate,
+  ValidationError,
+} from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -146,9 +150,11 @@ export async function DELETE(
         });
       }
 
-      await tx.verificationToken.deleteMany({
-        where: { identifier: existingUser.email },
-      });
+      if (existingUser.email) {
+        await tx.verificationToken.deleteMany({
+          where: { identifier: existingUser.email },
+        });
+      }
 
       await tx.user.update({
         where: { id: id },

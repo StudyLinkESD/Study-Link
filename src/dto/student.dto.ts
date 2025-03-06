@@ -1,6 +1,7 @@
 export interface CreateStudentDTO {
   userId: string;
   schoolId: string;
+  studentEmail: string;
   status: string;
   skills: string;
   apprenticeshipRythm?: string;
@@ -37,6 +38,8 @@ export interface StudentResponseDTO {
     email: string;
     firstname: string;
     lastname: string;
+    firstname: string | null;
+    lastname: string | null;
     profilePicture?: string | null;
   };
   school?: {
