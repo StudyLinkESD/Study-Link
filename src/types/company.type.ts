@@ -4,4 +4,14 @@ interface ICompany {
   logo: string;
 }
 
-export type { ICompany };
+interface CompanyProfileFormData {
+  name: string;
+  logo?: { uuid: string; fileUrl: string } | null;
+  description?: string;
+  website?: string;
+  industry?: string;
+  size?: string;
+  location?: string;
+}
+
+export type { ICompany, CompanyProfileFormData };

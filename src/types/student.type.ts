@@ -13,4 +13,19 @@ interface IStudent extends IUser {
   availability: string;
 }
 
-export type { IStudent };
+interface StudentProfileFormData {
+  firstName: string;
+  lastName: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  schoolId: string;
+  studentEmail: string;
+  skills: string[];
+  apprenticeshipRythm?: string | null;
+  description: string;
+  curriculumVitae?: { uuid: string; fileUrl: string } | null;
+  previousCompanies: string;
+  availability: boolean;
+  profilePicture?: { uuid: string; fileUrl: string } | null;
+}
+
+export type { IStudent, StudentProfileFormData };
