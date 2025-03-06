@@ -19,8 +19,7 @@ model User {
   email             String              @unique
   firstname         String
   lastname          String
-  profilePicture    UploadFile?         @relation(fields: [profilePictureId], references: [uuid])
-  profilePictureId  String?
+  profilePicture    String?
   emailVerified     DateTime?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
@@ -44,8 +43,7 @@ model Student {
   skills                  String
   apprenticeshipRythm     String?
   description             String
-  curriculumVitae         UploadFile?      @relation(fields: [curriculumVitaeId], references: [uuid])
-  curriculumVitaeId       String?
+  curriculumVitae         String?
   previousCompanies       String
   availability            Boolean
   jobRequests             JobRequest[]
@@ -71,12 +69,11 @@ model Recommendation {
 }
 
 model Company {
-  id        String      @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
-  logo      UploadFile? @relation(fields: [logoId], references: [uuid])
-  logoId    String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  logo      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   companyOwners   CompanyOwner[]
@@ -93,17 +90,6 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-model UploadFile {
-  uuid    String @id
-  fileUrl String
-
-  userProfiles User[]
-  studentCVs   Student[]
-  companyLogos Company[]
-  schoolLogos  School[]
-  jobImages    Job[]
-}
-
 model SchoolOwner {
   id       String @id @default(cuid())
   user     User   @relation(fields: [userId], references: [id])
@@ -117,8 +103,7 @@ model School {
   domain    AuthorizedSchoolDomain @relation(fields: [domainId], references: [id])
   domainId  String
   name      String
-  logo      UploadFile?            @relation(fields: [logoId], references: [uuid])
-  logoId    String?
+  logo      String?
   createdAt DateTime               @default(now())
   updatedAt DateTime               @updatedAt
   deletedAt DateTime?
@@ -141,17 +126,16 @@ model AuthorizedSchoolDomain {
 }
 
 model Job {
-  id              String      @id @default(cuid())
-  company         Company     @relation(fields: [companyId], references: [id])
-  companyId       String
-  name            String
-  featuredImage   UploadFile? @relation(fields: [featuredImageId], references: [uuid])
-  featuredImageId String?
-  description     String
-  skills          String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  deletedAt       DateTime?
+  id            String    @id @default(cuid())
+  company       Company   @relation(fields: [companyId], references: [id])
+  companyId     String
+  name          String
+  featuredImage String?
+  description   String
+  skills        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
   jobRequests JobRequest[]
 }
