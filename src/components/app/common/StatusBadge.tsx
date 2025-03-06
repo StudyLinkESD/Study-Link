@@ -13,22 +13,18 @@ interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
   className?: string;
 }
 
-export default function StatusBadge({
+// Définition des variantes personnalisées en dehors du composant pour éviter la recréation à chaque rendu
+const variantClasses = {
+  success:
+    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100/80 dark:hover:bg-green-900/80',
+};
+
+function StatusBadgeComponent({
   status,
   variant = 'default',
   className,
   ...props
 }: StatusBadgeProps) {
-  // Définition des variantes personnalisées
-  const variantClasses = {
-    default: '',
-    success:
-      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100/80 dark:hover:bg-green-900/80',
-    destructive: '',
-    secondary: '',
-    outline: '',
-  };
-
   return (
     <Badge
       variant={variant === 'success' ? 'secondary' : variant} // Fallback to standard variants
@@ -39,3 +35,8 @@ export default function StatusBadge({
     </Badge>
   );
 }
+
+// Mémorisation du composant pour éviter les rendus inutiles
+const StatusBadge = React.memo(StatusBadgeComponent);
+
+export default StatusBadge;

@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type ProfileAvatarProps = {
@@ -9,29 +9,29 @@ type ProfileAvatarProps = {
   className?: string;
 };
 
-const ProfileAvatar: FC<ProfileAvatarProps> = ({
+// Map des tailles déplacé en dehors du composant
+const sizeClasses = {
+  sm: 'h-10 w-10',
+  md: 'h-16 w-16',
+  lg: 'h-24 w-24',
+  xl: 'h-32 w-32',
+};
+
+// Map des tailles de texte pour le fallback déplacé en dehors du composant
+const textSizeClasses = {
+  sm: 'text-sm',
+  md: 'text-lg',
+  lg: 'text-2xl',
+  xl: 'text-3xl',
+};
+
+const ProfileAvatarComponent = ({
   photoUrl,
   firstName,
   lastName,
   size = 'md',
   className = '',
-}) => {
-  // Map des tailles
-  const sizeClasses = {
-    sm: 'h-10 w-10',
-    md: 'h-16 w-16',
-    lg: 'h-24 w-24',
-    xl: 'h-32 w-32',
-  };
-
-  // Map des tailles de texte pour le fallback
-  const textSizeClasses = {
-    sm: 'text-sm',
-    md: 'text-lg',
-    lg: 'text-2xl',
-    xl: 'text-3xl',
-  };
-
+}: ProfileAvatarProps) => {
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
       {photoUrl ? (
@@ -45,5 +45,8 @@ const ProfileAvatar: FC<ProfileAvatarProps> = ({
     </Avatar>
   );
 };
+
+// Mémorisation du composant pour éviter les rendus inutiles
+const ProfileAvatar = React.memo(ProfileAvatarComponent);
 
 export default ProfileAvatar;
