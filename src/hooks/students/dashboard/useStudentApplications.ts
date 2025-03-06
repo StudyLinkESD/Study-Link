@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Session } from 'next-auth';
 import { JobApplicationFull } from '@/types/application_status.type';
+import axios from 'axios';
 
 export function useStudentApplications(session: Session | null) {
   const [applications, setApplications] = useState<JobApplicationFull[]>([]);
@@ -16,20 +17,16 @@ export function useStudentApplications(session: Session | null) {
 
     const fetchApplications = async (userId: string) => {
       try {
-        // Updated URL to use the correct API route for the current user's job requests
-        const response = await fetch(`${apiUrl}/users/${userId}/job-requests`, {
+        // Utilisation d'Axios au lieu de fetch
+        const response = await axios.get(`${apiUrl}/users/${userId}/job-requests`, {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // Include cookies for authentication
+          withCredentials: true, // Équivalent à credentials: 'include'
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch applications');
-        }
-
-        const data = await response.json();
-        setApplications(data);
+        // Avec Axios, les données sont déjà dans response.data (pas besoin de .json())
+        setApplications(response.data);
       } catch (err) {
         setError(err as Error);
         console.error('Error fetching applications:', err);
