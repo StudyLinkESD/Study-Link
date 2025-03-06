@@ -36,8 +36,6 @@ export interface StudentResponseDTO {
   user?: {
     id: string;
     email: string;
-    firstname: string;
-    lastname: string;
     firstname: string | null;
     lastname: string | null;
     profilePicture?: string | null;

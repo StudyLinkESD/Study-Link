@@ -58,7 +58,7 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
               email: true,
               firstname: true,
               lastname: true,
-              profilePictureId: true,
+              profilePicture: true,
             },
           },
           school: {
