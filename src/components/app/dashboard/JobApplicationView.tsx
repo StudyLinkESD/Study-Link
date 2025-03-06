@@ -17,11 +17,21 @@ import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { ApplicationStatus } from '@/types/application_status.type';
+import { JobApplicationsListProps } from './JobApplicationsList';
 
-export default function JobApplicationView({ applications, setApplications }) {
+// Type pour le mapping des statuts
+type StatusMappingType = {
+  [key in ApplicationStatus]: string;
+};
+
+export default function JobApplicationView({
+  applications,
+  setApplications,
+}: JobApplicationsListProps) {
   const { selectedApplication, setSelectedApplication } = useJobApplication();
 
-  const updateApplicationStatus = async (newStatus: string) => {
+  const updateApplicationStatus = async (newStatus: ApplicationStatus) => {
     if (!selectedApplication) return;
 
     try {
@@ -51,12 +61,12 @@ export default function JobApplicationView({ applications, setApplications }) {
   };
 
   const getStatusLabel = (status: string) => {
-    const statusMapping = {
+    const statusMapping: StatusMappingType = {
       PENDING: 'En attente',
       ACCEPTED: 'Acceptée',
       REJECTED: 'Rejetée',
     };
-    return statusMapping[status] || status;
+    return statusMapping[status as ApplicationStatus] || status;
   };
 
   if (!selectedApplication) {
@@ -137,7 +147,10 @@ export default function JobApplicationView({ applications, setApplications }) {
 
           <div className="space-y-3">
             <Label htmlFor="status-select">Mettre à jour le statut</Label>
-            <Select defaultValue={status} onValueChange={(value) => updateApplicationStatus(value)}>
+            <Select
+              defaultValue={status}
+              onValueChange={(value: ApplicationStatus) => updateApplicationStatus(value)}
+            >
               <SelectTrigger id="status-select">
                 <SelectValue placeholder="Sélectionner un statut" />
               </SelectTrigger>

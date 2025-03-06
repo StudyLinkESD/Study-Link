@@ -9,34 +9,14 @@ import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import {
+  ApplicationStatus,
+  StatusMappingType,
+  JobApplicationFull,
+} from '@/types/application_status.type';
 
 type JobApplicationCardProps = {
-  application: {
-    id: string;
-    studentId: string;
-    jobId: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-    student: {
-      id: string;
-      userId: string;
-      user: {
-        firstname: string;
-        lastname: string;
-        profilePictureId: string | null;
-      };
-    };
-    job: {
-      id: string;
-      name: string;
-      companyId: string;
-      company: {
-        name: string;
-        logoId: string | null;
-      };
-    };
-  };
+  application: JobApplicationFull;
   onDeleteClick: () => void;
 };
 
@@ -56,14 +36,14 @@ export default function JobApplicationCard({
     return format(new Date(createdAt), 'dd MMMM yyyy', { locale: fr });
   }, [createdAt]);
 
-  // Map le statut API vers le statut d'affichage
-  const statusMapping = {
+  // Map API status to display status
+  const statusMapping: StatusMappingType = {
     PENDING: 'En attente',
     ACCEPTED: 'Acceptée',
     REJECTED: 'Rejetée',
   };
 
-  const displayStatus = statusMapping[status] || status;
+  const displayStatus = statusMapping[status as ApplicationStatus] || status;
 
   return (
     <Card

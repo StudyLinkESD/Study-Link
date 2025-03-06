@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { JobApplicationFull } from '@/types/application_status.type';
 
 const STATUS_OPTIONS = {
   ALL: 'all',
@@ -63,8 +64,16 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Composant pour les filtres
-function ApplicationFilters({ state, dispatch, applicationCount }) {
+// Filter component
+function ApplicationFilters({
+  state,
+  dispatch,
+  applicationCount,
+}: {
+  state: FilterState;
+  dispatch: React.Dispatch<FilterAction>;
+  applicationCount: number;
+}) {
   const resetFilters = () => {
     const currentStatus = state.statusFilter;
     dispatch({ type: 'RESET_FILTERS' });
@@ -102,7 +111,15 @@ function ApplicationFilters({ state, dispatch, applicationCount }) {
   );
 }
 
-export default function JobApplicationsList({ applications, setApplications }) {
+export interface JobApplicationsListProps {
+  applications: JobApplicationFull[];
+  setApplications: React.Dispatch<React.SetStateAction<JobApplicationFull[]>>;
+}
+
+export default function JobApplicationsList({
+  applications,
+  setApplications,
+}: JobApplicationsListProps) {
   const [state, dispatch] = useReducer(filterReducer, initialFilterState);
   const { statusFilter, searchTerm, currentPage } = state;
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -110,7 +127,7 @@ export default function JobApplicationsList({ applications, setApplications }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [applicationToDelete, setApplicationToDelete] = React.useState<string | null>(null);
 
-  // Logique de filtrage
+  // Filtering logic
   const filteredApplications = useMemo(() => {
     let result = [...applications];
 
@@ -132,7 +149,7 @@ export default function JobApplicationsList({ applications, setApplications }) {
     return result;
   }, [statusFilter, searchTerm, applications]);
 
-  // Calcul de la pagination
+  // Pagination calculation
   const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
@@ -155,10 +172,10 @@ export default function JobApplicationsList({ applications, setApplications }) {
 
       if (!response.ok) throw new Error('Failed to delete application');
 
-      // Mise à jour de l'état local
+      // Update local state
       setApplications(applications.filter((app) => app.id !== applicationToDelete));
 
-      // Si la candidature supprimée était sélectionnée, désélectionner
+      // If deleted application was selected, deselect it
       if (selectedApplication?.id === applicationToDelete) {
         setSelectedApplication(null);
       }
@@ -190,7 +207,7 @@ export default function JobApplicationsList({ applications, setApplications }) {
               applicationCount={filteredApplications.length}
             />
 
-            {/* Contenu des onglets */}
+            {/* Tab contents */}
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
               <ItemGrid
                 items={currentApplications}
@@ -262,7 +279,7 @@ export default function JobApplicationsList({ applications, setApplications }) {
         </CardContent>
       </Card>
 
-      {/* Composant de pagination */}
+      {/* Pagination component */}
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
@@ -271,7 +288,7 @@ export default function JobApplicationsList({ applications, setApplications }) {
         />
       )}
 
-      {/* Dialog de confirmation pour la suppression */}
+      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

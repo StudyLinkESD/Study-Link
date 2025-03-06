@@ -1,21 +1,21 @@
-export interface CreateUserDTO {
+export interface BaseCreateUserDTO {
   email: string;
   firstname: string;
   lastname: string;
   profilePictureId?: string | null;
 }
 
-export interface CreateStudentUserDTO extends CreateUserDTO {
+export interface CreateStudentUserDTO extends BaseCreateUserDTO {
   type: 'student';
   schoolId: string;
 }
 
-export interface CreateCompanyOwnerUserDTO extends CreateUserDTO {
+export interface CreateCompanyOwnerUserDTO extends BaseCreateUserDTO {
   type: 'company-owner';
   companyName: string;
 }
 
-// export type CreateUserDTO = CreateStudentUserDTO | CreateCompanyOwnerUserDTO;
+export type CreateUserDTO = CreateStudentUserDTO | CreateCompanyOwnerUserDTO;
 
 export interface UpdateUserDTO {
   email?: string;

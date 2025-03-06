@@ -1,74 +1,45 @@
 import { useState, useEffect } from 'react';
 import { Session } from 'next-auth';
-
-interface JobApplicationsResponse {
-  id: string;
-  studentId: string;
-  jobId: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  job: {
-    id: string;
-    name: string;
-    companyId: string;
-    company: {
-      name: string;
-      logoId: string | null;
-    };
-  };
-}
+import { JobApplicationFull } from '@/types/application_status.type';
 
 export function useStudentApplications(session: Session | null) {
-  const [applications, setApplications] = useState<JobApplicationsResponse[]>([]);
+  const [applications, setApplications] = useState<JobApplicationFull[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    const fetchApplications = async () => {
+    if (!session?.user?.email) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchApplications = async (userId: string) => {
       try {
-        if (session?.user?.id) {
-          const userResponse = await fetch(`${apiUrl}/users/${session.user.id}`);
-          if (!userResponse.ok) throw new Error('Failed to fetch user data');
+        // Updated URL to use the correct API route for the current user's job requests
+        const response = await fetch(`${apiUrl}/users/${userId}/job-requests`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Include cookies for authentication
+        });
 
-          const userData = await userResponse.json();
-
-          if (userData.student) {
-            const studentId = userData.student.id;
-
-            if (userData.student.jobRequests && userData.student.jobRequests.length > 0) {
-              setApplications(userData.student.jobRequests);
-            } else {
-              const applicationsResponse = await fetch(
-                `${apiUrl}/job-requests?studentId=${studentId}`,
-              );
-              if (!applicationsResponse.ok) throw new Error('Failed to fetch job applications');
-
-              const applicationsData = await applicationsResponse.json();
-              setApplications(applicationsData);
-            }
-          } else {
-            console.log("Cet utilisateur n'a pas de profil étudiant");
-          }
+        if (!response.ok) {
+          throw new Error('Failed to fetch applications');
         }
-      } catch (error) {
-        console.error('Error fetching student applications:', error);
-        // In case of error, keep any existing applications data
+
+        const data = await response.json();
+        setApplications(data);
+      } catch (err) {
+        setError(err as Error);
+        console.error('Error fetching applications:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (session?.user?.id) {
-      fetchApplications();
-    } else {
-      // For development, set loading state after a delay
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [session, apiUrl]);
+    fetchApplications(session.user.id);
+  }, [session?.user?.email, apiUrl, session?.user.id]);
 
-  return { applications, setApplications, isLoading };
+  return { applications, setApplications, isLoading, error };
 }
