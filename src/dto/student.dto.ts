@@ -1,6 +1,7 @@
 export interface CreateStudentDTO {
   userId: string;
   schoolId: string;
+  studentEmail: string;
   status: string;
   skills: string;
   apprenticeshipRythm?: string;

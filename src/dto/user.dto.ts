@@ -1,7 +1,8 @@
 export type UserType = 'student' | 'company-owner';
 
 export interface BaseCreateUserDTO {
-  email: string;
+  email?: string | null;
+  googleEmail?: string | null;
   firstname: string;
   lastname: string;
   type: UserType;
@@ -11,6 +12,7 @@ export interface BaseCreateUserDTO {
 export interface CreateStudentUserDTO extends BaseCreateUserDTO {
   type: 'student';
   schoolId: string;
+  studentEmail: string;
 }
 
 export interface CreateCompanyOwnerUserDTO extends BaseCreateUserDTO {
@@ -21,7 +23,8 @@ export interface CreateCompanyOwnerUserDTO extends BaseCreateUserDTO {
 export type CreateUserDTO = CreateStudentUserDTO | CreateCompanyOwnerUserDTO;
 
 export interface UpdateUserDTO {
-  email?: string;
+  email?: string | null;
+  googleEmail?: string | null;
   firstname?: string;
   lastname?: string;
   profilePictureId?: string | null;
@@ -29,7 +32,8 @@ export interface UpdateUserDTO {
 
 export interface UserResponseDTO {
   id: string;
-  email: string;
+  email?: string | null;
+  googleEmail?: string | null;
   firstname: string;
   lastname: string;
   profilePictureId?: string | null;
