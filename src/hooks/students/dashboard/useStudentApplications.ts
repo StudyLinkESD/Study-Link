@@ -17,15 +17,12 @@ export function useStudentApplications(session: Session | null) {
 
     const fetchApplications = async (userId: string) => {
       try {
-        // Utilisation d'Axios au lieu de fetch
         const response = await axios.get(`${apiUrl}/users/${userId}/job-requests`, {
           headers: {
             'Content-Type': 'application/json',
           },
-          withCredentials: true, // Équivalent à credentials: 'include'
+          withCredentials: true,
         });
-
-        // Avec Axios, les données sont déjà dans response.data (pas besoin de .json())
         setApplications(response.data);
       } catch (err) {
         setError(err as Error);
