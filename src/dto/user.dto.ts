@@ -5,7 +5,7 @@ export interface BaseCreateUserDTO {
   firstname: string;
   lastname: string;
   type: UserType;
-  profilePictureId?: string | null;
+  profilePicture?: string | null;
 }
 
 export interface CreateStudentUserDTO extends BaseCreateUserDTO {
@@ -24,7 +24,7 @@ export interface UpdateUserDTO {
   email?: string;
   firstname?: string;
   lastname?: string;
-  profilePictureId?: string | null;
+  profilePicture?: string | null;
 }
 
 export interface UserResponseDTO {
@@ -32,7 +32,7 @@ export interface UserResponseDTO {
   email: string;
   firstname: string;
   lastname: string;
-  profilePictureId?: string | null;
+  profilePicture?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

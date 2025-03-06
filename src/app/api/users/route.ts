@@ -45,7 +45,7 @@ export async function POST(
         email: body.email.toLowerCase(),
         firstname: body.firstname,
         lastname: body.lastname,
-        profilePictureId: body.profilePictureId,
+        profilePicture: body.profilePicture,
       },
     });
 
@@ -72,9 +72,9 @@ export async function POST(
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
-    console.error("Erreur lors de la création de l'utilisateur:", error);
+    console.error('Erreur lors de la création de l\'utilisateur:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la création de l'utilisateur" },
+      { error: 'Erreur lors de la création de l\'utilisateur' },
       { status: 500 },
     );
   }
