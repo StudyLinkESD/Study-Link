@@ -25,7 +25,6 @@ export async function GET(
       where: { id },
       include: {
         company: true,
-        featuredImage: true,
       },
     });
 
@@ -37,7 +36,7 @@ export async function GET(
       id: job.id,
       companyId: job.companyId,
       name: job.name,
-      featuredImageId: job.featuredImageId || undefined,
+      featuredImage: job.featuredImage || undefined,
       description: job.description,
       skills: job.skills || undefined,
       createdAt: job.createdAt,
@@ -85,7 +84,6 @@ export async function PUT(
       data: body,
       include: {
         company: true,
-        featuredImage: true,
       },
     });
 
@@ -93,7 +91,7 @@ export async function PUT(
       id: updatedJob.id,
       companyId: updatedJob.companyId,
       name: updatedJob.name,
-      featuredImageId: updatedJob.featuredImageId || undefined,
+      featuredImage: updatedJob.featuredImage || undefined,
       description: updatedJob.description,
       skills: updatedJob.skills || undefined,
       createdAt: updatedJob.createdAt,

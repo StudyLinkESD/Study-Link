@@ -13,7 +13,6 @@ export async function GET(): Promise<NextResponse<JobResponseDTO[] | { error: st
       },
       include: {
         company: true,
-        featuredImage: true,
       },
     });
 
@@ -56,7 +55,6 @@ export async function POST(
       data: body,
       include: {
         company: true,
-        featuredImage: true,
       },
     });
 
