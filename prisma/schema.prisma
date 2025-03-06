@@ -16,9 +16,11 @@ datasource db {
 
 model User {
   id                String              @id @default(cuid())
-  email             String              @unique
+  email             String?             @unique
+  google_email      String?             @unique
   firstname         String
   lastname          String
+  profileCompleted  Boolean             @default(false)
   profilePicture    UploadFile?         @relation(fields: [profilePictureId], references: [uuid])
   profilePictureId  String?
   emailVerified     DateTime?
@@ -149,8 +151,8 @@ model Job {
   featuredImageId String?
   description     String
   skills          String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
   deletedAt       DateTime?
 
   jobRequests JobRequest[]
