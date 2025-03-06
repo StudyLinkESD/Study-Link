@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import AuthWrapper from '@/providers/AuthWrapper';
 import { Toaster } from 'sonner';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="fr">
       <AuthWrapper>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <SpeedInsights />
           <Toaster position="top-right" richColors />
           {children}
         </body>
