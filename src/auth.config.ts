@@ -20,7 +20,7 @@ export default {
     }),
     Resend({
       apiKey: process.env.AUTH_RESEND_KEY,
-      from: 'StudyLink <onboarding@resend.dev>',
+      from: 'StudyLink <noreply@studylink.space>',
       async sendVerificationRequest({ identifier, url, provider }) {
         try {
           const user = await prisma.user.findUnique({
