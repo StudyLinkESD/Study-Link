@@ -2,8 +2,8 @@ export type UserType = 'student' | 'company-owner';
 
 export interface BaseCreateUserDTO {
   email: string;
-  firstname: string;
-  lastname: string;
+  firstname?: string | null;
+  lastname?: string | null;
   type: UserType;
   profilePictureId?: string | null;
 }
@@ -31,8 +31,8 @@ export interface UpdateUserDTO {
 export interface UserResponseDTO {
   id: string;
   email: string;
-  firstname: string;
-  lastname: string;
+  firstname: string | null;
+  lastname: string | null;
   profilePictureId?: string | null;
   createdAt: Date;
   updatedAt: Date;
