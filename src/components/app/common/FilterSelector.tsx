@@ -33,7 +33,9 @@ function FilterSelector({
 }: FilterSelectorProps) {
   const [selectKey, setSelectKey] = useState(0);
 
-  const availableOptions = options.filter((option) => !selectedValues.includes(option.value));
+  const availableOptions = options
+    .filter((option) => !selectedValues.includes(option.value))
+    .filter((option) => option.value.trim() !== '');
 
   const handleValueChange = (value: string) => {
     if (value) {
@@ -70,7 +72,7 @@ function FilterSelector({
       </div>
 
       <div className="flex flex-row items-center gap-4">
-        <Select key={selectKey} onValueChange={handleValueChange} value="">
+        <Select key={selectKey} onValueChange={handleValueChange} value={undefined}>
           <SelectTrigger className="w-full sm:w-[210px]">
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>

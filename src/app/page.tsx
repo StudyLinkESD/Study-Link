@@ -1,4 +1,3 @@
-// src/app/page.tsx
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, Briefcase, Users, Star } from 'lucide-react';
@@ -8,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header pour remplacer le layout public */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold">
@@ -224,7 +222,8 @@ export default function HomePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center mb-4">
                   <div className="mr-4">
-                    <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold">
+                    <div
+                      className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold">
                       LD
                     </div>
                   </div>
@@ -252,7 +251,8 @@ export default function HomePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center mb-4">
                   <div className="mr-4">
-                    <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                    <div
+                      className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                       MT
                     </div>
                   </div>

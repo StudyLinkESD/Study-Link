@@ -9,13 +9,10 @@ export default async function StudentsPage() {
     const studentsData = await getStudents();
 
     const students = studentsData.map((student) => {
-      // Convertir les compétences en tableau
       const skillsArray = student.skills.split(',').map((s) => ({ id: s.trim(), name: s.trim() }));
 
-      // Déterminer le statut en fonction des compétences
-      let status: 'Alternant' | 'Stagiaire' = 'Stagiaire'; // Par défaut
+      let status: 'Alternant' | 'Stagiaire' = 'Stagiaire';
 
-      // Si l'étudiant a des compétences liées à l'alternance, il est alternant
       const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
       if (
         skillsArray.some((skill) =>
@@ -29,8 +26,8 @@ export default async function StudentsPage() {
         id: student.id,
         firstName: student.user?.firstname || '',
         lastName: student.user?.lastname || '',
-        photoUrl: student.user?.profilePictureId
-          ? `/api/files/${student.user.profilePictureId}`
+        photoUrl: student.user?.profilePicture
+          ? `/api/files/${student.user.profilePicture}`
           : '',
         status,
         school: student.school?.name || '',

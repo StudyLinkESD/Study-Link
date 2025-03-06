@@ -24,7 +24,7 @@ export async function GET(
     const companyResponse: CompanyResponseDTO = {
       id: companyCheck.company.id,
       name: companyCheck.company.name,
-      logoId: companyCheck.company.logoId,
+      logo: companyCheck.company.logo,
     };
 
     return NextResponse.json(companyResponse);
@@ -77,7 +77,7 @@ export async function PUT(
       select: {
         id: true,
         name: true,
-        logoId: true,
+        logo: true,
       },
     });
 

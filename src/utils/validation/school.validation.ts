@@ -24,14 +24,18 @@ export async function validateSchoolData(
       where: { id: data.domainId },
     });
     if (!domain) {
-      errors.domainId = "Le domaine spécifié n'existe pas";
+      errors.domainId = 'Le domaine spécifié n\'existe pas';
     }
   }
+
   if ('logo' in data && data.logo !== undefined && data.logo !== null) {
     try {
-      new URL(data.logo);
+      const url = new URL(data.logo);
+      if (!url.href.startsWith('https://')) {
+        errors.logo = 'Le logo doit être une URL HTTPS valide';
+      }
     } catch {
-      errors.logo = "L'URL du logo n'est pas valide";
+      errors.logo = 'L\'URL du logo n\'est pas valide';
     }
   }
 

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
-import { checkUserExists, validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
+import {
+  checkUserExists,
+  validateUserUpdate,
+  ValidationError,
+} from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -30,16 +34,16 @@ export async function GET(
       email: userCheck.user.email,
       firstname: userCheck.user.firstname,
       lastname: userCheck.user.lastname,
-      profilePictureId: userCheck.user.profilePictureId,
+      profilePicture: userCheck.user.profilePicture,
       createdAt: userCheck.user.createdAt,
       updatedAt: userCheck.user.updatedAt,
     };
 
     return NextResponse.json(userResponse);
   } catch (error) {
-    console.error("Erreur lors de la récupération de l'utilisateur:", error);
+    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération de l'utilisateur" },
+      { error: 'Erreur lors de la récupération de l\'utilisateur' },
       { status: 500 },
     );
   }
@@ -70,15 +74,15 @@ export async function PUT(
         ...(body.email && { email: body.email.toLowerCase() }),
         ...(body.firstname && { firstname: body.firstname }),
         ...(body.lastname && { lastname: body.lastname }),
-        ...(body.profilePictureId !== undefined && { profilePictureId: body.profilePictureId }),
+        ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
       },
     });
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la mise à jour de l'utilisateur" },
+      { error: 'Erreur lors de la mise à jour de l\'utilisateur' },
       { status: 500 },
     );
   }
@@ -146,9 +150,11 @@ export async function DELETE(
         });
       }
 
-      await tx.verificationToken.deleteMany({
-        where: { identifier: existingUser.email },
-      });
+      if (existingUser.email) {
+        await tx.verificationToken.deleteMany({
+          where: { identifier: existingUser.email },
+        });
+      }
 
       await tx.user.update({
         where: { id: id },

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { SchoolResponseDTO } from '../../../dto/school.dto';
-import { validateSchoolData } from '../../../utils/validation/school.validation';
+import { CreateSchoolDTO, SchoolResponseDTO } from '@/dto/school.dto';
+import { validateSchoolData } from '@/utils/validation/school.validation';
 
 const prisma = new PrismaClient();
 
@@ -64,7 +64,7 @@ export async function POST(
 
     const existingDomain = await prisma.authorizedSchoolDomain.findUnique({
       where: { id: body.domainId },
-    });
+      });
 
     if (!existingDomain) {
       return NextResponse.json({ error: "Le domaine spécifié n'existe pas" }, { status: 400 });
@@ -99,10 +99,7 @@ export async function POST(
 
     return NextResponse.json({ id: result.id });
   } catch (error) {
-    console.error("Erreur lors de la création de l'école:", error);
-    return NextResponse.json(
-      { error: "Une erreur est survenue lors de la création de l'école" },
-      { status: 500 },
-    );
+    console.error('Erreur lors de la création de l\'école:', error);
+    return NextResponse.json({ error: 'Erreur lors de la création de l\'école' }, { status: 500 });
   }
 }

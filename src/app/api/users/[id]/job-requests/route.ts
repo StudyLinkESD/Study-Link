@@ -23,7 +23,7 @@ export async function GET(
     }
 
     if (!user.student) {
-      return NextResponse.json({ error: "L'utilisateur n'est pas un étudiant" }, { status: 400 });
+      return NextResponse.json({ error: 'L\'utilisateur n\'est pas un étudiant' }, { status: 400 });
     }
 
     const jobRequests = await prisma.jobRequest.findMany({
@@ -50,11 +50,7 @@ export async function GET(
                 name: true,
                 createdAt: true,
                 updatedAt: true,
-                logo: {
-                  select: {
-                    fileUrl: true,
-                  },
-                },
+                logo: true,
               },
             },
             featuredImage: true,
