@@ -29,12 +29,14 @@ export async function validateCompanyData(
     }
   }
 
-  if (data.logoId !== undefined && data.logoId !== null) {
-    const logo = await prisma.uploadFile.findUnique({
-      where: { uuid: data.logoId },
-    });
-    if (!logo) {
-      errors.push("Le logo spécifié n'existe pas");
+  if (data.logo !== undefined && data.logo !== null) {
+    try {
+      const url = new URL(data.logo);
+      if (!url.href.startsWith('https://')) {
+        errors.push('Le logo doit être une URL HTTPS valide');
+      }
+    } catch {
+      errors.push('L\'URL du logo n\'est pas valide');
     }
   }
 
