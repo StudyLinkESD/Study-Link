@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
@@ -14,7 +15,27 @@ export type StudentCardProps = {
   school?: string;
 };
 
-export default function StudentCard({
+// Composant pour afficher les compétences, extrait pour plus de clarté
+const SkillsList = React.memo(({ skills }: { skills: StudentCardProps['skills'] }) => {
+  // Limiter l'affichage à 3 compétences maximum
+  const displayedSkills = skills.slice(0, 3);
+  const hasMoreSkills = skills.length > 3;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {displayedSkills.map((skill) => (
+        <StatusBadge key={skill.id} status={skill.name} variant="outline" className="text-xs" />
+      ))}
+      {hasMoreSkills && (
+        <StatusBadge status={`+${skills.length - 3}`} variant="outline" className="text-xs" />
+      )}
+    </div>
+  );
+});
+
+SkillsList.displayName = 'SkillsList';
+
+function StudentCardComponent({
   id,
   firstName,
   lastName,
@@ -61,23 +82,7 @@ export default function StudentCard({
                 <Briefcase className="h-4 w-4" />
                 <span>Compétences</span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {skills.slice(0, 3).map((skill) => (
-                  <StatusBadge
-                    key={skill.id}
-                    status={skill.name}
-                    variant="outline"
-                    className="text-xs"
-                  />
-                ))}
-                {skills.length > 3 && (
-                  <StatusBadge
-                    status={`+${skills.length - 3}`}
-                    variant="outline"
-                    className="text-xs"
-                  />
-                )}
-              </div>
+              <SkillsList skills={skills} />
             </div>
           </div>
         </CardContent>
@@ -85,3 +90,8 @@ export default function StudentCard({
     </Link>
   );
 }
+
+// Mémorisation du composant pour éviter les rendus inutiles
+const StudentCard = React.memo(StudentCardComponent);
+
+export default StudentCard;

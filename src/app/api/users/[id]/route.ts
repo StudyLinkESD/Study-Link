@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
+import { 
+  UpdateUserDTO, 
+  UserByIdResponseDTO, 
+  UserResponseDTO 
+} from '@/dto/user.dto';
 import {
   checkUserExists,
   validateUserUpdate,
@@ -12,34 +16,70 @@ const prisma = new PrismaClient();
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<UserResponseDTO | { error: string }>> {
+): Promise<NextResponse<UserByIdResponseDTO | { error: string }>> {
   try {
     const id = (await params).id;
-    const userCheck = await checkUserExists(id);
 
-    if (!userCheck.exists) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+      include: {
+        student: {
+          include: {
+            school: true,
+            curriculumVitae: true,
+            jobRequests: {
+              where: { deletedAt: null },
+              include: {
+                job: {
+                  include: {
+                    company: {
+                      include: {
+                        logo: true,
+                      },
+                    },
+                    featuredImage: true,
+                  },
+                },
+              },
+            },
+            recommendations: true,
+          },
+        },
+        schoolOwner: {
+          include: {
+            school: {
+              include: {
+                domain: true,
+                logo: true,
+              },
+            },
+          },
+        },
+        companyOwner: {
+          include: {
+            company: {
+              include: {
+                logo: true,
+                jobs: {
+                  where: { deletedAt: null },
+                },
+              },
+            },
+          },
+        },
+        admin: true,
+        profilePicture: true,
+      },
+    });
+
+    if (!user) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    if (userCheck.isDeleted) {
-      return NextResponse.json({ error: 'Cet utilisateur a été supprimé' }, { status: 410 });
-    }
-
-    if (!userCheck.user) {
-      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
-    }
-
-    const userResponse: UserResponseDTO = {
-      id: userCheck.user.id,
-      email: userCheck.user.email,
-      firstname: userCheck.user.firstname,
-      lastname: userCheck.user.lastname,
-      profilePicture: userCheck.user.profilePicture,
-      createdAt: userCheck.user.createdAt,
-      updatedAt: userCheck.user.updatedAt,
-    };
-
-    return NextResponse.json(userResponse);
+    return NextResponse.json(user as UserByIdResponseDTO);
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur:', error);
     return NextResponse.json(
