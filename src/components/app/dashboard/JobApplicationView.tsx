@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -34,8 +34,6 @@ export default function JobApplicationView({ applications, setApplications }) {
       });
 
       if (!response.ok) throw new Error('Failed to update application status');
-
-      const updatedApplication = await response.json();
 
       // Mise à jour des applications dans l'état local
       const updatedApplications = applications.map((app) =>
@@ -116,7 +114,7 @@ export default function JobApplicationView({ applications, setApplications }) {
             <h4 className="font-medium">{job.name}</h4>
             <p className="text-sm text-muted-foreground">{job.company.name}</p>
             <Button variant="link" className="px-0 h-auto text-sm text-primary" asChild>
-              <a href={`/jobs/${job.id}`}>Voir l'offre</a>
+              <a href={`/jobs/${job.id}`}>Voir l&apos;offre</a>
             </Button>
           </div>
         </div>
