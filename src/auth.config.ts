@@ -28,9 +28,16 @@ export default {
             select: { firstname: true },
           });
 
+          const baseUrl =
+            process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
+          const modifiedUrl = url.replace(
+            /callbackUrl=([^&]*)/,
+            `callbackUrl=${encodeURIComponent(`${baseUrl}/students/profile-info`)}`,
+          );
+
           const emailHtml = await render(
             AuthenticateEmail({
-              url,
+              url: modifiedUrl,
               firstname: user?.firstname || undefined,
             }),
           );
@@ -50,7 +57,7 @@ export default {
               to: identifier,
               subject: 'Bienvenue sur StudyLink - Votre lien de connexion',
               html: emailHtml,
-              url,
+              url: modifiedUrl,
             }),
           });
 
