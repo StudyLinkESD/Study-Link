@@ -5,7 +5,7 @@ export interface BaseCreateUserDTO {
   firstname?: string | null;
   lastname?: string | null;
   type: UserType;
-  profilePicture?: string | null;
+  profilePicture?: { uuid: string; fileUrl: string } | null;
 }
 
 export interface CreateStudentUserDTO extends BaseCreateUserDTO {
@@ -25,7 +25,7 @@ export interface UpdateUserDTO {
   email: string;
   firstname?: string;
   lastname?: string;
-  profilePicture?: string | null;
+  profilePicture?: { uuid: string; fileUrl: string } | null;
 }
 
 export interface UserResponseDTO {
@@ -33,17 +33,6 @@ export interface UserResponseDTO {
   email: string;
   firstname: string | null;
   lastname: string | null;
-  profilePicture?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface UserByIdResponseDTO {
-  id: string;
-  email: string;
-  firstname: string;
-  lastname: string;
-  profilePictureId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   student?: {
@@ -51,7 +40,7 @@ export interface UserByIdResponseDTO {
     userId: string;
     schoolId: string;
     primaryRecommendationId?: string | null;
-    status: string;
+    status: 'ACTIVE' | 'INACTIVE';
     skills: string;
     apprenticeshipRythm?: string | null;
     description: string;

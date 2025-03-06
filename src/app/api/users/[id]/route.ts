@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { 
-  UpdateUserDTO, 
-  UserByIdResponseDTO, 
-  UserResponseDTO 
-} from '@/dto/user.dto';
-import {
-  checkUserExists,
-  validateUserUpdate,
-  ValidationError,
-} from '@/utils/validation/user.validation';
+import { UpdateUserDTO, UserByIdResponseDTO, UserResponseDTO } from '@/dto/user.dto';
+import { validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -29,18 +21,12 @@ export async function GET(
         student: {
           include: {
             school: true,
-            curriculumVitae: true,
             jobRequests: {
               where: { deletedAt: null },
               include: {
                 job: {
                   include: {
-                    company: {
-                      include: {
-                        logo: true,
-                      },
-                    },
-                    featuredImage: true,
+                    company: true,
                   },
                 },
               },
@@ -53,7 +39,6 @@ export async function GET(
             school: {
               include: {
                 domain: true,
-                logo: true,
               },
             },
           },
@@ -62,7 +47,6 @@ export async function GET(
           include: {
             company: {
               include: {
-                logo: true,
                 jobs: {
                   where: { deletedAt: null },
                 },
@@ -71,7 +55,6 @@ export async function GET(
           },
         },
         admin: true,
-        profilePicture: true,
       },
     });
 
@@ -79,11 +62,15 @@ export async function GET(
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
+    if (user.deletedAt) {
+      return NextResponse.json({ error: 'Cet utilisateur a été supprimé' }, { status: 410 });
+    }
+
     return NextResponse.json(user as UserByIdResponseDTO);
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération de l\'utilisateur' },
+      { error: "Erreur lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
@@ -120,9 +107,9 @@ export async function PUT(
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'utilisateur' },
+      { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { status: 500 },
     );
   }

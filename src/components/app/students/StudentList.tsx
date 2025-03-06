@@ -103,6 +103,7 @@ function StudentListComponent({
       );
     }
 
+    console.log('Étudiants filtrés:', result);
     return result;
   }, [statusFilter, searchTerm, selectedSkills, students]);
 
@@ -125,6 +126,8 @@ function StudentListComponent({
         status={student.status}
         skills={student.skills}
         school={student.school}
+        apprenticeshipRythm={student.apprenticeshipRythm}
+        availability={student.availability}
       />
     ),
     [],

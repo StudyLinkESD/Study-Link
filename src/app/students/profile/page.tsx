@@ -26,46 +26,41 @@ import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
 import RecommendationsList from '@/components/app/common/RecommendationsList';
 import { toast } from 'sonner';
 import { StudentResponseDTO } from '@/dto/student.dto';
+import { getStudentByUserId } from '@/services/student.service';
 
 export default function StudentProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
   const [student, setStudent] = useState<StudentResponseDTO | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-      return;
-    }
-
-    const fetchStudentProfile = async () => {
-      if (!session?.user?.id) return;
+    const fetchStudent = async () => {
+      if (!session?.user?.id) {
+        setLoading(false);
+        return;
+      }
 
       try {
-        const response = await fetch(`/api/students/students/${session.user.id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch student profile');
-        }
-        const data = await response.json();
-        setStudent(data);
+        const studentData = await getStudentByUserId(session.user.id);
+        setStudent(studentData);
       } catch (error) {
-        console.error('Error fetching student profile:', error);
-        toast.error('Impossible de charger votre profil');
+        console.error('Error fetching student:', error);
+        toast.error('Erreur lors du chargement du profil');
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    if (session?.user?.id) {
-      fetchStudentProfile();
-    }
-  }, [session, status, router]);
+    fetchStudent();
+  }, [session?.user?.id]);
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="container mx-auto py-8 px-4 max-w-4xl">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Chargement...</h1>
+        </div>
       </div>
     );
   }
@@ -74,11 +69,12 @@ export default function StudentProfilePage() {
     return (
       <div className="container mx-auto py-8 px-4 max-w-4xl">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Profil non trouvé</h1>
-          <p className="text-muted-foreground mb-6">
-            Vous n&apos;avez pas encore créé votre profil étudiant.
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Profil non trouvé</h1>
+          <p className="text-gray-600">
+            Votre profil étudiant n&apos;existe pas encore. Veuillez le créer en complétant le
+            formulaire.
           </p>
-          <Button onClick={() => router.push('/students/profile-info')}>
+          <Button onClick={() => router.push('/students/profile-info')} className="mt-4">
             Créer mon profil
           </Button>
         </div>
@@ -86,18 +82,39 @@ export default function StudentProfilePage() {
     );
   }
 
-  const firstName = student.user?.firstname || session?.user?.name?.split(' ')[0] || '';
-  const lastName = student.user?.lastname || session?.user?.name?.split(' ')[1] || '';
-  const photoUrl = student.user?.profilePicture || session?.user?.image || undefined;
+  if (!student.user) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-4xl">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Erreur de données</h1>
+          <p className="text-gray-600">
+            Les informations de l&apos;utilisateur sont manquantes. Veuillez mettre à jour votre
+            profil.
+          </p>
+          <Button onClick={() => router.push('/students/profile-info')} className="mt-4">
+            Mettre à jour mon profil
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const firstName = student.user.firstname || session?.user?.name?.split(' ')[0] || '';
+  const lastName = student.user.lastname || session?.user?.name?.split(' ')[1] || '';
+  const photoUrl = student.user.profilePicture
+    ? `/api/files/${student.user.profilePicture}`
+    : session?.user?.image || undefined;
 
   const experiences = student.previousCompanies
     .split(',')
-    .filter(company => company.trim())
-    .map((company, index) => ({
-      id: `exp-${index}`,
+    .map((company) => company.trim())
+    .filter(Boolean)
+    .map((company) => ({
+      id: company,
       position: 'Stage/Alternance',
-      company: company.trim(),
+      company: company,
       startDate: 'Non spécifié',
+      endDate: 'Non spécifié',
       description: '',
     }));
 
@@ -116,8 +133,8 @@ export default function StudentProfilePage() {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center">
               <ProfileAvatar
-                firstName={firstName}
-                lastName={lastName}
+                firstName={firstName || 'A'}
+                lastName={lastName || 'N'}
                 photoUrl={photoUrl}
                 size="lg"
                 className="mb-4"
@@ -161,7 +178,7 @@ export default function StudentProfilePage() {
             <TabsContent value="about" className="space-y-6">
               <SectionCard title="Description" icon={BookOpen}>
                 <p className="text-muted-foreground">
-                  {student.description || 'Aucune description n\'a été ajoutée.'}
+                  {student.description || "Aucune description n'a été ajoutée."}
                 </p>
               </SectionCard>
 
@@ -191,4 +208,4 @@ export default function StudentProfilePage() {
       </div>
     </main>
   );
-} 
+}

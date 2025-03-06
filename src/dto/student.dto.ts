@@ -2,46 +2,40 @@ export interface CreateStudentDTO {
   userId: string;
   schoolId: string;
   studentEmail: string;
-  status: string;
+  status: 'ACTIVE' | 'INACTIVE';
   skills: string;
-  apprenticeshipRythm?: string;
+  apprenticeshipRythm: string | null;
   description: string;
-  curriculumVitae?: string;
+  curriculumVitae: { fileUrl: string; fileId: string } | null;
   previousCompanies: string;
   availability: boolean;
 }
 
-export interface UpdateStudentDTO {
-  status?: string;
-  skills?: string;
-  apprenticeshipRythm?: string;
-  description?: string;
-  curriculumVitae?: string;
-  previousCompanies?: string;
-  availability?: boolean;
+export interface UpdateStudentDTO
+  extends Partial<Omit<CreateStudentDTO, 'userId' | 'schoolId' | 'studentEmail'>> {
+  updatedAt?: Date;
 }
 
-export interface StudentResponseDTO {
+export interface StudentResponseDTO extends Omit<CreateStudentDTO, 'skills'> {
   id: string;
-  userId: string;
-  schoolId: string;
-  primaryRecommendationId?: string;
-  status: string;
+  primaryRecommendationId: string | null;
   skills: string;
-  apprenticeshipRythm?: string;
-  description: string;
-  curriculumVitae?: string;
-  previousCompanies: string;
-  availability: boolean;
-  user?: {
+  user: {
     id: string;
     email: string;
     firstname: string | null;
     lastname: string | null;
-    profilePicture?: string | null;
+    profilePicture: string | null;
   };
-  school?: {
+  school: {
     id: string;
     name: string;
-  };
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Cette interface est maintenant basée sur CreateStudentDTO pour assurer la cohérence
+export interface CreateStudentData extends CreateStudentDTO {
+  createdAt: Date;
 }

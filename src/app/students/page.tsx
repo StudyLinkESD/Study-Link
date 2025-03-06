@@ -9,29 +9,20 @@ export default async function StudentsPage() {
     const studentsData = await getStudents();
 
     const students = studentsData.map((student) => {
-      const skillsArray = student.skills.split(',').map((s) => ({ id: s.trim(), name: s.trim() }));
-
-      let status: 'Alternant' | 'Stagiaire' = 'Stagiaire';
-
-      const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
-      if (
-        skillsArray.some((skill) =>
-          alternanceKeywords.some((keyword) => skill.name.toLowerCase().includes(keyword)),
-        )
-      ) {
-        status = 'Alternant';
-      }
+      const skillsArray =
+        student.skills?.split(',').map((s) => ({ id: s.trim(), name: s.trim() })) || [];
 
       return {
         id: student.id,
-        firstName: student.user?.firstname || '',
-        lastName: student.user?.lastname || '',
-        photoUrl: student.user?.profilePicture
-          ? `/api/files/${student.user.profilePicture}`
-          : '',
-        status,
+        firstName: student.user?.firstname || 'Anonyme',
+        lastName: student.user?.lastname || 'Anonyme',
+        photoUrl: student.user?.profilePicture ? `/api/files/${student.user.profilePicture}` : '',
+        status: student.status,
         school: student.school?.name || '',
         skills: skillsArray,
+        description: student.description || '',
+        apprenticeshipRythm: student.apprenticeshipRythm || null,
+        availability: student.availability ?? false,
       };
     });
 

@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BackButton from '@/components/app/common/BackButton';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
@@ -24,56 +23,62 @@ import RecommendationsList from '@/components/app/common/RecommendationsList';
 import { getStudentById } from '@/services/student.service';
 
 interface PageProps {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
 export default async function Page({ params }: PageProps) {
-  const { id } = await params;
+  const { id } = params;
+
+  if (!id) {
+    console.error('No student ID provided');
+    notFound();
+  }
 
   try {
+    console.log('Fetching student with ID:', id);
     const studentData = await getStudentById(id);
 
     if (!studentData) {
-      notFound();
+      console.error('Student not found with ID:', id);
+      return (
+        <div className="container mx-auto py-8 px-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Étudiant non trouvé</h1>
+            <p className="text-gray-600">
+              L&apos;étudiant que vous recherchez n&apos;existe pas ou a été supprimé.
+            </p>
+          </div>
+        </div>
+      );
     }
 
-    const skillsArray = studentData.skills
-      .split(',')
-      .map((s) => ({ id: s.trim(), name: s.trim() }));
-
-    let status: 'Alternant' | 'Stagiaire' = 'Stagiaire';
-
-    const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
-    if (
-      skillsArray.some((skill) =>
-        alternanceKeywords.some((keyword) => skill.name.toLowerCase().includes(keyword)),
-      )
-    ) {
-      status = 'Alternant';
-    }
+    // Convertir les compétences en tableau
+    const skillsArray =
+      studentData.skills?.split(',').map((s) => ({ id: s.trim(), name: s.trim() })) || [];
 
     const student = {
       id: studentData.id,
-      firstName: studentData.user?.firstname || '',
-      lastName: studentData.user?.lastname || '',
+      firstName: studentData.user?.firstname || 'Anonyme',
+      lastName: studentData.user?.lastname || 'Anonyme',
+      email: studentData.user?.email || '',
       photoUrl: studentData.user?.profilePicture
         ? `/api/files/${studentData.user.profilePicture}`
-        : '',
-      email: studentData.user?.email || '',
-      status,
-      school: studentData.school?.name || '',
-      skills: skillsArray,
-      alternanceRhythm: studentData.apprenticeshipRythm || '',
-      description: studentData.description,
-      cvUrl: studentData.curriculumVitae
-        ? `/api/files/${studentData.curriculumVitae}`
         : undefined,
+      status: studentData.status,
+      school: studentData.school?.name || 'Non spécifié',
+      alternanceRhythm: studentData.apprenticeshipRythm || 'Non spécifié',
+      description: studentData.description || 'Aucune description',
+      skills: skillsArray,
+      previousCompanies: studentData.previousCompanies || 'Aucune expérience',
       availability: studentData.availability ? 'Disponible' : 'Non disponible',
-      recommendations: [],
+      curriculumVitae: studentData.curriculumVitae?.fileUrl || undefined,
       experiences: [],
+      recommendations: [],
     };
+
+    console.log('Student data formatted:', student);
 
     return (
       <main className="container mx-auto py-4 px-4 max-w-4xl">
@@ -120,73 +125,59 @@ export default async function Page({ params }: PageProps) {
                   )}
                 </div>
 
-                {student.cvUrl && (
-                  <a
-                    href={student.cvUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full"
-                  >
-                    <Button className="w-full mt-6">
-                      <Download className="mr-2 h-4 w-4" />
-                      Télécharger le CV
-                    </Button>
-                  </a>
-                )}
-
                 <Button className="w-full mt-4">Contacter</Button>
               </div>
             </CardContent>
           </Card>
 
-          <div className="md:col-span-2">
-            <Tabs defaultValue="profile">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="profile">Profil</TabsTrigger>
-                <TabsTrigger value="experience">Expérience</TabsTrigger>
-                <TabsTrigger value="recommendations">Recommandations</TabsTrigger>
-              </TabsList>
+          <div className="md:col-span-2 space-y-6">
+            {student.description && (
+              <SectionCard title="À propos" icon={BookOpen}>
+                <p className="text-muted-foreground">{student.description}</p>
+              </SectionCard>
+            )}
 
-              <TabsContent value="profile" className="space-y-6">
-                {/* Utilisation du composant SectionCard */}
-                {student.description && (
-                  <SectionCard title="À propos" icon={BookOpen}>
-                    <p>{student.description}</p>
-                  </SectionCard>
-                )}
+            {student.skills.length > 0 && (
+              <SectionCard title="Compétences" icon={Award}>
+                <SkillsList skills={student.skills} />
+              </SectionCard>
+            )}
 
-                <SectionCard title="Compétences" icon={Award}>
-                  {/* Utilisation du composant SkillsList */}
-                  <SkillsList skills={student.skills} />
-                </SectionCard>
-              </TabsContent>
+            {student.experiences.length > 0 && (
+              <SectionCard title="Expérience" icon={Briefcase}>
+                <ExperienceTimeline experiences={student.experiences} />
+              </SectionCard>
+            )}
 
-              <TabsContent value="experience" className="space-y-6">
-                <SectionCard title="Expériences professionnelles" icon={Briefcase}>
-                  {/* Utilisation du composant ExperienceTimeline */}
-                  <ExperienceTimeline
-                    experiences={student.experiences}
-                    emptyMessage="Aucune expérience professionnelle listée."
-                  />
-                </SectionCard>
-              </TabsContent>
+            {student.recommendations.length > 0 && (
+              <SectionCard title="Recommandations" icon={Heart}>
+                <RecommendationsList recommendations={student.recommendations} />
+              </SectionCard>
+            )}
 
-              <TabsContent value="recommendations" className="space-y-6">
-                <SectionCard title="Recommandations" icon={Heart}>
-                  {/* Utilisation du composant RecommendationsList */}
-                  <RecommendationsList
-                    recommendations={student.recommendations}
-                    emptyMessage="Aucune recommandation disponible."
-                  />
-                </SectionCard>
-              </TabsContent>
-            </Tabs>
+            {student.curriculumVitae && (
+              <Button asChild className="w-full">
+                <a href={student.curriculumVitae} target="_blank" rel="noopener noreferrer">
+                  <Download className="w-4 h-4 mr-2" />
+                  Télécharger le CV
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </main>
     );
   } catch (error) {
-    console.error('Erreur lors du chargement du profil étudiant:', error);
-    notFound();
+    console.error('Erreur lors du chargement de l&apos;étudiant:', error);
+    return (
+      <main className="container mx-auto py-4 px-4 max-w-4xl">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Erreur de chargement</h1>
+          <p className="text-muted-foreground mb-6">
+            Une erreur est survenue lors du chargement des informations de l&apos;étudiant.
+          </p>
+        </div>
+      </main>
+    );
   }
 }

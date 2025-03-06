@@ -2,6 +2,11 @@ export interface CreateSchoolDTO {
   name: string;
   domainId: string;
   logo?: string | null;
+  owner: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 export interface UpdateSchoolDTO {

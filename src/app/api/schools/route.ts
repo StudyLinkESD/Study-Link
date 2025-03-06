@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { SchoolResponseDTO } from '@/dto/school.dto';
+import { CreateSchoolDTO, SchoolResponseDTO } from '@/dto/school.dto';
 import { validateSchoolData } from '@/utils/validation/school.validation';
 
 const prisma = new PrismaClient();
@@ -34,17 +34,6 @@ export async function GET(
   }
 }
 
-interface CreateSchoolDTO {
-  name: string;
-  domainId: string;
-  logo?: string | null;
-  owner: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
-
 export async function POST(
   request: Request,
 ): Promise<NextResponse<{ id: string } | { error: string; details?: Record<string, string> }>> {
@@ -64,7 +53,7 @@ export async function POST(
 
     const existingDomain = await prisma.authorizedSchoolDomain.findUnique({
       where: { id: body.domainId },
-      });
+    });
 
     if (!existingDomain) {
       return NextResponse.json({ error: "Le domaine spécifié n'existe pas" }, { status: 400 });
@@ -85,6 +74,9 @@ export async function POST(
           logo: body.logo,
           domainId: body.domainId,
         },
+        include: {
+          domain: true,
+        },
       });
 
       await tx.schoolOwner.create({
@@ -99,7 +91,7 @@ export async function POST(
 
     return NextResponse.json({ id: result.id });
   } catch (error) {
-    console.error('Erreur lors de la création de l\'école:', error);
-    return NextResponse.json({ error: 'Erreur lors de la création de l\'école' }, { status: 500 });
+    console.error("Erreur lors de la création de l'école:", error);
+    return NextResponse.json({ error: "Erreur lors de la création de l'école" }, { status: 500 });
   }
 }

@@ -7,10 +7,12 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ): Promise<NextResponse<StudentResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
+    console.log("Recherche de l'étudiant avec id:", id);
+
     const student = await prisma.student.findUnique({
       where: {
         id: id,
@@ -22,21 +24,40 @@ export async function GET(
     });
 
     if (!student) {
+      console.log('Aucun étudiant trouvé pour id:', id);
       return NextResponse.json({ error: 'Étudiant non trouvé' }, { status: 404 });
     }
+
+    console.log('Étudiant trouvé:', student);
 
     const formattedStudent: StudentResponseDTO = {
       id: student.id,
       userId: student.userId,
       schoolId: student.schoolId,
-      primaryRecommendationId: student.primaryRecommendationId || undefined,
-      status: student.status,
+      primaryRecommendationId: student.primaryRecommendationId || null,
+      status: student.status as 'ACTIVE' | 'INACTIVE',
       skills: student.skills,
-      apprenticeshipRythm: student.apprenticeshipRythm || undefined,
+      apprenticeshipRythm: student.apprenticeshipRythm || null,
       description: student.description,
-      curriculumVitae: student.curriculumVitae || undefined,
+      curriculumVitae: student.curriculumVitae
+        ? { fileUrl: student.curriculumVitae, fileId: student.curriculumVitae }
+        : null,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
+      studentEmail: student.studentEmail,
+      user: {
+        id: student.user.id,
+        email: student.user.email,
+        firstname: student.user.firstname,
+        lastname: student.user.lastname,
+        profilePicture: student.user.profilePicture || null,
+      },
+      school: student.school
+        ? {
+            id: student.school.id,
+            name: student.school.name,
+          }
+        : undefined,
     };
 
     return NextResponse.json(formattedStudent);
@@ -51,14 +72,22 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ): Promise<NextResponse<StudentResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     const body = (await request.json()) as UpdateStudentDTO;
 
-    const existingStudent = await prisma.student.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: id },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
+
+    const existingStudent = await prisma.student.findUnique({
+      where: { userId: id },
     });
 
     if (!existingStudent) {
@@ -76,9 +105,15 @@ export async function PUT(
       );
     }
 
+    // Convertir le format du CV pour la base de données
+    const cvData = body.curriculumVitae?.fileUrl || null;
+
     const student = await prisma.student.update({
-      where: { id: id },
-      data: body,
+      where: { userId: id },
+      data: {
+        ...body,
+        curriculumVitae: cvData,
+      },
       include: {
         user: true,
         school: true,
@@ -89,14 +124,30 @@ export async function PUT(
       id: student.id,
       userId: student.userId,
       schoolId: student.schoolId,
-      primaryRecommendationId: student.primaryRecommendationId || undefined,
-      status: student.status,
+      primaryRecommendationId: student.primaryRecommendationId || null,
+      status: student.status as 'ACTIVE' | 'INACTIVE',
       skills: student.skills,
-      apprenticeshipRythm: student.apprenticeshipRythm || undefined,
+      apprenticeshipRythm: student.apprenticeshipRythm || null,
       description: student.description,
-      curriculumVitae: student.curriculumVitae || undefined,
+      curriculumVitae: student.curriculumVitae
+        ? { fileUrl: student.curriculumVitae, fileId: student.curriculumVitae }
+        : null,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
+      studentEmail: student.studentEmail,
+      user: {
+        id: student.user.id,
+        email: student.user.email,
+        firstname: student.user.firstname,
+        lastname: student.user.lastname,
+        profilePicture: student.user.profilePicture || null,
+      },
+      school: student.school
+        ? {
+            id: student.school.id,
+            name: student.school.name,
+          }
+        : undefined,
     };
 
     return NextResponse.json(formattedStudent);
@@ -111,12 +162,23 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
-    const id = (await params).id;
-    const existingStudent = await prisma.student.findUnique({
+    const { id } = params;
+
+    // Vérifier d'abord si l'utilisateur existe
+    const user = await prisma.user.findUnique({
       where: { id: id },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
+
+    // Rechercher l'étudiant
+    const existingStudent = await prisma.student.findUnique({
+      where: { userId: id },
       include: {
         user: true,
       },
@@ -127,7 +189,7 @@ export async function DELETE(
     }
 
     await prisma.student.delete({
-      where: { id: id },
+      where: { userId: id },
     });
 
     return NextResponse.json({

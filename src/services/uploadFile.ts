@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Variables d'environnement côté serveur
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const prisma = new PrismaClient();
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase URL ou clé anonyme manquante. Vérifiez votre fichier .env.local');
@@ -25,84 +29,66 @@ const MIME_TYPES: { [key: string]: string } = {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-interface FileValidationResult {
-  isValid: boolean;
-  error?: string;
-  normalizedExt?: string;
-}
-
-function validateFile(file: File, allowedTypes: string[]): FileValidationResult {
-  const fileExt = file.name.split('.').pop()?.toLowerCase();
-
-  const mimeType = file.type.toLowerCase();
-  const isValidMime = allowedTypes.some((ext) => {
-    if (ext === 'jpg' || ext === 'jpeg') {
-      return mimeType === 'image/jpeg';
-    }
-    return mimeType === `image/${ext}`;
-  });
-
-  if (!fileExt || !isValidMime) {
-    return {
-      isValid: false,
-      error: `Le type du fichier n'est pas valide. Utilisez un fichier .${allowedTypes.join(', .')}`,
-    };
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return {
-      isValid: false,
-      error: `Fichier trop volumineux. Taille maximale : ${MAX_FILE_SIZE / 1024 / 1024} Mo`,
-    };
-  }
-
-  return {
-    isValid: true,
-    normalizedExt: fileExt === 'jpeg' ? 'jpg' : fileExt,
-  };
-}
-
-export async function handleUploadFile(
-  e: React.ChangeEvent<HTMLInputElement>,
-  bucket: string,
-): Promise<{ url: string | null; error?: string }> {
-  const file = e.target.files?.[0];
-  if (!file) return { url: null, error: 'Aucun fichier sélectionné' };
-
-  const allowedTypes =
-    bucket === 'studylink_images'
-      ? SUPPORTED_FILE_TYPES.images
-      : [...SUPPORTED_FILE_TYPES.images, ...SUPPORTED_FILE_TYPES.documents];
-
-  const validation = validateFile(file, allowedTypes);
-
-  if (!validation.isValid) {
-    return { url: null, error: validation.error };
-  }
-
+export const uploadFileToSupabase = async (
+  file: File,
+  bucket: string = 'studylink_images',
+): Promise<{ fileUrl: string; fileId: string } | null> => {
   try {
-    const fileName = `public/${Date.now()}.${validation.normalizedExt}`;
+    // Validate file type
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    const allSupportedTypes = [...SUPPORTED_FILE_TYPES.images, ...SUPPORTED_FILE_TYPES.documents];
+
+    if (!fileExt || !allSupportedTypes.includes(fileExt)) {
+      console.error(
+        `Type de fichier non supporté. Types acceptés : ${allSupportedTypes.join(', ')}`,
+      );
+      return null;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      console.error(`Fichier trop volumineux. Limite : ${MAX_FILE_SIZE / 1024 / 1024} Mo`);
+      return null;
+    }
+
+    const fileName = `public/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file, {
       cacheControl: '3600',
       upsert: true,
-      contentType: MIME_TYPES[validation.normalizedExt!] || 'application/octet-stream',
+      contentType: MIME_TYPES[fileExt] || 'application/octet-stream',
     });
 
     if (uploadError) {
-      return {
-        url: null,
-        error: `Le type du fichier n'est pas valide. Utilisez un fichier .${allowedTypes.join(', .')}`,
-      };
+      console.error("Erreur lors de l'upload:", uploadError);
+      return null;
     }
 
     const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
-    return { url: publicUrlData.publicUrl, error: undefined };
+
+    // Créer une entrée dans la table UploadFile
+    const uploadFile = await prisma.uploadFile.create({
+      data: {
+        uuid: uuidv4(),
+        fileUrl: publicUrlData.publicUrl,
+      },
+    });
+
+    return {
+      fileUrl: publicUrlData.publicUrl,
+      fileId: uploadFile.uuid,
+    };
   } catch (error) {
     console.error("Erreur lors de l'upload du fichier:", error);
-    return {
-      url: null,
-      error: `Le type du fichier n'est pas valide. Utilisez un fichier .${allowedTypes.join(', .')}`,
-    };
+    return null;
   }
-}
+};
+
+export const handleUploadFile = async (
+  event: React.ChangeEvent<HTMLInputElement>,
+  bucket: string = 'studylink_images',
+): Promise<{ fileUrl: string; fileId: string } | null> => {
+  const file = event.target.files?.[0];
+  if (!file) return null;
+  return await uploadFileToSupabase(file, bucket);
+};

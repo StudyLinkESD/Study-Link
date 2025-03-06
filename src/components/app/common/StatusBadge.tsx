@@ -8,7 +8,7 @@ type BadgeProps = React.ComponentProps<'span'> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean };
 
 interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
-  status: string;
+  status: 'ACTIVE' | 'INACTIVE';
   variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success';
   className?: string;
 }
@@ -21,17 +21,19 @@ const variantClasses = {
 
 function StatusBadgeComponent({
   status,
-  variant = 'default',
+  variant = status === 'ACTIVE' ? 'success' : 'secondary',
   className,
   ...props
 }: StatusBadgeProps) {
+  const label = status === 'ACTIVE' ? 'Actif' : 'Inactif';
+
   return (
     <Badge
       variant={variant === 'success' ? 'secondary' : variant} // Fallback to standard variants
       className={cn(variant === 'success' ? variantClasses.success : '', className)}
       {...props}
     >
-      {status}
+      {label}
     </Badge>
   );
 }

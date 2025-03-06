@@ -8,10 +8,10 @@ type ProfilePreviewProps = {
   firstName: string;
   lastName: string;
   photoUrl?: string;
-  status?: 'Alternant' | 'Stagiaire';
+  status?: 'ACTIVE' | 'INACTIVE';
   school?: string;
   alternanceRhythm?: string;
-  availability?: string;
+  availability?: boolean;
 };
 
 export default function ProfilePreview({
@@ -43,21 +43,15 @@ export default function ProfilePreview({
           {status && <StatusBadge status={status} className="mt-1" />}
         </div>
 
-        <div className="space-y-2 text-sm">
-          {school && (
-            <InfoItem icon={School} iconSize="sm">
-              {school}
-            </InfoItem>
+        <div className="w-full mt-6 space-y-4">
+          {school && <InfoItem icon={School}>{school}</InfoItem>}
+
+          {status === 'ACTIVE' && alternanceRhythm && (
+            <InfoItem icon={Calendar}>{alternanceRhythm}</InfoItem>
           )}
-          {status === 'Alternant' && alternanceRhythm && (
-            <InfoItem icon={Calendar} iconSize="sm">
-              {alternanceRhythm}
-            </InfoItem>
-          )}
-          {availability && (
-            <InfoItem icon={Clock} iconSize="sm">
-              Disponible dès {availability}
-            </InfoItem>
+
+          {availability !== undefined && (
+            <InfoItem icon={Clock}>{availability ? 'Disponible' : 'Indisponible'}</InfoItem>
           )}
         </div>
       </CardContent>

@@ -3,16 +3,18 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
-import { Briefcase, GraduationCap } from 'lucide-react';
+import { GraduationCap, Briefcase, CheckCircle2, XCircle } from 'lucide-react';
 
 export type StudentCardProps = {
   id: string;
   firstName: string;
   lastName: string;
   photoUrl: string;
-  status: 'Alternant' | 'Stagiaire';
+  status: 'ACTIVE' | 'INACTIVE';
   skills: { id: string; name: string }[];
   school?: string;
+  apprenticeshipRythm?: string | null;
+  availability?: boolean;
 };
 
 // Composant pour afficher les compétences, extrait pour plus de clarté
@@ -24,10 +26,14 @@ const SkillsList = React.memo(({ skills }: { skills: StudentCardProps['skills'] 
   return (
     <div className="flex flex-wrap gap-2">
       {displayedSkills.map((skill) => (
-        <StatusBadge key={skill.id} status={skill.name} variant="outline" className="text-xs" />
+        <span key={skill.id} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">
+          {skill.name}
+        </span>
       ))}
       {hasMoreSkills && (
-        <StatusBadge status={`+${skills.length - 3}`} variant="outline" className="text-xs" />
+        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">
+          +{skills.length - 3}
+        </span>
       )}
     </div>
   );
@@ -37,52 +43,72 @@ SkillsList.displayName = 'SkillsList';
 
 function StudentCardComponent({
   id,
-  firstName,
-  lastName,
+  firstName = 'Anonyme',
+  lastName = 'Anonyme',
   photoUrl,
   status,
   skills,
   school,
+  apprenticeshipRythm,
+  availability,
 }: StudentCardProps) {
   return (
-    <Link href={`/students/${id}`} className="block h-full">
-      <Card className="overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-1 h-full">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4">
-            {/* En-tête avec avatar et informations principales */}
-            <div className="flex items-start gap-4">
-              <ProfileAvatar
-                firstName={firstName}
-                lastName={lastName}
-                photoUrl={photoUrl}
-                size="md"
-                className="border border-gray-200 dark:border-gray-700"
-              />
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold truncate">
-                    {firstName} {lastName}
-                  </h3>
-                  <StatusBadge status={status} className="text-xs" />
+    <Link href={`/students/${id}`}>
+      <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
+        <CardContent className="p-8 h-full flex flex-col">
+          <div className="flex items-start gap-6">
+            <ProfileAvatar
+              photoUrl={photoUrl}
+              firstName={firstName}
+              lastName={lastName}
+              className="w-20 h-20 flex-shrink-0"
+            />
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">
+                  {firstName} {lastName}
+                </h3>
+                <div className="flex flex-col items-end gap-3">
+                  {availability !== undefined && (
+                    <div className="flex items-center gap-2 text-sm">
+                      {availability ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      )}
+                      <span className={availability ? 'text-green-500' : 'text-red-500'}>
+                        {availability ? 'Disponible' : 'Non disponible'}
+                      </span>
+                    </div>
+                  )}
+                  <StatusBadge status={status} />
                 </div>
+              </div>
 
+              {/* Informations de l'école et du rythme d'alternance */}
+              <div className="space-y-3 mb-4">
                 {school && (
-                  <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
-                    <GraduationCap className="h-4 w-4" />
-                    <span className="truncate">{school}</span>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <GraduationCap className="w-5 h-5" />
+                    <span>{school}</span>
+                  </div>
+                )}
+                {apprenticeshipRythm && (
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <Briefcase className="w-5 h-5" />
+                    <span>{apprenticeshipRythm}</span>
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Compétences */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Briefcase className="h-4 w-4" />
-                <span>Compétences</span>
+              {/* Compétences */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Briefcase className="h-4 w-4" />
+                  <span>Compétences</span>
+                </div>
+                <SkillsList skills={skills} />
               </div>
-              <SkillsList skills={skills} />
             </div>
           </div>
         </CardContent>

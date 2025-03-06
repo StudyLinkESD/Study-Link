@@ -75,7 +75,7 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
 
     // En développement, utiliser l'API
     const students = await serverFetch('/students');
-    console.log('Raw students data:', students);
+    console.log('Raw students data:', JSON.stringify(students, null, 2));
 
     if (!Array.isArray(students)) {
       throw new Error('Students data is not an array');
@@ -85,10 +85,13 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
     const studentsWithUserInfo = await Promise.all(
       students.map(async (student) => {
         try {
+          console.log(`Fetching data for student ${student.id}:`, student);
           // Récupérer les informations de l'utilisateur
           const userData = await serverFetch(`/users/${student.userId}`);
+          console.log(`User data for student ${student.id}:`, userData);
           // Récupérer les informations de l'école
           const schoolData = await serverFetch(`/schools/${student.schoolId}`);
+          console.log(`School data for student ${student.id}:`, schoolData);
 
           return {
             ...student,
@@ -102,6 +105,7 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
       }),
     );
 
+    console.log('Final students data:', JSON.stringify(studentsWithUserInfo, null, 2));
     return studentsWithUserInfo;
   } catch (error) {
     console.error('Failed to fetch students:', error);
@@ -112,50 +116,73 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
 export async function getStudentById(id: string): Promise<StudentResponseDTO | null> {
   try {
     console.log('Fetching student with ID:', id);
+
+    // Récupérer directement l'étudiant par son ID
     const student = await serverFetch(`/students/${id}`);
+    console.log('Raw student data:', JSON.stringify(student, null, 2));
+
+    if (!student) {
+      console.log('No student data received');
+      return null;
+    }
 
     // Récupérer les informations de l'utilisateur et de l'école
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
+    try {
+      const [userData, schoolData] = await Promise.all([
+        serverFetch(`/users/${student.userId}`),
+        serverFetch(`/schools/${student.schoolId}`),
+      ]);
 
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
+      console.log('User data:', JSON.stringify(userData, null, 2));
+      console.log('School data:', JSON.stringify(schoolData, null, 2));
+
+      return {
+        ...student,
+        user: userData,
+        school: schoolData,
+      };
+    } catch (error) {
+      console.error('Error fetching user or school data:', error);
+      // Retourner l'étudiant même si les données utilisateur ou école ne sont pas disponibles
+      return student;
+    }
   } catch (error) {
+    console.error("Erreur détaillée lors de la récupération de l'étudiant:", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      id,
+      errorObject: error,
+    });
+
     if (error instanceof Error && error.message.includes('404')) {
       console.log('Student not found');
       return null;
     }
-    console.error("Erreur lors de la récupération de l'étudiant:", error);
-    return null;
+    throw error;
   }
 }
 
 export async function getStudentByUserId(userId: string): Promise<StudentResponseDTO | null> {
   try {
+    console.log('Fetching student for userId:', userId);
     const student = await serverFetch(`/students/user/${userId}`);
+    console.log('Student data received:', student);
 
-    // Récupérer les informations de l'utilisateur et de l'école
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
-
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('404')) {
+    if (!student) {
+      console.log('No student data received');
       return null;
     }
+
+    return student;
+  } catch (error) {
     console.error("Erreur lors de la récupération de l'étudiant:", error);
-    return null;
+    if (error instanceof Error) {
+      if (error.message.includes('404')) {
+        console.log('Student not found for userId:', userId);
+        return null;
+      }
+    }
+    throw error;
   }
 }
 
