@@ -45,7 +45,7 @@ export async function POST(
         email: body.email.toLowerCase() ?? '',
         firstname: body.firstname,
         lastname: body.lastname,
-        profilePictureId: body.profilePictureId,
+        profilePicture: body.profilePicture,
       },
     });
 

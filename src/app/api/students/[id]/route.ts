@@ -18,7 +18,6 @@ export async function GET(
       include: {
         user: true,
         school: true,
-        curriculumVitae: true,
       },
     });
 
@@ -35,7 +34,7 @@ export async function GET(
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || undefined,
       description: student.description,
-      curriculumVitaeId: student.curriculumVitaeId || undefined,
+      curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
     };
@@ -83,7 +82,6 @@ export async function PUT(
       include: {
         user: true,
         school: true,
-        curriculumVitae: true,
       },
     });
 
@@ -96,7 +94,7 @@ export async function PUT(
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || undefined,
       description: student.description,
-      curriculumVitaeId: student.curriculumVitaeId || undefined,
+      curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
     };

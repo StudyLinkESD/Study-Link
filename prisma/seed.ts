@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -13,31 +12,15 @@ async function main() {
   await prisma.company.deleteMany();
   await prisma.school.deleteMany();
   await prisma.authorizedSchoolDomain.deleteMany();
-  await prisma.uploadFile.deleteMany();
   await prisma.verificationToken.deleteMany();
   await prisma.admin.deleteMany();
   await prisma.user.deleteMany();
 
-  const logoSchool = await prisma.uploadFile.create({
-    data: {
-      uuid: uuidv4(),
-      fileUrl: 'https://png.pngtree.com/png-clipart/20211017/original/pngtree-school-logo-png-image_6851480.png',
-    },
-  });
-
-  const logoCompany = await prisma.uploadFile.create({
-    data: {
-      uuid: uuidv4(),
-      fileUrl: 'https://png.pngtree.com/png-clipart/20190604/original/pngtree-creative-company-logo-png-image_1197025.jpg',
-    },
-  });
-
-  const cvFile = await prisma.uploadFile.create({
-    data: {
-      uuid: uuidv4(),
-      fileUrl: 'https://example.com/cv.pdf',
-    },
-  });
+  const schoolLogoUrl =
+    'https://png.pngtree.com/png-clipart/20211017/original/pngtree-school-logo-png-image_6851480.png';
+  const companyLogoUrl =
+    'https://png.pngtree.com/png-clipart/20190604/original/pngtree-creative-company-logo-png-image_1197025.jpg';
+  const cvUrl = 'https://example.com/cv.pdf';
 
   const schoolDomain = await prisma.authorizedSchoolDomain.create({
     data: {
@@ -48,15 +31,19 @@ async function main() {
   const school = await prisma.school.create({
     data: {
       name: 'École Test',
-      logoId: logoSchool.uuid,
-      domainId: schoolDomain.id,
+      logo: schoolLogoUrl,
+      domain: {
+        connect: {
+          id: schoolDomain.id,
+        },
+      },
     },
   });
 
   const company = await prisma.company.create({
     data: {
       name: 'Entreprise Test',
-      logoId: logoCompany.uuid,
+      logo: companyLogoUrl,
     },
   });
 
@@ -80,7 +67,11 @@ async function main() {
       emailVerified: new Date(),
       schoolOwner: {
         create: {
-          schoolId: school.id,
+          school: {
+            connect: {
+              id: school.id,
+            },
+          },
         },
       },
     },
@@ -94,13 +85,17 @@ async function main() {
       emailVerified: new Date(),
       companyOwner: {
         create: {
-          companyId: company.id,
+          company: {
+            connect: {
+              id: company.id,
+            },
+          },
         },
       },
     },
   });
 
-  const studentUser = await prisma.user.create({
+  const student = await prisma.student.create({
     data: {
       email: 'student@test.com',
       firstname: 'Étudiant',
@@ -119,19 +114,28 @@ async function main() {
           curriculumVitaeId: cvFile.uuid,
         },
       },
-    },
-    include: {
-      student: true,
+      school: {
+        connect: {
+          id: school.id,
+        },
+      },
+      status: 'ACTIVE',
+      skills: 'JavaScript, React, Node.js',
+      apprenticeshipRythm: '3 semaines entreprise / 1 semaine école',
+      description: 'Étudiant motivé en recherche d\'alternance',
+      previousCompanies: 'Stage chez Company X',
+      availability: true,
+      curriculumVitae: cvUrl,
     },
   });
 
-  if (!studentUser.student) {
-    throw new Error('Failed to create student');
-  }
-
   const job = await prisma.job.create({
     data: {
-      companyId: company.id,
+      company: {
+        connect: {
+          id: company.id,
+        },
+      },
       name: 'Développeur Full Stack',
       description: 'Nous recherchons un développeur full stack pour un contrat d\'alternance',
     },
@@ -139,16 +143,32 @@ async function main() {
 
   await prisma.jobRequest.create({
     data: {
-      studentId: studentUser.student.id,
-      jobId: job.id,
+      student: {
+        connect: {
+          id: student.id,
+        },
+      },
+      job: {
+        connect: {
+          id: job.id,
+        },
+      },
       status: 'PENDING',
     },
   });
 
   await prisma.recommendation.create({
     data: {
-      studentId: studentUser.student.id,
-      companyId: company.id,
+      student: {
+        connect: {
+          id: student.id,
+        },
+      },
+      company: {
+        connect: {
+          id: company.id,
+        },
+      },
       recommendation: 'Excellent stagiaire, très motivé et compétent',
     },
   });

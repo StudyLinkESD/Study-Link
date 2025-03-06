@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { SchoolResponseDTO, UpdateSchoolDTO } from '../../../../dto/school.dto';
-import { validateSchoolData } from '../../../../utils/validation/school.validation';
+import { SchoolResponseDTO, UpdateSchoolDTO } from '@/dto/school.dto';
+import { validateSchoolData } from '@/utils/validation/school.validation';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +18,6 @@ export async function GET(
       },
       include: {
         domain: true,
-        logo: true,
       },
     });
 
@@ -28,9 +27,9 @@ export async function GET(
 
     return NextResponse.json(school);
   } catch (error) {
-    console.error("Erreur lors de la récupération de l'école:", error);
+    console.error('Erreur lors de la récupération de l\'école:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération de l'école" },
+      { error: 'Erreur lors de la récupération de l\'école' },
       { status: 500 },
     );
   }
@@ -63,19 +62,18 @@ export async function PUT(
       data: {
         name: body.name,
         domainId: body.domainId,
-        logoId: body.logoId,
+        logo: body.logo,
       },
       include: {
         domain: true,
-        logo: true,
       },
     });
 
     return NextResponse.json(school);
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'école:", error);
+    console.error('Erreur lors de la mise à jour de l\'école:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la mise à jour de l'école" },
+      { error: 'Erreur lors de la mise à jour de l\'école' },
       { status: 500 },
     );
   }
@@ -99,9 +97,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'École supprimée avec succès' }, { status: 200 });
   } catch (error) {
-    console.error("Erreur lors de la suppression de l'école:", error);
+    console.error('Erreur lors de la suppression de l\'école:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la suppression de l'école" },
+      { error: 'Erreur lors de la suppression de l\'école' },
       { status: 500 },
     );
   }

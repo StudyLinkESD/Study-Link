@@ -6,7 +6,7 @@ export interface CreateStudentDTO {
   skills: string;
   apprenticeshipRythm?: string;
   description: string;
-  curriculumVitaeId?: string;
+  curriculumVitae?: string;
   previousCompanies: string;
   availability: boolean;
 }
@@ -16,7 +16,7 @@ export interface UpdateStudentDTO {
   skills?: string;
   apprenticeshipRythm?: string;
   description?: string;
-  curriculumVitaeId?: string;
+  curriculumVitae?: string;
   previousCompanies?: string;
   availability?: boolean;
 }
@@ -30,15 +30,17 @@ export interface StudentResponseDTO {
   skills: string;
   apprenticeshipRythm?: string;
   description: string;
-  curriculumVitaeId?: string;
+  curriculumVitae?: string;
   previousCompanies: string;
   availability: boolean;
   user?: {
     id: string;
     email: string;
+    firstname: string;
+    lastname: string;
     firstname: string | null;
     lastname: string | null;
-    profilePictureId?: string | null;
+    profilePicture?: string | null;
   };
   school?: {
     id: string;
