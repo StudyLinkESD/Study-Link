@@ -52,7 +52,7 @@ const AuthForm = () => {
 
       toast.success('Un email de connexion vous a été envoyé');
       router.push('/verify-request');
-    } catch (error) {
+    } catch {
       toast.error("Une erreur est survenue lors de l'authentification");
     } finally {
       setIsLoading(false);
