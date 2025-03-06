@@ -5,16 +5,19 @@ import { StudentResponseDTO, CreateStudentDTO, UpdateStudentDTO } from '@/dto/st
 function getBaseUrl() {
   // En développement, utiliser localhost:3000
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000';
+    return 'http://localhost:3000/api';
   }
   // En production, utiliser l'URL de l'API ou une URL par défaut
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  return process.env.NEXT_PUBLIC_API_URL;
 }
 
 // Fonction utilitaire pour les appels API côté serveur
 async function serverFetch(url: string, options: RequestInit = {}) {
   const baseUrl = getBaseUrl();
-  const response = await fetch(`${baseUrl}${url}`, {
+  const fullUrl = `${baseUrl}${url}`;
+  console.log('Fetching from:', fullUrl);
+
+  const response = await fetch(fullUrl, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -24,7 +27,12 @@ async function serverFetch(url: string, options: RequestInit = {}) {
   });
 
   if (!response.ok) {
-    console.error(`API Error (${url}):`, response.status, response.statusText);
+    const errorText = await response.text();
+    console.error(`API Error (${url}):`, {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText,
+    });
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
@@ -169,6 +177,14 @@ export async function updateStudent(
       school: schoolData,
     };
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('404')) {
+        throw new Error('Student not found');
+      }
+      if (error.message.includes('400')) {
+        throw new Error('Invalid student data');
+      }
+    }
     console.error('Failed to update student:', error);
     throw error;
   }
