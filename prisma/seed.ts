@@ -108,7 +108,7 @@ async function main() {
           status: 'ACTIVE',
           skills: 'JavaScript, React, Node.js',
           apprenticeshipRythm: '3 semaines entreprise / 1 semaine école',
-          description: 'Étudiant motivé en recherche d\'alternance',
+          description: "Étudiant motivé en recherche d'alternance",
           previousCompanies: 'Stage chez Company X',
           availability: true,
           curriculumVitaeId: cvFile.uuid,
@@ -137,7 +137,7 @@ async function main() {
         },
       },
       name: 'Développeur Full Stack',
-      description: 'Nous recherchons un développeur full stack pour un contrat d\'alternance',
+      description: "Nous recherchons un développeur full stack pour un contrat d'alternance",
     },
   });
 

@@ -62,15 +62,13 @@ export default function FileUploadInput({
         },
       } as unknown as React.ChangeEvent<HTMLInputElement>;
 
-      const url = await handleUploadFile(syntheticEvent);
+      const { url, error } = await handleUploadFile(syntheticEvent, 'studylink_images');
 
       if (url) {
         setFileUrl(url);
         onChange(file, url);
-      } else {
-        // Handle the case when URL is null but no error was thrown
-        setErrorMessage("L'upload a échoué. Veuillez réessayer.");
-        onChange(file);
+      } else if (error) {
+        setErrorMessage(error);
       }
     } catch (error) {
       console.error("Erreur lors de l'upload du fichier:", error);

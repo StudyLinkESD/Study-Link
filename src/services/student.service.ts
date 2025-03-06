@@ -1,5 +1,6 @@
 // src/services/student.service.ts
 import { StudentResponseDTO, CreateStudentDTO, UpdateStudentDTO } from '@/dto/student.dto';
+import { prisma } from '@/lib/prisma';
 
 // Fonction utilitaire pour obtenir l'URL de base
 function getBaseUrl() {
@@ -46,6 +47,33 @@ async function serverFetch(url: string, options: RequestInit = {}) {
 export async function getStudents(): Promise<StudentResponseDTO[]> {
   try {
     console.log('Fetching all students...');
+
+    // Utiliser Prisma directement pendant le build
+    if (process.env.NODE_ENV === 'production') {
+      const students = await prisma.student.findMany({
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstname: true,
+              lastname: true,
+              profilePictureId: true,
+            },
+          },
+          school: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return students as unknown as StudentResponseDTO[];
+    }
+
+    // En développement, utiliser l'API
     const students = await serverFetch('/students');
     console.log('Raw students data:', students);
 

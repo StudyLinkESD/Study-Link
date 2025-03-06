@@ -108,8 +108,9 @@ model School {
   domainId  String
   name      String
   logo      String?
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @updatedAt
+  isActive  Boolean               @default(true)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
   deletedAt DateTime?
 
   students     Student[]

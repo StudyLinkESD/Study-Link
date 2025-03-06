@@ -82,20 +82,25 @@ export async function PUT(
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+): Promise<NextResponse<{ success: boolean } | { error: string }>> {
   try {
     const id = (await params).id;
+    const existingSchool = await prisma.school.findUnique({
+      where: { id },
+    });
+
+    if (!existingSchool) {
+      return NextResponse.json({ error: 'École non trouvée' }, { status: 404 });
+    }
+
     await prisma.school.update({
-      where: {
-        id: id,
-        deletedAt: null,
-      },
+      where: { id },
       data: {
         deletedAt: new Date(),
       },
     });
 
-    return NextResponse.json({ message: 'École supprimée avec succès' }, { status: 200 });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'école:', error);
     return NextResponse.json(
