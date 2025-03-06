@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useStudentApplications } from '@/hooks/students/dashboard/useStudentApplications';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/app/common/StatusBadge';
@@ -22,24 +23,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 
-interface JobApplicationsResponse {
-  id: string;
-  studentId: string;
-  jobId: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  job: {
-    id: string;
-    name: string;
-    companyId: string;
-    company: {
-      name: string;
-      logoId: string | null;
-    };
-  };
-}
-
 const STATUS_OPTIONS = {
   ALL: 'all',
   PENDING: 'PENDING',
@@ -49,56 +32,12 @@ const STATUS_OPTIONS = {
 
 export default function StudentDashboardPage() {
   const { data: session } = useSession();
-  const [applications, setApplications] = useState<JobApplicationsResponse[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { applications, setApplications, isLoading } = useStudentApplications(session);
   const [statusFilter, setStatusFilter] = useState<string>(STATUS_OPTIONS.ALL);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  // Ajout des états pour la suppression
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        if (session?.user?.id) {
-          // Récupérer l'ID de l'étudiant à partir de l'ID de l'utilisateur
-          const studentResponse = await fetch(`/api/students?userId=${session.user.id}`);
-          if (!studentResponse.ok) throw new Error('Failed to fetch student data');
-
-          const studentData = await studentResponse.json();
-          if (studentData.length > 0) {
-            const studentId = studentData[0].id;
-
-            // Récupérer les candidatures de l'étudiant
-            const applicationsResponse = await fetch(`/api/job-requests?studentId=${studentId}`);
-            if (!applicationsResponse.ok) throw new Error('Failed to fetch job applications');
-
-            const applicationsData = await applicationsResponse.json();
-            setApplications(applicationsData);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching student applications:', error);
-        // Utilisation des données factices en cas d'erreur
-        setApplications(applications);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (session?.user?.id) {
-      fetchApplications();
-    } else {
-      // Pour le développement, utiliser les données factices
-      const timer = setTimeout(() => {
-        setApplications(applications);
-        setIsLoading(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [session]);
-
-  // Filtrage des candidatures selon le statut et la recherche
   const filteredApplications = applications.filter((app) => {
     const matchesStatus = statusFilter === STATUS_OPTIONS.ALL || app.status === statusFilter;
     const matchesSearch =
@@ -108,7 +47,6 @@ export default function StudentDashboardPage() {
     return matchesStatus && matchesSearch;
   });
 
-  // Comptage des statuts pour les badges
   const statusCounts = applications.reduce(
     (acc, app) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
@@ -145,7 +83,6 @@ export default function StudentDashboardPage() {
 
       if (!response.ok) throw new Error('Failed to delete application');
 
-      // Mise à jour de l'état local
       setApplications(applications.filter((app) => app.id !== applicationToDelete));
       toast.success('Candidature supprimée avec succès');
     } catch (error) {
@@ -159,7 +96,7 @@ export default function StudentDashboardPage() {
 
   return (
     <main className="container max-w-screen-xl mx-auto py-6 px-4 md:px-6">
-      <h1 className="text-3xl font-bold mb-6">Mes candidatures</h1>
+      <h1 className="text-3xl font-bold mb-6">Mes candidatures {session?.user.name}</h1>
 
       {isLoading ? (
         <div className="flex justify-center items-center min-h-[400px]">
@@ -170,7 +107,6 @@ export default function StudentDashboardPage() {
         </div>
       ) : (
         <>
-          {/* Résumé des candidatures */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card>
               <CardContent className="p-6 flex items-center">
@@ -201,7 +137,6 @@ export default function StudentDashboardPage() {
             </Card>
           </div>
 
-          {/* Liste des candidatures avec filtres */}
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -300,7 +235,6 @@ export default function StudentDashboardPage() {
           </Card>
         </>
       )}
-      {/* Dialogue de confirmation pour la suppression */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
