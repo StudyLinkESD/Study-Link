@@ -21,14 +21,16 @@ async function main() {
   const logoSchool = await prisma.uploadFile.create({
     data: {
       uuid: uuidv4(),
-      fileUrl: 'https://png.pngtree.com/png-clipart/20211017/original/pngtree-school-logo-png-image_6851480.png',
+      fileUrl:
+        'https://png.pngtree.com/png-clipart/20211017/original/pngtree-school-logo-png-image_6851480.png',
     },
   });
 
   const logoCompany = await prisma.uploadFile.create({
     data: {
       uuid: uuidv4(),
-      fileUrl: 'https://png.pngtree.com/png-clipart/20190604/original/pngtree-creative-company-logo-png-image_1197025.jpg',
+      fileUrl:
+        'https://png.pngtree.com/png-clipart/20190604/original/pngtree-creative-company-logo-png-image_1197025.jpg',
     },
   });
 
@@ -48,7 +50,7 @@ async function main() {
   const school = await prisma.school.create({
     data: {
       name: 'École Test',
-      logoId: logoSchool.uuid,
+      logo: logoSchool.uuid,
       domainId: schoolDomain.id,
     },
   });
@@ -112,7 +114,7 @@ async function main() {
           status: 'ACTIVE',
           skills: 'JavaScript, React, Node.js',
           apprenticeshipRythm: '3 semaines entreprise / 1 semaine école',
-          description: 'Étudiant motivé en recherche d\'alternance',
+          description: "Étudiant motivé en recherche d'alternance",
           previousCompanies: 'Stage chez Company X',
           availability: true,
           curriculumVitaeId: cvFile.uuid,
@@ -132,7 +134,7 @@ async function main() {
     data: {
       companyId: company.id,
       name: 'Développeur Full Stack',
-      description: 'Nous recherchons un développeur full stack pour un contrat d\'alternance',
+      description: "Nous recherchons un développeur full stack pour un contrat d'alternance",
     },
   });
 

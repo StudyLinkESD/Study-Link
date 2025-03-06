@@ -100,7 +100,6 @@ model UploadFile {
   userProfiles User[]
   studentCVs   Student[]
   companyLogos Company[]
-  schoolLogos  School[]
   jobImages    Job[]
 }
 
@@ -117,10 +116,10 @@ model School {
   domain    AuthorizedSchoolDomain @relation(fields: [domainId], references: [id])
   domainId  String
   name      String
-  logo      UploadFile?            @relation(fields: [logoId], references: [uuid])
-  logoId    String?
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @updatedAt
+  logo      String?
+  isActive  Boolean               @default(true)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
   deletedAt DateTime?
 
   students     Student[]
