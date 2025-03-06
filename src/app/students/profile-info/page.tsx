@@ -45,14 +45,14 @@ const profileSchema = z.object({
   school: z.string()
     .min(1, { message: 'Veuillez sélectionner votre école' }),
   availability: z.string()
-    .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, { 
-      message: 'Format attendu : MM/YYYY (ex: 09/2024)' 
+    .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, {
+      message: 'Format attendu : MM/YYYY (ex: 09/2024)',
     })
     .optional()
     .or(z.literal('')),
   alternanceRhythm: z.string()
-    .min(5, { message: "Veuillez décrire votre rythme d'alternance" })
-    .max(100, { message: "La description du rythme est trop longue" })
+    .min(5, { message: 'Veuillez décrire votre rythme d\'alternance' })
+    .max(100, { message: 'La description du rythme est trop longue' })
     .optional()
     .or(z.literal('')),
   description: z.string()
@@ -123,7 +123,7 @@ export default function StudentProfileForm() {
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -149,7 +149,7 @@ export default function StudentProfileForm() {
 
       return await response.json();
     } catch (error) {
-      console.error("Erreur lors de la récupération de l'étudiant:", error);
+      console.error('Erreur lors de la récupération de l\'étudiant:', error);
       return null;
     }
   };
@@ -320,7 +320,7 @@ export default function StudentProfileForm() {
             }),
           });
         } catch (error) {
-          console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+          console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
           // Continuer malgré l'erreur
         }
       }
@@ -353,7 +353,7 @@ export default function StudentProfileForm() {
     } catch (error) {
       console.error('Erreur lors de la soumission du profil:', error);
       toast.error(
-        error instanceof Error ? error.message : "Erreur lors de l'enregistrement du profil",
+        error instanceof Error ? error.message : 'Erreur lors de l\'enregistrement du profil',
       );
     }
   };
@@ -361,50 +361,50 @@ export default function StudentProfileForm() {
   const getProfileCompletionFields = () => {
     return [
       {
-        name: "Nom et prénom",
+        name: 'Nom et prénom',
         completed: !!(formValues.firstName && formValues.lastName),
-        required: true
+        required: true,
       },
       {
-        name: "Photo de profil",
+        name: 'Photo de profil',
         completed: !!photoUrl,
-        required: false
+        required: false,
       },
       {
-        name: "Statut",
+        name: 'Statut',
         completed: !!formValues.status,
-        required: true
+        required: true,
       },
       {
-        name: "École",
+        name: 'École',
         completed: !!formValues.school,
-        required: true
+        required: true,
       },
       {
-        name: "Rythme d'alternance",
+        name: 'Rythme d\'alternance',
         completed: !!formValues.alternanceRhythm,
-        required: formValues.status === 'Alternant'
+        required: formValues.status === 'Alternant',
       },
       {
-        name: "Description",
+        name: 'Description',
         completed: !!(formValues.description && formValues.description.length >= 100),
-        required: false
+        required: false,
       },
       {
-        name: "Compétences",
+        name: 'Compétences',
         completed: !!(formValues.skills && formValues.skills.length >= 3),
-        required: true
+        required: true,
       },
       {
-        name: "CV",
+        name: 'CV',
         completed: !!uploadedCv,
-        required: false
+        required: false,
       },
       {
-        name: "Disponibilité",
+        name: 'Disponibilité',
         completed: !!formValues.availability,
-        required: false
-      }
+        required: false,
+      },
     ];
   };
 
@@ -473,13 +473,13 @@ export default function StudentProfileForm() {
                       isValid={!!dirtyFields.firstName && !errors.firstName}
                       helpText="Utilisez votre prénom légal tel qu'il apparaît sur vos documents officiels"
                     >
-                      <Input 
-                        id="firstName" 
-                        placeholder="Votre prénom" 
+                      <Input
+                        id="firstName"
+                        placeholder="Votre prénom"
                         {...register('firstName')}
                         className={cn(
-                          errors.firstName && "border-destructive",
-                          !errors.firstName && touchedFields.firstName && "border-green-500"
+                          errors.firstName && 'border-destructive',
+                          !errors.firstName && touchedFields.firstName && 'border-green-500',
                         )}
                       />
                     </FormField>
@@ -493,13 +493,13 @@ export default function StudentProfileForm() {
                       isValid={!!dirtyFields.lastName && !errors.lastName}
                       helpText="Utilisez votre nom de famille légal"
                     >
-                      <Input 
-                        id="lastName" 
-                        placeholder="Votre nom" 
+                      <Input
+                        id="lastName"
+                        placeholder="Votre nom"
                         {...register('lastName')}
                         className={cn(
-                          errors.lastName && "border-destructive",
-                          !errors.lastName && touchedFields.lastName && "border-green-500"
+                          errors.lastName && 'border-destructive',
+                          !errors.lastName && touchedFields.lastName && 'border-green-500',
                         )}
                       />
                     </FormField>
@@ -565,9 +565,9 @@ export default function StudentProfileForm() {
                       id="description"
                       placeholder="Décrivez votre parcours, vos projets et vos aspirations professionnelles..."
                       className={cn(
-                        "min-h-[120px]",
-                        errors.description && "border-destructive",
-                        !errors.description && touchedFields.description && "border-green-500"
+                        'min-h-[120px]',
+                        errors.description && 'border-destructive',
+                        !errors.description && touchedFields.description && 'border-green-500',
                       )}
                       {...register('description')}
                     />
@@ -629,8 +629,8 @@ export default function StudentProfileForm() {
                         placeholder="09/2024"
                         {...register('availability')}
                         className={cn(
-                          errors.availability && "border-destructive",
-                          !errors.availability && touchedFields.availability && "border-green-500"
+                          errors.availability && 'border-destructive',
+                          !errors.availability && touchedFields.availability && 'border-green-500',
                         )}
                       />
                     </FormField>
