@@ -17,7 +17,7 @@ datasource db {
 model User {
   id                String              @id @default(cuid())
   email             String?             @unique
-  google_email      String?             @unique
+  googleEmail       String?             @unique
   firstname         String
   lastname          String
   profileCompleted  Boolean             @default(false)
