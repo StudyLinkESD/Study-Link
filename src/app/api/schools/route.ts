@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateSchoolDTO, SchoolResponseDTO } from '../../../dto/school.dto';
-import { validateSchoolData } from '../../../utils/validation/school.validation';
+import { CreateSchoolDTO, SchoolResponseDTO } from '@/dto/school.dto';
+import { validateSchoolData } from '@/utils/validation/school.validation';
 
 const prisma = new PrismaClient();
 
@@ -13,7 +13,6 @@ export async function GET(): Promise<NextResponse<SchoolResponseDTO[] | { error:
       },
       include: {
         domain: true,
-        logo: true,
       },
     });
 
@@ -48,17 +47,16 @@ export async function POST(
       data: {
         name: body.name,
         domainId: body.domainId,
-        logoId: body.logoId,
+        logo: body.logo,
       },
       include: {
         domain: true,
-        logo: true,
       },
     });
 
     return NextResponse.json(school, { status: 201 });
   } catch (error) {
-    console.error("Erreur lors de la création de l'école:", error);
-    return NextResponse.json({ error: "Erreur lors de la création de l'école" }, { status: 500 });
+    console.error('Erreur lors de la création de l\'école:', error);
+    return NextResponse.json({ error: 'Erreur lors de la création de l\'école' }, { status: 500 });
   }
 }
