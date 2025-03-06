@@ -21,7 +21,6 @@ export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error
       include: {
         user: true,
         school: true,
-        curriculumVitae: true,
       },
     });
 
@@ -34,7 +33,7 @@ export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || undefined,
       description: student.description,
-      curriculumVitaeId: student.curriculumVitaeId || undefined,
+      curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
     }));
@@ -71,7 +70,6 @@ export async function POST(
       include: {
         user: true,
         school: true,
-        curriculumVitae: true,
       },
     });
 
@@ -84,16 +82,16 @@ export async function POST(
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || undefined,
       description: student.description,
-      curriculumVitaeId: student.curriculumVitaeId || undefined,
+      curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
     };
 
     return NextResponse.json(formattedStudent, { status: 201 });
   } catch (error) {
-    console.error("Erreur lors de la création de l'étudiant:", error);
+    console.error('Erreur lors de la création de l\'étudiant:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la création de l'étudiant" },
+      { error: 'Erreur lors de la création de l\'étudiant' },
       { status: 500 },
     );
   }
