@@ -5,7 +5,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
@@ -13,122 +12,29 @@ import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { Separator } from '@/components/ui/separator';
 
-const registerSchema = z.object({
-  firstname: z.string().min(2, 'Le prénom est requis'),
-  lastname: z.string().min(2, 'Le nom est requis'),
-  email: z.string().email('Email invalide'),
-  companyName: z.string().optional(),
-  schoolId: z.string().optional(),
-  logo: z.any().optional(),
-  cv: z.any().optional(),
-});
-
-const loginSchema = z.object({
+const authSchema = z.object({
   email: z.string().email('Email invalide'),
 });
 
-type RegisterValues = z.infer<typeof registerSchema>;
-type LoginValues = z.infer<typeof loginSchema>;
+type AuthValues = z.infer<typeof authSchema>;
 
-const LoginForm = () => {
-  const [statusFilter, setStatusFilter] = useState<string>('student');
-  const [isLogin, setIsLogin] = useState<boolean>(true);
+const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const registerForm = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      firstname: '',
-      lastname: '',
-      email: '',
-      companyName: '',
-      schoolId: '',
-    },
-  });
-
-  const loginForm = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<AuthValues>({
+    resolver: zodResolver(authSchema),
     defaultValues: {
       email: '',
     },
   });
 
-  const onSubmitRegister = async (data: RegisterValues) => {
+  const handleAuth = async (data: AuthValues) => {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: data.email }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.exists) {
-        toast.error('Un compte existe déjà avec cet email');
-        setIsLogin(true);
-        return;
-      }
-
-      if (statusFilter === 'student') {
-        const emailDomain = data.email.split('@')[1];
-
-        if (!emailDomain) {
-          toast.error('Email invalide');
-          return;
-        }
-
-        const schoolResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/school-domains/check`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ domain: emailDomain }),
-          },
-        );
-
-        const schoolResult = await schoolResponse.json();
-
-        if (!schoolResponse.ok || !schoolResult.schoolId) {
-          toast.error('Votre email doit être une adresse email étudiante valide');
-          return;
-        }
-
-        data.schoolId = schoolResult.schoolId;
-      }
-
-      const endpoint =
-        statusFilter === 'student'
-          ? `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`
-          : `${process.env.NEXT_PUBLIC_API_URL}/auth/company-signup`;
-
-      const createUserResponse = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          firstname: data.firstname,
-          lastname: data.lastname,
-          type: statusFilter === 'student' ? 'student' : 'company-owner',
-          schoolId: statusFilter === 'student' ? data.schoolId : undefined,
-          companyName: statusFilter === 'company' ? data.companyName : undefined,
-        }),
-      });
-
-      if (!createUserResponse.ok) {
-        const errorData = await createUserResponse.json();
-        toast.error(errorData.error || "Une erreur est survenue lors de l'inscription");
-        return;
-      }
-
+      // Cette partie sera modifiée plus tard pour utiliser une route unique
+      // qui déterminera si l'utilisateur doit être créé ou connecté
       const signInResult = await signIn('resend', {
         email: data.email,
         redirect: true,
@@ -138,52 +44,18 @@ const LoginForm = () => {
         toast.error(signInResult.error || 'Une erreur est survenue');
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de l'inscription" + error);
+      toast.error('Une erreur est survenue lors de l\'authentification' + error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const onSubmitLogin = async (data: LoginValues) => {
-    try {
-      setIsLoading(true);
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: data.email }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.exists) {
-        toast.error('Aucun compte trouvé avec cet email');
-        return;
-      }
-
-      const signInResult = await signIn('resend', {
-        email: data.email,
-        redirect: true,
-      });
-
-      if (signInResult?.error) {
-        toast.error(signInResult.error || 'Une erreur est survenue');
-      }
-    } catch (error) {
-      toast.error('Une erreur est survenue lors de la connexion' + error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
+  const handleGoogleAuth = async () => {
     try {
       setIsGoogleLoading(true);
       await signIn('google', { callbackUrl: '/' });
     } catch {
-      toast.error('Une erreur est survenue lors de la connexion avec Google');
+      toast.error('Une erreur est survenue lors de l\'authentification avec Google');
     } finally {
       setIsGoogleLoading(false);
     }
@@ -191,16 +63,43 @@ const LoginForm = () => {
 
   return (
     <>
-      <h2 className="text-2xl font-medium ml-1 mb-2">{isLogin ? 'Se connecter' : "S'inscrire"}</h2>
+      <h2 className="text-2xl font-medium ml-1 mb-2">Authentification</h2>
 
       <Card className="w-full px-4 py-8 space-y-6">
         <CardContent className="px-0">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAuth)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="exemple@email.com" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Envoi en cours...' : 'Continuer avec email'}
+              </Button>
+            </form>
+          </Form>
+
+          <div className="relative mb-6 mt-6">
+            <Separator className="absolute top-1/2 w-full" />
+            <div className="relative flex justify-center">
+              <span className="bg-card px-2 text-xs text-muted-foreground">OU</span>
+            </div>
+          </div>
+
           <div className="mb-6">
             <Button
               type="button"
               variant="outline"
               className="w-full flex items-center justify-center gap-2"
-              onClick={handleGoogleSignIn}
+              onClick={handleGoogleAuth}
               disabled={isGoogleLoading}
             >
               {isGoogleLoading ? (
@@ -238,167 +137,6 @@ const LoginForm = () => {
             </Button>
           </div>
 
-          <div className="relative mb-6">
-            <Separator className="absolute top-1/2 w-full" />
-            <div className="relative flex justify-center">
-              <span className="bg-card px-2 text-xs text-muted-foreground">OU</span>
-            </div>
-          </div>
-
-          {isLogin ? (
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onSubmitLogin)} className="space-y-4">
-                <FormField
-                  control={loginForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-between items-center mt-4">
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Envoi en cours...' : 'Se connecter'}
-                  </Button>
-                  <Button
-                    variant="link"
-                    type="button"
-                    onClick={() => setIsLogin(false)}
-                    disabled={isLoading}
-                  >
-                    Pas encore inscrit ?
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          ) : (
-            <>
-              <Tabs defaultValue="student" className="w-full" onValueChange={setStatusFilter}>
-                <div className="flex flex-col align-center mb-4 gap-2">
-                  <label className="ml-1 font-medium">Profil</label>
-                  <TabsList>
-                    <TabsTrigger value="student">Étudiant</TabsTrigger>
-                    <TabsTrigger value="company">Entreprise</TabsTrigger>
-                  </TabsList>
-                </div>
-              </Tabs>
-
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onSubmitRegister)} className="space-y-4">
-                  <FormField
-                    control={registerForm.control}
-                    name="firstname"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Prénom</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={registerForm.control}
-                    name="lastname"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  {statusFilter === 'company' ? (
-                    <>
-                      <FormField
-                        control={registerForm.control}
-                        name="companyName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nom de l&apos;entreprise</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="logo"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Logo</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) =>
-                                  field.onChange(e.target.files ? e.target.files[0] : null)
-                                }
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  ) : (
-                    <FormField
-                      control={registerForm.control}
-                      name="cv"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CV</FormLabel>
-                          <FormControl className="cursor-pointer">
-                            <Input
-                              type="file"
-                              accept=".pdf,.doc,.docx"
-                              onChange={(e) =>
-                                field.onChange(e.target.files ? e.target.files[0] : null)
-                              }
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                  <div className="flex justify-between items-center mt-4">
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? 'Envoi en cours...' : "S'inscrire"}
-                    </Button>
-                    <Button
-                      variant="link"
-                      type="button"
-                      onClick={() => setIsLogin(true)}
-                      disabled={isLoading}
-                    >
-                      Déjà inscrit ?
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </>
-          )}
-
           <div className="mt-6 text-center text-xs text-muted-foreground">
             En continuant, vous acceptez nos{' '}
             <a href="/terms-of-service" className="text-primary hover:underline">
@@ -416,4 +154,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default AuthForm;
