@@ -32,7 +32,6 @@ export async function GET(
     const userResponse: UserResponseDTO = {
       id: userCheck.user.id,
       email: userCheck.user.email,
-      googleEmail: userCheck.user.googleEmail,
       firstname: userCheck.user.firstname,
       lastname: userCheck.user.lastname,
       profilePictureId: userCheck.user.profilePictureId,
