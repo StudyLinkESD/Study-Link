@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { UserResponseDTO } from '@/dto/user.dto';
-import { ValidationError } from '@/utils/validation/user.validation';
+import { CreateUserDTO, UserResponseDTO } from '@/dto/user.dto';
+import { validateUserCreation, ValidationError } from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -27,19 +27,48 @@ export async function POST(
   request: Request,
 ): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {
   try {
-    const { email, firstname, lastname } = await request.json();
+    const body = (await request.json()) as CreateUserDTO;
 
-    if (!email || !firstname || !lastname) {
-      return NextResponse.json({ error: 'Email, prénom et nom sont requis' }, { status: 400 });
+    const validationResult = await validateUserCreation(body);
+    if (!validationResult.isValid) {
+      return NextResponse.json(
+        {
+          error: 'Données invalides',
+          details: validationResult.errors,
+        },
+        { status: 400 },
+      );
     }
 
     const user = await prisma.user.create({
       data: {
-        email: email.toLowerCase(),
-        firstname,
-        lastname,
+        email: body.email.toLowerCase(),
+        firstname: body.firstname,
+        lastname: body.lastname,
+        profilePictureId: body.profilePictureId,
       },
     });
+
+    if (body.type === 'company-owner') {
+      await prisma.companyOwner.create({
+        data: {
+          userId: user.id,
+          companyId: body.companyName,
+        },
+      });
+    } else if (body.type === 'student') {
+      await prisma.student.create({
+        data: {
+          userId: user.id,
+          schoolId: body.schoolId,
+          status: 'PENDING',
+          skills: '',
+          description: '',
+          previousCompanies: '',
+          availability: false,
+        },
+      });
+    }
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {

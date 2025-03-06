@@ -1,17 +1,17 @@
-import { CreateUserDTO } from '@/dto/user.dto';
+import { CreateUserDTO, UpdateUserDTO } from '@/dto/user.dto';
 import { PrismaClient, User } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export type ValidationError = {
+export interface ValidationError {
   field: string;
   message: string;
-};
+}
 
-export type ValidationResult = {
+export interface ValidationResult {
   isValid: boolean;
   errors: ValidationError[];
-};
+}
 
 export type UserCheckResult = {
   exists: boolean;
@@ -41,67 +41,75 @@ export const checkUserExists = async (userId: string): Promise<UserCheckResult> 
   };
 };
 
-export const validateUserData = async (
-  data: Partial<CreateUserDTO>,
-  isUpdate: boolean = false,
-  userId?: string,
-): Promise<ValidationResult> => {
+export async function validateUser(
+  data: CreateUserDTO | UpdateUserDTO,
+  options?: { userId?: string; isUpdate?: boolean },
+): Promise<ValidationResult> {
   const errors: ValidationError[] = [];
+  const isUpdate = options?.isUpdate ?? false;
+  const userId = options?.userId;
+
+  if (isUpdate && userId) {
+    const userExists = await checkUserExists(userId);
+    if (!userExists.exists) {
+      errors.push({ field: 'id', message: 'Utilisateur non trouvé' });
+      return { isValid: false, errors };
+    }
+  }
 
   if (!isUpdate || data.email !== undefined) {
     if (!data.email) {
-      errors.push({
-        field: 'email',
-        message: "L'email est requis",
-      });
-    } else if (!data.email.includes('@')) {
-      errors.push({
-        field: 'email',
-        message: "L'adresse email n'est pas valide",
-      });
+      errors.push({ field: 'email', message: 'Email requis' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      errors.push({ field: 'email', message: "Format d'email invalide" });
     } else {
-      const normalizedEmail = data.email.toLowerCase();
       const existingUser = await prisma.user.findFirst({
         where: {
-          email: normalizedEmail,
+          email: data.email.toLowerCase(),
           ...(isUpdate && userId ? { id: { not: userId } } : {}),
         },
       });
-
       if (existingUser) {
-        errors.push({
-          field: 'email',
-          message: 'Un utilisateur avec cet email existe déjà',
-        });
+        errors.push({ field: 'email', message: 'Cet email est déjà utilisé' });
       }
     }
   }
 
   if (!isUpdate || data.firstname !== undefined) {
-    if (!data.firstname) {
-      errors.push({
-        field: 'firstname',
-        message: 'Le prénom est requis',
-      });
-    } else if (data.firstname.length < 2) {
-      errors.push({
-        field: 'firstname',
-        message: 'Le prénom doit contenir au moins 2 caractères',
-      });
+    if (!data.firstname || data.firstname.length < 2) {
+      errors.push({ field: 'firstname', message: 'Prénom requis (minimum 2 caractères)' });
     }
   }
 
   if (!isUpdate || data.lastname !== undefined) {
-    if (!data.lastname) {
-      errors.push({
-        field: 'lastname',
-        message: 'Le nom est requis',
-      });
-    } else if (data.lastname.length < 2) {
-      errors.push({
-        field: 'lastname',
-        message: 'Le nom doit contenir au moins 2 caractères',
-      });
+    if (!data.lastname || data.lastname.length < 2) {
+      errors.push({ field: 'lastname', message: 'Nom requis (minimum 2 caractères)' });
+    }
+  }
+
+  if (!isUpdate) {
+    const createData = data as CreateUserDTO;
+    if (!createData.type) {
+      errors.push({ field: 'type', message: "Type d'utilisateur requis" });
+    } else if (!['student', 'company-owner'].includes(createData.type)) {
+      errors.push({ field: 'type', message: "Type d'utilisateur invalide" });
+    }
+
+    if (createData.type === 'student') {
+      if (!createData.schoolId) {
+        errors.push({ field: 'schoolId', message: "ID de l'école requis pour un étudiant" });
+      } else {
+        const school = await prisma.school.findUnique({
+          where: { id: createData.schoolId },
+        });
+        if (!school) {
+          errors.push({ field: 'schoolId', message: 'École non trouvée' });
+        }
+      }
+    } else if (createData.type === 'company-owner') {
+      if (!createData.companyName) {
+        errors.push({ field: 'companyName', message: "Nom de l'entreprise requis" });
+      }
     }
   }
 
@@ -109,4 +117,17 @@ export const validateUserData = async (
     isValid: errors.length === 0,
     errors,
   };
+}
+
+export const validateUserCreation = (data: CreateUserDTO): Promise<ValidationResult> => {
+  return validateUser(data);
 };
+
+export const validateUserUpdate = (
+  data: UpdateUserDTO,
+  userId: string,
+): Promise<ValidationResult> => {
+  return validateUser(data, { userId, isUpdate: true });
+};
+
+export const validateUserData = validateUserCreation;

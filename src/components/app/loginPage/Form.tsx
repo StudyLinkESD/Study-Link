@@ -18,6 +18,7 @@ const registerSchema = z.object({
   lastname: z.string().min(2, 'Le nom est requis'),
   email: z.string().email('Email invalide'),
   companyName: z.string().optional(),
+  schoolId: z.string().optional(),
   logo: z.any().optional(),
   cv: z.any().optional(),
 });
@@ -42,6 +43,7 @@ const LoginForm = () => {
       lastname: '',
       email: '',
       companyName: '',
+      schoolId: '',
     },
   });
 
@@ -72,7 +74,41 @@ const LoginForm = () => {
         return;
       }
 
-      const createUserResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+      if (statusFilter === 'student') {
+        const emailDomain = data.email.split('@')[1];
+
+        if (!emailDomain) {
+          toast.error('Email invalide');
+          return;
+        }
+
+        const schoolResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/school-domains/check`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ domain: emailDomain }),
+          },
+        );
+
+        const schoolResult = await schoolResponse.json();
+
+        if (!schoolResponse.ok || !schoolResult.schoolId) {
+          toast.error('Votre email doit être une adresse email étudiante valide');
+          return;
+        }
+
+        data.schoolId = schoolResult.schoolId;
+      }
+
+      const endpoint =
+        statusFilter === 'student'
+          ? `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`
+          : `${process.env.NEXT_PUBLIC_API_URL}/auth/company-signup`;
+
+      const createUserResponse = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,12 +117,15 @@ const LoginForm = () => {
           email: data.email,
           firstname: data.firstname,
           lastname: data.lastname,
-          companyName: data.companyName,
+          type: statusFilter === 'student' ? 'student' : 'company-owner',
+          schoolId: statusFilter === 'student' ? data.schoolId : undefined,
+          companyName: statusFilter === 'company' ? data.companyName : undefined,
         }),
       });
 
       if (!createUserResponse.ok) {
-        toast.error("Une erreur est survenue lors de l'inscription");
+        const errorData = await createUserResponse.json();
+        toast.error(errorData.error || "Une erreur est survenue lors de l'inscription");
         return;
       }
 
@@ -108,13 +147,29 @@ const LoginForm = () => {
   const onSubmitLogin = async (data: LoginValues) => {
     try {
       setIsLoading(true);
-      const result = await signIn('resend', {
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/check-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.exists) {
+        toast.error('Aucun compte trouvé avec cet email');
+        return;
+      }
+
+      const signInResult = await signIn('resend', {
         email: data.email,
         redirect: true,
       });
 
-      if (result?.error) {
-        toast.error(result.error || 'Une erreur est survenue');
+      if (signInResult?.error) {
+        toast.error(signInResult.error || 'Une erreur est survenue');
       }
     } catch (error) {
       toast.error('Une erreur est survenue lors de la connexion' + error);
