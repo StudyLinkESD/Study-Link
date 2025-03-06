@@ -42,7 +42,8 @@ export async function POST(
 
     const user = await prisma.user.create({
       data: {
-        email: body.email.toLowerCase(),
+        email: body.email?.toLowerCase() ?? '',
+        googleEmail: body.googleEmail?.toLowerCase() ?? '',
         firstname: body.firstname,
         lastname: body.lastname,
         profilePictureId: body.profilePictureId,
@@ -61,6 +62,7 @@ export async function POST(
         data: {
           userId: user.id,
           schoolId: body.schoolId,
+          studentEmail: body.studentEmail,
           status: 'PENDING',
           skills: '',
           description: '',
