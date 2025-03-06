@@ -88,7 +88,7 @@ export default function StudentProfilePage() {
 
   const firstName = student.user?.firstname || session?.user?.name?.split(' ')[0] || '';
   const lastName = student.user?.lastname || session?.user?.name?.split(' ')[1] || '';
-  const photoUrl = student.user?.profilePictureId || session?.user?.image || undefined;
+  const photoUrl = student.user?.profilePicture || session?.user?.image || undefined;
 
   const experiences = student.previousCompanies
     .split(',')
@@ -98,7 +98,7 @@ export default function StudentProfilePage() {
       position: 'Stage/Alternance',
       company: company.trim(),
       startDate: 'Non spécifié',
-      description: ''
+      description: '',
     }));
 
   return (
@@ -161,7 +161,7 @@ export default function StudentProfilePage() {
             <TabsContent value="about" className="space-y-6">
               <SectionCard title="Description" icon={BookOpen}>
                 <p className="text-muted-foreground">
-                  {student.description || "Aucune description n'a été ajoutée."}
+                  {student.description || 'Aucune description n\'a été ajoutée.'}
                 </p>
               </SectionCard>
 
@@ -172,11 +172,11 @@ export default function StudentProfilePage() {
 
             <TabsContent value="skills">
               <SectionCard title="Compétences" icon={Award}>
-                <SkillsList 
+                <SkillsList
                   skills={student.skills.split(',').map((skill) => ({
                     id: skill.trim(),
-                    name: skill.trim()
-                  }))} 
+                    name: skill.trim(),
+                  }))}
                 />
               </SectionCard>
             </TabsContent>

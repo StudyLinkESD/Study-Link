@@ -39,15 +39,12 @@ export default async function Page({ params }: PageProps) {
       notFound();
     }
 
-    // Convertir les compétences en tableau
     const skillsArray = studentData.skills
       .split(',')
       .map((s) => ({ id: s.trim(), name: s.trim() }));
 
-    // Déterminer le statut en fonction des compétences
-    let status: 'Alternant' | 'Stagiaire' = 'Stagiaire'; // Par défaut
+    let status: 'Alternant' | 'Stagiaire' = 'Stagiaire';
 
-    // Si l'étudiant a des compétences liées à l'alternance, il est alternant
     const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
     if (
       skillsArray.some((skill) =>
@@ -57,13 +54,12 @@ export default async function Page({ params }: PageProps) {
       status = 'Alternant';
     }
 
-    // Formatter les données pour correspondre à ce qu'attend la page
     const student = {
       id: studentData.id,
       firstName: studentData.user?.firstname || '',
       lastName: studentData.user?.lastname || '',
-      photoUrl: studentData.user?.profilePictureId
-        ? `/api/files/${studentData.user.profilePictureId}`
+      photoUrl: studentData.user?.profilePicture
+        ? `/api/files/${studentData.user.profilePicture}`
         : '',
       email: studentData.user?.email || '',
       status,
@@ -71,8 +67,8 @@ export default async function Page({ params }: PageProps) {
       skills: skillsArray,
       alternanceRhythm: studentData.apprenticeshipRythm || '',
       description: studentData.description,
-      cvUrl: studentData.curriculumVitaeId
-        ? `/api/files/${studentData.curriculumVitaeId}`
+      cvUrl: studentData.curriculumVitae
+        ? `/api/files/${studentData.curriculumVitae}`
         : undefined,
       availability: studentData.availability ? 'Disponible' : 'Non disponible',
       recommendations: [],

@@ -13,30 +13,29 @@ export async function validateSchoolData(
 ): Promise<ValidationResult> {
   const errors: Record<string, string> = {};
 
-  // Validation du nom
   if ('name' in data && data.name !== undefined) {
     if (data.name.length < 2) {
       errors.name = 'Le nom doit contenir au moins 2 caractères';
     }
   }
 
-  // Validation du domainId
   if ('domainId' in data && data.domainId !== undefined) {
     const domain = await prisma.authorizedSchoolDomain.findUnique({
       where: { id: data.domainId },
     });
     if (!domain) {
-      errors.domainId = "Le domaine spécifié n'existe pas";
+      errors.domainId = 'Le domaine spécifié n\'existe pas';
     }
   }
 
-  // Validation du logoId si présent
-  if ('logoId' in data && data.logoId !== undefined && data.logoId !== null) {
-    const logo = await prisma.uploadFile.findUnique({
-      where: { uuid: data.logoId },
-    });
-    if (!logo) {
-      errors.logoId = "Le fichier logo spécifié n'existe pas";
+  if ('logo' in data && data.logo !== undefined && data.logo !== null) {
+    try {
+      const url = new URL(data.logo);
+      if (!url.href.startsWith('https://')) {
+        errors.logo = 'Le logo doit être une URL HTTPS valide';
+      }
+    } catch {
+      errors.logo = 'L\'URL du logo n\'est pas valide';
     }
   }
 

@@ -17,7 +17,7 @@ export interface JobExistsResult {
     id: string;
     companyId: string;
     name: string;
-    featuredImageId: string | null;
+    featuredImage: string | null;
     description: string;
     skills: string | null;
     createdAt: Date;

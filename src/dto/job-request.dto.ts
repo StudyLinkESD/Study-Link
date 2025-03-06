@@ -34,9 +34,7 @@ export interface EnrichedJobRequestResponseDTO {
       name: string;
       createdAt: Date;
       updatedAt: Date;
-      logo: {
-        fileUrl: string;
-      } | null;
+      logo: string | null;
     };
     featuredImage: string | null;
   };
