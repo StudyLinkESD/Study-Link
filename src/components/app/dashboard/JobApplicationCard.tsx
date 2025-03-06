@@ -9,11 +9,8 @@ import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import {
-  ApplicationStatus,
-  StatusMappingType,
-  JobApplicationFull,
-} from '@/types/application_status.type';
+import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
+import { StatusMappingType, JobApplicationFull } from '@/types/application_status.type';
 
 type JobApplicationCardProps = {
   application: JobApplicationFull;

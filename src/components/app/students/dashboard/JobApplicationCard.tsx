@@ -27,9 +27,15 @@ type JobApplicationCardProps = {
       id: string;
       userId: string;
       user: {
+        id: string; // Added
+        createdAt: Date; // Added
+        updatedAt: Date; // Added
+        deletedAt: Date | null; // Added
+        email: string; // Added
         firstname: string;
         lastname: string;
         profilePictureId: string | null;
+        emailVerified: Date | null; // Added
       };
     };
     job: {

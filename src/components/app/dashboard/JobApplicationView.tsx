@@ -17,7 +17,7 @@ import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { ApplicationStatus } from '@/types/application_status.type';
+import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
 import { JobApplicationsListProps } from './JobApplicationsList';
 
 // Type pour le mapping des statuts

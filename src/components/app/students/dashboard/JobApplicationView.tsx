@@ -145,7 +145,10 @@ export default function JobApplicationView({
 
           <div className="space-y-3">
             <Label htmlFor="status-select">Mettre à jour le statut</Label>
-            <Select defaultValue={status} onValueChange={(value) => updateApplicationStatus(value)}>
+            <Select
+              defaultValue={status}
+              onValueChange={(value) => updateApplicationStatus(value as ApplicationStatus)}
+            >
               <SelectTrigger id="status-select">
                 <SelectValue placeholder="Sélectionner un statut" />
               </SelectTrigger>
