@@ -4,6 +4,8 @@ import './globals.css';
 import AuthWrapper from '@/providers/AuthWrapper';
 import { Toaster } from 'sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Inter } from 'next/font/google';
+import { QueryProvider } from '@/providers/QueryProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -14,6 +16,8 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 });
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'StudyLink - Connectez étudiants et entreprises',
@@ -29,10 +33,14 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <AuthWrapper>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased ${inter.className}`}
+        >
           <SpeedInsights />
-          <Toaster position="top-right" richColors />
-          {children}
+          <QueryProvider>
+            <Toaster position="top-right" richColors />
+            {children}
+          </QueryProvider>
         </body>
       </AuthWrapper>
     </html>
