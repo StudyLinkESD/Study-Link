@@ -38,7 +38,7 @@ async function serverFetch(url: string, options: RequestInit = {}) {
 export async function getStudents(): Promise<StudentResponseDTO[]> {
   try {
     console.log('Fetching all students...');
-    const students = await serverFetch('/api/students');
+    const students = await serverFetch('/students');
     console.log('Raw students data:', students);
 
     if (!Array.isArray(students)) {
@@ -50,9 +50,9 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
       students.map(async (student) => {
         try {
           // Récupérer les informations de l'utilisateur
-          const userData = await serverFetch(`/api/users/${student.userId}`);
+          const userData = await serverFetch(`/users/${student.userId}`);
           // Récupérer les informations de l'école
-          const schoolData = await serverFetch(`/api/schools/${student.schoolId}`);
+          const schoolData = await serverFetch(`/schools/${student.schoolId}`);
 
           return {
             ...student,
@@ -76,12 +76,12 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
 export async function getStudentById(id: string): Promise<StudentResponseDTO | null> {
   try {
     console.log('Fetching student with ID:', id);
-    const student = await serverFetch(`/api/students/${id}`);
+    const student = await serverFetch(`/students/${id}`);
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/api/users/${student.userId}`),
-      serverFetch(`/api/schools/${student.schoolId}`),
+      serverFetch(`/users/${student.userId}`),
+      serverFetch(`/schools/${student.schoolId}`),
     ]);
 
     return {
@@ -101,12 +101,12 @@ export async function getStudentById(id: string): Promise<StudentResponseDTO | n
 
 export async function getStudentByUserId(userId: string): Promise<StudentResponseDTO | null> {
   try {
-    const student = await serverFetch(`/api/students/user/${userId}`);
+    const student = await serverFetch(`/students/user/${userId}`);
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/api/users/${student.userId}`),
-      serverFetch(`/api/schools/${student.schoolId}`),
+      serverFetch(`/users/${student.userId}`),
+      serverFetch(`/schools/${student.schoolId}`),
     ]);
 
     return {
@@ -125,15 +125,15 @@ export async function getStudentByUserId(userId: string): Promise<StudentRespons
 
 export async function createStudent(data: CreateStudentDTO): Promise<StudentResponseDTO> {
   try {
-    const student = await serverFetch('/api/students', {
+    const student = await serverFetch('/students', {
       method: 'POST',
       body: JSON.stringify(data),
     });
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/api/users/${student.userId}`),
-      serverFetch(`/api/schools/${student.schoolId}`),
+      serverFetch(`/users/${student.userId}`),
+      serverFetch(`/schools/${student.schoolId}`),
     ]);
 
     return {
@@ -152,15 +152,15 @@ export async function updateStudent(
   data: UpdateStudentDTO,
 ): Promise<StudentResponseDTO> {
   try {
-    const student = await serverFetch(`/api/students/${id}`, {
+    const student = await serverFetch(`/students/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/api/users/${student.userId}`),
-      serverFetch(`/api/schools/${student.schoolId}`),
+      serverFetch(`/users/${student.userId}`),
+      serverFetch(`/schools/${student.schoolId}`),
     ]);
 
     return {
