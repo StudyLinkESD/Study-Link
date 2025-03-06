@@ -1,3 +1,5 @@
+export type UserType = 'student' | 'company-owner';
+
 export interface BaseCreateUserDTO {
   email: string;
   firstname: string;
