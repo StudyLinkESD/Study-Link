@@ -42,10 +42,10 @@ export async function POST(
 
     const user = await prisma.user.create({
       data: {
-        email: body.email.toLowerCase(),
+        email: body.email.toLowerCase() ?? '',
         firstname: body.firstname,
         lastname: body.lastname,
-        profilePictureId: body.profilePictureId,
+        profilePicture: body.profilePicture,
       },
     });
 
@@ -61,6 +61,7 @@ export async function POST(
         data: {
           userId: user.id,
           schoolId: body.schoolId,
+          studentEmail: body.studentEmail,
           status: 'PENDING',
           skills: '',
           description: '',
@@ -72,9 +73,9 @@ export async function POST(
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
-    console.error("Erreur lors de la création de l'utilisateur:", error);
+    console.error('Erreur lors de la création de l\'utilisateur:', error);
     return NextResponse.json(
-      { error: "Erreur lors de la création de l'utilisateur" },
+      { error: 'Erreur lors de la création de l\'utilisateur' },
       { status: 500 },
     );
   }

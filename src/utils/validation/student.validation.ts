@@ -96,14 +96,19 @@ export const validateStudentData = async (
     }
   }
 
-  if (data.curriculumVitaeId) {
-    const file = await prisma.uploadFile.findUnique({
-      where: { uuid: data.curriculumVitaeId },
-    });
-    if (!file) {
+  if (data.curriculumVitae) {
+    try {
+      const url = new URL(data.curriculumVitae);
+      if (!url.href.startsWith('https://')) {
+        errors.push({
+          field: 'curriculumVitae',
+          message: "L'URL du CV doit être une URL HTTPS valide",
+        });
+      }
+    } catch {
       errors.push({
-        field: 'curriculumVitaeId',
-        message: "Le fichier CV spécifié n'existe pas",
+        field: 'curriculumVitae',
+        message: "L'URL du CV n'est pas valide",
       });
     }
   }

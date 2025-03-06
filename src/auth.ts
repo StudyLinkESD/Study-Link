@@ -9,6 +9,7 @@ declare module 'next-auth' {
     user: {
       id: string;
       email: string;
+      isGoogleEmail?: boolean;
       name?: string | null;
       image?: string | null;
     };
@@ -28,37 +29,28 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (account && user) {
         token.accessToken = account.access_token;
         token.id = user.id;
+        token.isGoogleEmail = account.provider === 'google';
       }
       return token;
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.user.id = token.id as string;
+      session.user.isGoogleEmail = token.isGoogleEmail as boolean;
       return session;
     },
     async redirect({ url, baseUrl }) {
       if (url.startsWith('http')) return url;
-
       if (url.startsWith('/')) return `${baseUrl}${url}`;
-      
-      const userId = url.split('user=')[1]?.split('&')[0];
-      if (userId) {
-        const student = await prisma.student.findUnique({
-          where: { userId },
-          select: { status: true }
-        });
-        
-        if (student && student.status === 'PENDING') {
-          return `${baseUrl}/students/profile-info`;
-        }
-      }
-      
-      return baseUrl;
+
+      return `${baseUrl}/students/profile-info`;
     },
-    async signIn({ account, profile }) {
+    async signIn({ account, profile, user }) {
       if (account?.provider === 'google' && profile?.email) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: profile.email },
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            email: profile.email,
+          },
         });
 
         if (!existingUser && profile.name) {
@@ -75,7 +67,26 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               },
             });
           } catch (error) {
-            console.error("Erreur lors de la création de l'utilisateur:", error);
+            console.error('Erreur lors de la création de l\'utilisateur:', error);
+            return false;
+          }
+        }
+      } else if (user?.email) {
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            email: user.email,
+          },
+        });
+
+        if (!existingUser) {
+          try {
+            await prisma.user.create({
+              data: {
+                email: user.email,
+              },
+            });
+          } catch (error) {
+            console.error('Erreur lors de la création de l\'utilisateur:', error);
             return false;
           }
         }
