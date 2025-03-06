@@ -17,8 +17,10 @@ datasource db {
 model User {
   id                String              @id @default(cuid())
   email             String              @unique
-  firstname         String
-  lastname          String
+  name              String?
+  firstname         String?
+  lastname          String?
+  profileCompleted  Boolean             @default(false)
   profilePicture    UploadFile?         @relation(fields: [profilePictureId], references: [uuid])
   profilePictureId  String?
   emailVerified     DateTime?
@@ -30,6 +32,7 @@ model User {
   companyOwner      CompanyOwner?
   admin             Admin?
   verificationToken VerificationToken[]
+  Account           Account[]
 }
 
 model Student {
@@ -37,6 +40,7 @@ model Student {
   user                    User             @relation(fields: [userId], references: [id])
   userId                  String           @unique
   school                  School           @relation(fields: [schoolId], references: [id])
+  studentEmail            String           @unique
   schoolId                String
   primaryRecommendation   Recommendation?  @relation("PrimaryRecommendation", fields: [primaryRecommendationId], references: [id])
   primaryRecommendationId String?          @unique
@@ -149,8 +153,8 @@ model Job {
   featuredImageId String?
   description     String
   skills          String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
   deletedAt       DateTime?
 
   jobRequests JobRequest[]
@@ -166,4 +170,22 @@ model JobRequest {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  type              String?
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  @@unique([provider, providerAccountId])
 }
