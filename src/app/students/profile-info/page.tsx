@@ -31,7 +31,7 @@ import NavigationButtons from '@/components/app/profileForm/NavigationButton';
 import { cn } from '@/lib/utils';
 import { CreateStudentData } from '@/dto/student.dto';
 import { validateSchoolEmail } from '@/services/school.service';
-import { uploadFileToSupabase } from '@/utils/uploadFile';
+import { uploadFileToSupabase } from '@/services/uploadFile';
 
 const profileSchema = z.object({
   firstName: z
@@ -309,7 +309,7 @@ export default function StudentProfileForm() {
           fileSize: file.size,
         });
 
-        // Upload du fichier vers Supabase
+        // Upload du fichier vers Supabase et création de l'entrée dans UploadFile
         const result = await uploadFileToSupabase(file, 'studylink_images');
 
         if (!result) {
@@ -317,7 +317,7 @@ export default function StudentProfileForm() {
           throw new Error("Échec de l'upload du CV");
         }
 
-        console.log('Upload réussi, URL du fichier:', result.fileUrl);
+        console.log('Upload réussi:', result);
         setUploadedCv(file);
         return result;
       } catch (error) {
@@ -390,13 +390,20 @@ export default function StudentProfileForm() {
 
       let cvData = null;
       if (uploadedCv) {
-        const uploadResult = await handleCvUpload(uploadedCv);
-        if (uploadResult) {
+        try {
+          const uploadResult = await handleCvUpload(uploadedCv);
+          if (!uploadResult) {
+            throw new Error("Échec de l'upload du CV");
+          }
           cvData = uploadResult;
+        } catch (error) {
+          console.error("Erreur lors de l'upload du CV:", error);
+          toast.error("Erreur lors de l'upload du CV");
+          return;
         }
       }
 
-      const studentData = {
+      const studentData: CreateStudentData = {
         userId: session.user.id,
         schoolId: data.school,
         status: data.status,
@@ -407,6 +414,7 @@ export default function StudentProfileForm() {
         previousCompanies: data.previousCompanies || 'Aucune expérience',
         availability: data.availability,
         studentEmail: data.schoolEmail,
+        createdAt: new Date(),
       };
 
       console.log('Données du formulaire:', data);
