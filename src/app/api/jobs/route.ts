@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, Job, Company, UploadFile } from '@prisma/client';
+import { PrismaClient, Job } from '@prisma/client';
 import { CreateJobDTO, JobResponseDTO } from '@/dto/job.dto';
 import { validateJobData } from '@/utils/validation/job.validation';
 
@@ -17,16 +17,11 @@ export async function GET(): Promise<NextResponse<JobResponseDTO[] | { error: st
       },
     });
 
-    const formattedJobs: JobResponseDTO[] = (
-      jobs as (Job & {
-        company: Company;
-        featuredImage: UploadFile | null;
-      })[]
-    ).map((job) => ({
+    const formattedJobs: JobResponseDTO[] = jobs.map((job) => ({
       id: job.id,
       companyId: job.companyId,
       name: job.name,
-      featuredImageId: job.featuredImageId || undefined,
+      featuredImage: job.featuredImage || undefined,
       description: job.description,
       skills: job.skills || undefined,
       createdAt: job.createdAt,
@@ -69,7 +64,7 @@ export async function POST(
       id: job.id,
       companyId: job.companyId,
       name: job.name,
-      featuredImageId: job.featuredImageId || undefined,
+      featuredImage: job.featuredImage || undefined,
       description: job.description,
       skills: (job as Job).skills || undefined,
       createdAt: job.createdAt,
