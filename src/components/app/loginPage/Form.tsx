@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { Separator } from '@/components/ui/separator';
+import { useRouter } from 'next/navigation';
 
 const authSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -21,6 +22,7 @@ type AuthValues = z.infer<typeof authSchema>;
 const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm<AuthValues>({
     resolver: zodResolver(authSchema),
@@ -33,18 +35,25 @@ const AuthForm = () => {
     try {
       setIsLoading(true);
 
-      // Cette partie sera modifiée plus tard pour utiliser une route unique
-      // qui déterminera si l'utilisateur doit être créé ou connecté
-      const signInResult = await signIn('resend', {
-        email: data.email,
-        redirect: true,
+      const response = await fetch('/api/auth/authenticate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
       });
 
-      if (signInResult?.error) {
-        toast.error(signInResult.error || 'Une erreur est survenue');
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(result.error || 'Une erreur est survenue');
+        return;
       }
+
+      toast.success('Un email de connexion vous a été envoyé');
+      router.push('/verify-request');
     } catch (error) {
-      toast.error('Une erreur est survenue lors de l\'authentification' + error);
+      toast.error("Une erreur est survenue lors de l'authentification");
     } finally {
       setIsLoading(false);
     }
@@ -53,9 +62,9 @@ const AuthForm = () => {
   const handleGoogleAuth = async () => {
     try {
       setIsGoogleLoading(true);
-      await signIn('google', { callbackUrl: '/' });
+      await signIn('google', { callbackUrl: '/students/profile-info' });
     } catch {
-      toast.error('Une erreur est survenue lors de l\'authentification avec Google');
+      toast.error("Une erreur est survenue lors de l'authentification avec Google");
     } finally {
       setIsGoogleLoading(false);
     }
