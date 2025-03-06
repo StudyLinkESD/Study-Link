@@ -1,27 +1,23 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { ReactNode } from 'react';
+import { createContextHook } from './createContextHook';
 import { JobCardProps } from '@/components/app/jobs/JobCard';
 
-type JobContextType = {
-  selectedJob: JobCardProps | null;
-  setSelectedJob: (job: JobCardProps | null) => void;
-};
+// Utilisation du hook factory pour créer le contexte et le hook
+const { Provider, useContextHook } = createContextHook<JobCardProps>('Job');
 
-const JobContext = createContext<JobContextType | undefined>(undefined);
-
+// Renommage du Provider pour maintenir la compatibilité avec le code existant
 export function JobProvider({ children }: { children: ReactNode }) {
-  const [selectedJob, setSelectedJob] = useState<JobCardProps | null>(null);
-
-  return (
-    <JobContext.Provider value={{ selectedJob, setSelectedJob }}>{children}</JobContext.Provider>
-  );
+  return <Provider>{children}</Provider>;
 }
 
+// Adaptation du hook pour maintenir la compatibilité avec le code existant
 export function useJob() {
-  const context = useContext(JobContext);
-  if (context === undefined) {
-    throw new Error('useJob must be used within a JobProvider');
-  }
-  return context;
+  const { state, setState } = useContextHook();
+
+  return {
+    selectedJob: state,
+    setSelectedJob: setState,
+  };
 }

@@ -1,24 +1,23 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { JobApplicationContextType, JobApplicationFull } from '@/types/application_status.type';
+import { ReactNode } from 'react';
+import { createContextHook } from './createContextHook';
+import { JobApplicationFull } from '@/types/application_status.type';
 
-const JobApplicationContext = createContext<JobApplicationContextType | undefined>(undefined);
+// Utilisation du hook factory pour créer le contexte et le hook
+const { Provider, useContextHook } = createContextHook<JobApplicationFull>('JobApplication');
 
+// Renommage du Provider pour maintenir la compatibilité avec le code existant
 export function JobApplicationProvider({ children }: { children: ReactNode }) {
-  const [selectedApplication, setSelectedApplication] = useState<JobApplicationFull | null>(null);
-
-  return (
-    <JobApplicationContext.Provider value={{ selectedApplication, setSelectedApplication }}>
-      {children}
-    </JobApplicationContext.Provider>
-  );
+  return <Provider>{children}</Provider>;
 }
 
+// Adaptation du hook pour maintenir la compatibilité avec le code existant
 export function useJobApplication() {
-  const context = useContext(JobApplicationContext);
-  if (context === undefined) {
-    throw new Error('useJobApplication must be used within a JobApplicationProvider');
-  }
-  return context;
+  const { state, setState } = useContextHook();
+
+  return {
+    selectedApplication: state,
+    setSelectedApplication: setState,
+  };
 }
