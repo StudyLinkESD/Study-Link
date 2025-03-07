@@ -13,8 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import Link from 'next/link';
-import { Search, Users } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import { Input } from '@/components/ui/input';
 
@@ -90,11 +89,6 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
     setFilteredSchools(filtered);
     setCurrentPage(1);
   }, [schools, activeFilter, searchTerm]);
-
-  const paginatedSchools = filteredSchools.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
-  );
 
   const handleEditSuccess = () => {
     setEditingSchool(null);

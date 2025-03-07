@@ -1,52 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
-import { validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
+import { UpdateUserDTO } from '@/dto/user.dto';
+import { validateUserUpdate } from '@/utils/validation/user.validation';
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } },
-): Promise<NextResponse<UserResponseDTO | { error: string }>> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const id = request.nextUrl.pathname.split('/').pop();
+    if (!id) {
+      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id: context.params.id },
+      where: { id },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    const userResponse: UserResponseDTO = {
-      id: user.id,
-      email: user.email,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      profilePicture: user.profilePicture,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-
-    return NextResponse.json(userResponse);
+    return NextResponse.json(user);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
-    console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération de l'utilisateur" },
       { error: "Une erreur est survenue lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
 }
 
-export async function PUT(
-  request: Request,
-  context: { params: { id: string } },
-): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {
+export async function PUT(request: NextRequest): Promise<NextResponse> {
   try {
-    const userId = context.params.id;
+    const id = request.nextUrl.pathname.split('/').pop();
+    if (!id) {
+      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
+    }
+
     const body = (await request.json()) as UpdateUserDTO;
 
-    const validationResult = await validateUserUpdate(body, userId);
+    const validationResult = await validateUserUpdate(body, id);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
@@ -58,46 +49,34 @@ export async function PUT(
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { id },
       data: {
         ...(body.email && { email: body.email.toLowerCase() }),
-        ...(body.firstName && { firstName: body.firstName }),
-        ...(body.lastName && { lastName: body.lastName }),
-        ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
+        ...(body.firstName && { firstname: body.firstName }),
+        ...(body.lastName && { lastname: body.lastName }),
+        ...(body.profilePicture !== undefined && { profilePictureId: body.profilePicture }),
       },
     });
 
-    const userResponse: UserResponseDTO = {
-      id: updatedUser.id,
-      email: updatedUser.email,
-      firstname: updatedUser.firstname,
-      lastname: updatedUser.lastname,
-      profilePicture: updatedUser.profilePicture,
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt,
-    };
-
-    return NextResponse.json(userResponse);
+    return NextResponse.json(updatedUser);
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
-    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { status: 500 },
     );
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
-    const id = (await params).id;
+    const id = request.nextUrl.pathname.split('/').pop();
+    if (!id) {
+      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
+    }
 
     const existingUser = await prisma.user.findUnique({
-      where: { id: id },
+      where: { id },
       include: {
         student: true,
         schoolOwner: true,
@@ -155,7 +134,7 @@ export async function DELETE(
       }
 
       await tx.user.update({
-        where: { id: id },
+        where: { id },
         data: {
           deletedAt: new Date(),
         },
