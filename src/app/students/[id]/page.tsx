@@ -68,7 +68,7 @@ export default async function Page({ params }: PageProps) {
       status,
       school: studentData.school?.name || '',
       skills: skillsArray,
-      alternanceRhythm: studentData.apprenticeshipRythm || '',
+      alternanceRhythm: studentData.apprenticeshipRhythm || '',
       description: studentData.description,
       cvUrl: studentData.curriculumVitae ? `/api/files/${studentData.curriculumVitae}` : undefined,
       availability: studentData.availability ? 'Disponible' : 'Non disponible',

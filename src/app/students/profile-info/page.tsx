@@ -89,7 +89,7 @@ interface CreateStudentData {
   schoolId: string;
   status: 'Alternant' | 'Stagiaire';
   skills: string;
-  apprenticeshipRythm: string | null;
+  apprenticeshipRhythm: string | null;
   description: string;
   curriculumVitaeId: string | null;
   previousCompanies: string;
@@ -239,7 +239,7 @@ export default function StudentProfileForm() {
               status: studentData.status as 'Alternant' | 'Stagiaire',
               school: studentData.schoolId,
               availability: studentData.availability ? 'Disponible' : '',
-              alternanceRhythm: studentData.apprenticeshipRythm || '',
+              alternanceRhythm: studentData.apprenticeshipRhythm || '',
               description: studentData.description,
               skills: studentData.skills.split(',').map((s: string) => s.trim()),
             });
@@ -327,7 +327,7 @@ export default function StudentProfileForm() {
         schoolId: data.school,
         status: data.status,
         skills: data.skills.join(', '),
-        apprenticeshipRythm: data.alternanceRhythm || null,
+        apprenticeshipRhythm: data.alternanceRhythm || null,
         description: data.description || '',
         curriculumVitaeId: uploadedCv ? uploadedCv.name : null,
         previousCompanies: '',

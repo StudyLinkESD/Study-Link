@@ -39,7 +39,7 @@ model Student {
   primaryRecommendationId String?          @unique
   status                  String
   skills                  String
-  apprenticeshipRythm     String?
+  apprenticeshipRhythm    String?
   description             String
   curriculumVitae         String?
   previousCompanies       String

@@ -133,8 +133,8 @@ export default function StudentProfilePage() {
               <div className="mt-6 w-full space-y-4">
                 {student.school && <InfoItem icon={School}>{student.school.name}</InfoItem>}
 
-                {student.apprenticeshipRythm && (
-                  <InfoItem icon={Calendar}>{student.apprenticeshipRythm}</InfoItem>
+                {student.apprenticeshipRhythm && (
+                  <InfoItem icon={Calendar}>{student.apprenticeshipRhythm}</InfoItem>
                 )}
 
                 {student.availability !== undefined && (
