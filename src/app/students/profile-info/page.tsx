@@ -307,12 +307,17 @@ export default function StudentProfileForm() {
           fileSize: file.size,
         });
 
-        // Upload du fichier vers Supabase et création de l'entrée dans UploadFile
+        // Upload du fichier vers Supabase
         const result = await uploadFileToSupabase(file, 'studylink_images');
 
         if (!result) {
           console.error("L'upload a échoué - aucune URL retournée");
           throw new Error("Échec de l'upload du CV");
+        }
+
+        if ('code' in result) {
+          console.error('Erreur de validation:', result.message);
+          throw new Error(result.message);
         }
 
         console.log('Upload réussi:', result);

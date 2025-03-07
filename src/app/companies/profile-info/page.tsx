@@ -85,21 +85,7 @@ export default function CompanyProfileForm() {
       if (uploadedLogo) {
         const logoUrl = await uploadLogo(uploadedLogo);
         if (logoUrl) {
-          // Créer une entrée dans la table UploadFile
-          const uploadResponse = await fetch('/api/upload-files', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fileUrl: logoUrl,
-            }),
-          });
-          if (!uploadResponse.ok) {
-            throw new Error("Erreur lors de la création de l'entrée du fichier");
-          }
-          const uploadData = await uploadResponse.json();
-          logo = uploadData.uuid;
+          logo = logoUrl;
         }
       }
 
