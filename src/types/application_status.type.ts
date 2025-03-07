@@ -1,14 +1,10 @@
 import { Prisma } from '@prisma/client';
 import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
 
-// Define the application status type based on the existing schema
-// export type ApplicationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
-
 export type StatusMappingType = {
   [key in ApplicationStatus]: string;
 };
 
-// Define extended types with relations
 export type JobWithCompany = Prisma.JobGetPayload<{
   include: {
     company: true;
@@ -23,7 +19,6 @@ export type StudentWithUser = Prisma.StudentGetPayload<{
   };
 }>;
 
-// Mise à jour du type JobApplicationFull pour correspondre à la structure utilisée dans JobApplicationCard
 export type JobApplicationFull = {
   id: string;
   studentId: string;
@@ -57,7 +52,6 @@ export type JobApplicationFull = {
   };
 };
 
-// Types for context
 export interface JobApplicationContextType {
   selectedApplication: JobApplicationFull | null;
   setSelectedApplication: (application: JobApplicationFull | null) => void;

@@ -33,7 +33,6 @@ export default function JobApplicationCard({
     return format(new Date(createdAt), 'dd MMMM yyyy', { locale: fr });
   }, [createdAt]);
 
-  // Map API status to display status
   const statusMapping: StatusMappingType = {
     PENDING: 'En attente',
     ACCEPTED: 'Acceptée',

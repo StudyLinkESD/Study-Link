@@ -5,14 +5,14 @@ type PaginationProps = {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  maxPageButtons?: number; // Limite le nombre de boutons de page affichés
-  showFirstLastButtons?: boolean; // Option pour afficher les boutons "Premier" et "Dernier"
+  maxPageButtons?: number;
+  showFirstLastButtons?: boolean;
   labels?: {
     previous?: string;
     next?: string;
     first?: string;
     last?: string;
-  }; // Personnalisation des libellés pour l'internationalisation
+  };
 };
 
 function Pagination({
@@ -28,13 +28,11 @@ function Pagination({
     last: 'Dernier',
   },
 }: PaginationProps) {
-  // Logique pour déterminer quelles pages afficher lorsque maxPageButtons est inférieur à totalPages
   const getPageRange = () => {
     if (totalPages <= maxPageButtons) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
 
-    // Calcul pour afficher les boutons de page autour de la page courante
     const halfMax = Math.floor(maxPageButtons / 2);
     let start = Math.max(currentPage - halfMax, 1);
     const end = Math.min(start + maxPageButtons - 1, totalPages);

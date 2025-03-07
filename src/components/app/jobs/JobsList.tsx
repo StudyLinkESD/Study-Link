@@ -5,15 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-
-// Importation des composants communs réutilisables
 import SearchBar from '@/components/app/common/SearchBar';
 import FilterSelector from '@/components/app/common/FilterSelector';
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
 import JobCard, { JobCardProps } from '@/components/app/jobs/JobCard';
 
-// Constantes et types
 const JOBS_PER_PAGE = 9;
 const STATUS_OPTIONS = {
   ALL: 'all',
@@ -31,7 +28,6 @@ type JobsListProps = {
   isLoading?: boolean;
 };
 
-// Définition de l'état et du reducer
 type FilterState = {
   statusFilter: string;
   searchTerm: string;
@@ -84,7 +80,6 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Composant pour les filtres extraits
 function JobFilters({
   state,
   dispatch,
@@ -98,7 +93,6 @@ function JobFilters({
 }) {
   const { selectedSkills } = state;
 
-  // Fonctions de gestion des skills
   const handleSelectSkill = (skill: string) => {
     dispatch({ type: 'ADD_SKILL', payload: skill });
   };
@@ -108,17 +102,11 @@ function JobFilters({
   };
 
   const resetFilters = () => {
-    // Récupérer le statut actuel avant la réinitialisation
     const currentStatus = state.statusFilter;
-
-    // Réinitialiser tous les filtres
     dispatch({ type: 'RESET_FILTERS' });
-
-    // Rétablir le statut d'onglet précédent
     dispatch({ type: 'SET_STATUS_FILTER', payload: currentStatus });
   };
 
-  // Convertir les skills en options pour le FilterSelector
   const skillOptions = allSkills.map((skill) => ({
     value: skill,
     label: skill,
@@ -145,7 +133,6 @@ function JobFilters({
           Filtrer par compétences
         </Label>
 
-        {/* Utilisation du composant FilterSelector */}
         <div className="flex">
           <FilterSelector
             options={skillOptions}
@@ -161,7 +148,6 @@ function JobFilters({
   );
 }
 
-// Composant principal de liste d'étudiants
 export default function JobsList({
   jobs,
   title = 'Liste des étudiants',
@@ -176,7 +162,6 @@ export default function JobsList({
     [jobs],
   );
 
-  // Logique de filtrage
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
 
@@ -204,7 +189,6 @@ export default function JobsList({
     return result;
   }, [statusFilter, searchTerm, selectedSkills, jobs]);
 
-  // Calcul de la pagination
   const totalPages = Math.ceil(filteredJobs.length / JOBS_PER_PAGE);
   const currentJobs = useMemo(() => {
     const indexOfLastJob = currentPage * JOBS_PER_PAGE;
@@ -212,7 +196,6 @@ export default function JobsList({
     return filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
   }, [filteredJobs, currentPage]);
 
-  // État de chargement
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[400px]">
@@ -252,7 +235,6 @@ export default function JobsList({
               jobsCount={filteredJobs.length}
             />
 
-            {/* Contenu des onglets unifié en un seul élément */}
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
               <ItemGrid
                 items={currentJobs}
@@ -290,7 +272,6 @@ export default function JobsList({
         </CardContent>
       </Card>
 
-      {/* Composant de pagination */}
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}

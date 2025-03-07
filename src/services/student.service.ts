@@ -1,18 +1,13 @@
-// src/services/student.service.ts
 import { StudentResponseDTO, CreateStudentDTO, UpdateStudentDTO } from '@/dto/student.dto';
 import { prisma } from '@/lib/prisma';
 
-// Fonction utilitaire pour obtenir l'URL de base
 function getBaseUrl() {
-  // En développement, utiliser localhost:3000
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:3000/api';
   }
-  // En production, utiliser l'URL de l'API ou une URL par défaut
   return process.env.NEXT_PUBLIC_API_URL;
 }
 
-// Fonction utilitaire pour les appels API côté serveur
 async function serverFetch(url: string, options: RequestInit = {}) {
   const baseUrl = getBaseUrl();
   const fullUrl = `${baseUrl}${url}`;
@@ -48,7 +43,6 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
   try {
     console.log('Fetching all students...');
 
-    // Utiliser Prisma directement pendant le build
     if (process.env.NODE_ENV === 'production') {
       const students = await prisma.student.findMany({
         include: {
@@ -73,7 +67,6 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
       return students as unknown as StudentResponseDTO[];
     }
 
-    // En développement, utiliser l'API
     const students = await serverFetch('/students');
     console.log('Raw students data:', students);
 
@@ -81,13 +74,10 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
       throw new Error('Students data is not an array');
     }
 
-    // Récupérer les informations utilisateur pour chaque étudiant
     const studentsWithUserInfo = await Promise.all(
       students.map(async (student) => {
         try {
-          // Récupérer les informations de l'utilisateur
           const userData = await serverFetch(`/users/${student.userId}`);
-          // Récupérer les informations de l'école
           const schoolData = await serverFetch(`/schools/${student.schoolId}`);
 
           return {
@@ -114,7 +104,6 @@ export async function getStudentById(id: string): Promise<StudentResponseDTO | n
     console.log('Fetching student with ID:', id);
     const student = await serverFetch(`/students/${id}`);
 
-    // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
       serverFetch(`/users/${student.userId}`),
       serverFetch(`/schools/${student.schoolId}`),
@@ -139,7 +128,6 @@ export async function getStudentByUserId(userId: string): Promise<StudentRespons
   try {
     const student = await serverFetch(`/students/user/${userId}`);
 
-    // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
       serverFetch(`/users/${student.userId}`),
       serverFetch(`/schools/${student.schoolId}`),
@@ -166,7 +154,6 @@ export async function createStudent(data: CreateStudentDTO): Promise<StudentResp
       body: JSON.stringify(data),
     });
 
-    // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
       serverFetch(`/users/${student.userId}`),
       serverFetch(`/schools/${student.schoolId}`),
@@ -193,7 +180,6 @@ export async function updateStudent(
       body: JSON.stringify(data),
     });
 
-    // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
       serverFetch(`/users/${student.userId}`),
       serverFetch(`/schools/${student.schoolId}`),

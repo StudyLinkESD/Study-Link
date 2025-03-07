@@ -64,7 +64,6 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Filter component
 function ApplicationFilters({
   state,
   dispatch,
@@ -127,7 +126,6 @@ export default function JobApplicationsList({
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [applicationToDelete, setApplicationToDelete] = React.useState<string | null>(null);
 
-  // Filtering logic
   const filteredApplications = useMemo(() => {
     let result = [...applications];
 
@@ -149,7 +147,6 @@ export default function JobApplicationsList({
     return result;
   }, [statusFilter, searchTerm, applications]);
 
-  // Pagination calculation
   const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
@@ -172,10 +169,8 @@ export default function JobApplicationsList({
 
       if (!response.ok) throw new Error('Failed to delete application');
 
-      // Update local state
       setApplications(applications.filter((app) => app.id !== applicationToDelete));
 
-      // If deleted application was selected, deselect it
       if (selectedApplication?.id === applicationToDelete) {
         setSelectedApplication(null);
       }
@@ -207,7 +202,6 @@ export default function JobApplicationsList({
               applicationCount={filteredApplications.length}
             />
 
-            {/* Tab contents */}
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
               <ItemGrid
                 items={currentApplications}
@@ -279,7 +273,6 @@ export default function JobApplicationsList({
         </CardContent>
       </Card>
 
-      {/* Pagination component */}
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
@@ -288,7 +281,6 @@ export default function JobApplicationsList({
         />
       )}
 
-      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -15,9 +15,7 @@ export type StudentCardProps = {
   school?: string;
 };
 
-// Composant pour afficher les compétences, extrait pour plus de clarté
 const SkillsList = React.memo(({ skills }: { skills: StudentCardProps['skills'] }) => {
-  // Limiter l'affichage à 3 compétences maximum
   const displayedSkills = skills.slice(0, 3);
   const hasMoreSkills = skills.length > 3;
 
@@ -49,7 +47,6 @@ function StudentCardComponent({
       <Card className="overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-1 h-full">
         <CardContent className="p-4">
           <div className="flex flex-col gap-4">
-            {/* En-tête avec avatar et informations principales */}
             <div className="flex items-start gap-4">
               <ProfileAvatar
                 firstName={firstName}
@@ -76,7 +73,6 @@ function StudentCardComponent({
               </div>
             </div>
 
-            {/* Compétences */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Briefcase className="h-4 w-4" />
@@ -91,7 +87,6 @@ function StudentCardComponent({
   );
 }
 
-// Mémorisation du composant pour éviter les rendus inutiles
 const StudentCard = React.memo(StudentCardComponent);
 
 export default StudentCard;

@@ -1,7 +1,6 @@
-// FormField.tsx
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { CheckCircle2, AlertCircle, HelpCircle } from "lucide-react";
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
 
 interface FormFieldProps {
   label: string;
@@ -29,12 +28,9 @@ export default function FormField({
   helpText,
 }: FormFieldProps) {
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn('space-y-2', className)}>
       <div className="flex items-center justify-between">
-        <Label
-          htmlFor={htmlFor}
-          className={cn("text-sm font-medium", error && "text-destructive")}
-        >
+        <Label htmlFor={htmlFor} className={cn('text-sm font-medium', error && 'text-destructive')}>
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
@@ -48,17 +44,13 @@ export default function FormField({
           </div>
         )}
       </div>
-      
+
       {children}
-      
+
       {(error || hint || helpText) && (
         <div className="space-y-2">
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-          {hint && !error && (
-            <p className="text-sm text-muted-foreground">{hint}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {hint && !error && <p className="text-sm text-muted-foreground">{hint}</p>}
           {helpText && !error && (
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
               <HelpCircle className="w-4 h-4 mt-0.5" />

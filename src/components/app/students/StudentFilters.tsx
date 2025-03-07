@@ -5,7 +5,6 @@ import SearchBar from '@/components/app/common/SearchBar';
 import FilterSelector from '@/components/app/common/FilterSelector';
 import { STUDENT_STATUS } from '@/constants/status';
 
-// Types exportés pour être partagés
 export type FilterState = {
   statusFilter: string;
   searchTerm: string;
@@ -30,7 +29,6 @@ type StudentFiltersProps = {
 function StudentFiltersComponent({ state, dispatch, allSkills }: StudentFiltersProps) {
   const { selectedSkills } = state;
 
-  // Fonctions de gestion des skills mémorisées
   const handleSelectSkill = React.useCallback(
     (skill: string) => {
       dispatch({ type: 'ADD_SKILL', payload: skill });
@@ -46,17 +44,11 @@ function StudentFiltersComponent({ state, dispatch, allSkills }: StudentFiltersP
   );
 
   const resetFilters = React.useCallback(() => {
-    // Récupérer le statut actuel avant la réinitialisation
     const currentStatus = state.statusFilter;
-
-    // Réinitialiser tous les filtres
     dispatch({ type: 'RESET_FILTERS' });
-
-    // Rétablir le statut d'onglet précédent
     dispatch({ type: 'SET_STATUS_FILTER', payload: currentStatus });
   }, [dispatch, state.statusFilter]);
 
-  // Convertir les skills en options pour le FilterSelector
   const skillOptions = React.useMemo(
     () =>
       allSkills.map((skill) => ({
@@ -75,7 +67,6 @@ function StudentFiltersComponent({ state, dispatch, allSkills }: StudentFiltersP
           <TabsTrigger value={STUDENT_STATUS.STAGIAIRE}>Stagiaires</TabsTrigger>
         </TabsList>
 
-        {/* Utilisation du composant SearchBar */}
         <SearchBar
           onSearch={(term) => dispatch({ type: 'SET_SEARCH_TERM', payload: term })}
           placeholder="Rechercher..."
@@ -89,7 +80,6 @@ function StudentFiltersComponent({ state, dispatch, allSkills }: StudentFiltersP
           Filtrer par compétences
         </Label>
 
-        {/* Utilisation du composant FilterSelector */}
         <div className="flex">
           <FilterSelector
             options={skillOptions}
@@ -105,7 +95,6 @@ function StudentFiltersComponent({ state, dispatch, allSkills }: StudentFiltersP
   );
 }
 
-// Mémorisation du composant pour éviter les rendus inutiles
 const StudentFilters = React.memo(StudentFiltersComponent);
 
 export default StudentFilters;

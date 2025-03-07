@@ -77,7 +77,6 @@ export async function DELETE(
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
     const id = (await params).id;
-    // Vérifier si le domaine est utilisé par des écoles
     const schoolsUsingDomain = await prisma.school.count({
       where: {
         domainId: id,

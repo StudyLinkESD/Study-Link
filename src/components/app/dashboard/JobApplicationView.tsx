@@ -20,7 +20,6 @@ import { toast } from 'sonner';
 import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
 import { JobApplicationsListProps } from './JobApplicationsList';
 
-// Type pour le mapping des statuts
 type StatusMappingType = {
   [key in ApplicationStatus]: string;
 };
@@ -45,7 +44,6 @@ export default function JobApplicationView({
 
       if (!response.ok) throw new Error('Failed to update application status');
 
-      // Mise à jour des applications dans l'état local
       const updatedApplications = applications.map((app) =>
         app.id === selectedApplication.id ? { ...app, status: newStatus } : app,
       );
@@ -97,7 +95,6 @@ export default function JobApplicationView({
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Informations sur le candidat */}
         <div className="space-y-4">
           <h3 className="font-semibold text-lg">Candidat</h3>
           <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-md">
@@ -117,7 +114,6 @@ export default function JobApplicationView({
           </div>
         </div>
 
-        {/* Informations sur l'offre */}
         <div className="space-y-4">
           <h3 className="font-semibold text-lg">Offre</h3>
           <div className="bg-muted/50 p-3 rounded-md">
@@ -129,7 +125,6 @@ export default function JobApplicationView({
           </div>
         </div>
 
-        {/* Statut de la candidature */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-lg">Statut</h3>
@@ -163,7 +158,6 @@ export default function JobApplicationView({
           </div>
         </div>
 
-        {/* Dates */}
         <div className="space-y-2 pt-2 text-sm">
           <p className="text-muted-foreground">
             <span className="font-medium">Date de candidature:</span> {formattedCreatedDate}

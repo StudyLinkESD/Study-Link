@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { UpdateUserDTO, UserByIdResponseDTO, UserResponseDTO } from '@/dto/user.dto';
-import {
-  validateUserUpdate,
-  ValidationError,
-} from '@/utils/validation/user.validation';
+import { validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
 
 const prisma = new PrismaClient();
 
@@ -135,9 +132,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    // Transaction is used to cascade values
-    // Used here to delete all information related to the user
-    // If one transaction fail, other tx are not executed and a rollback is executed
     await prisma.$transaction(async (tx) => {
       if (existingUser.student) {
         await tx.recommendation.deleteMany({

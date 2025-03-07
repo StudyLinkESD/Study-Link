@@ -9,7 +9,6 @@ type ProfileAvatarProps = {
   className?: string;
 };
 
-// Map des tailles déplacé en dehors du composant
 const sizeClasses = {
   sm: 'h-10 w-10',
   md: 'h-16 w-16',
@@ -17,7 +16,6 @@ const sizeClasses = {
   xl: 'h-32 w-32',
 };
 
-// Map des tailles de texte pour le fallback déplacé en dehors du composant
 const textSizeClasses = {
   sm: 'text-sm',
   md: 'text-lg',
@@ -46,7 +44,6 @@ const ProfileAvatarComponent = ({
   );
 };
 
-// Mémorisation du composant pour éviter les rendus inutiles
 const ProfileAvatar = React.memo(ProfileAvatarComponent);
 
 export default ProfileAvatar;

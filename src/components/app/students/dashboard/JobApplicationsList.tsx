@@ -11,7 +11,6 @@ import JobApplicationCard from '@/components/app/students/dashboard/JobApplicati
 import { Prisma } from '@prisma/client';
 import { JobApplicationFull } from '@/types/application_status.type';
 
-// Add this type using Prisma's generated types
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   include: {
     student: {
@@ -27,7 +26,6 @@ type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   };
 }>;
 
-// Fonction de transformation
 const transformToJobApplicationFull = (app: JobRequestWithRelations): JobApplicationFull => ({
   id: app.id,
   studentId: app.studentId,
@@ -103,7 +101,6 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Composant pour les filtres
 function ApplicationFilters({
   state,
   dispatch,
@@ -162,7 +159,6 @@ export default function JobApplicationsList({
   const [, setDeleteDialogOpen] = React.useState(false);
   const [, setApplicationToDelete] = React.useState<string | null>(null);
 
-  // Logique de filtrage
   const filteredApplications = useMemo(() => {
     let result = [...applications];
 
@@ -184,7 +180,6 @@ export default function JobApplicationsList({
     return result;
   }, [statusFilter, searchTerm, applications]);
 
-  // Calcul de la pagination
   const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
@@ -214,7 +209,6 @@ export default function JobApplicationsList({
               applicationCount={filteredApplications.length}
             />
 
-            {/* Contenu des onglets */}
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
               <ItemGrid
                 items={currentApplications}
@@ -285,15 +279,6 @@ export default function JobApplicationsList({
           </Tabs>
         </CardContent>
       </Card>
-
-      {/* Composant de pagination */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => dispatch({ type: 'SET_PAGE', payload: page })}
-        />
-      )}
     </div>
   );
 }

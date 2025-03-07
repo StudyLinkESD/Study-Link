@@ -180,7 +180,7 @@ async function main() {
       data: {
         identifier: studentUser.email,
         token: 'verification_token_123',
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expire dans 24h
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
