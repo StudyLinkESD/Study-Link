@@ -6,7 +6,7 @@ export interface CreateStudentDTO {
   skills: string;
   apprenticeshipRythm: string | null;
   description: string;
-  curriculumVitae: { fileUrl: string; fileId: string } | null;
+  curriculumVitae?: { fileUrl: string; fileId: string } | null;
   previousCompanies: string;
   availability: boolean;
 }
@@ -25,7 +25,7 @@ export interface StudentResponseDTO extends Omit<CreateStudentDTO, 'skills'> {
     email: string;
     firstname: string | null;
     lastname: string | null;
-    profilePicture: string | null;
+    profilePicture?: string | null;
   };
   school: {
     id: string;
