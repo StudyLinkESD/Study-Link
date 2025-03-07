@@ -24,7 +24,6 @@ import {
 import Link from 'next/link';
 import { APPLICATION_STATUS } from '@/constants/status';
 
-// Composant pour afficher le badge de statut, extrait pour plus de clarté
 const ApplicationStatusBadge = React.memo(({ status }: { status: string }) => {
   switch (status) {
     case APPLICATION_STATUS.PENDING:
@@ -48,7 +47,6 @@ function StudentDashboardPageComponent() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
 
-  // Filtrage des applications mémorisé
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
       const matchesStatus = statusFilter === APPLICATION_STATUS.ALL || app.status === statusFilter;
@@ -60,7 +58,6 @@ function StudentDashboardPageComponent() {
     });
   }, [applications, statusFilter, searchTerm]);
 
-  // Calcul des compteurs de statut mémorisé
   const statusCounts = useMemo(() => {
     return applications.reduce(
       (acc, app) => {
@@ -97,7 +94,6 @@ function StudentDashboardPageComponent() {
     }
   }, [applicationToDelete, applications, setApplications]);
 
-  // État de chargement
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -258,7 +254,6 @@ function StudentDashboardPageComponent() {
   );
 }
 
-// Mémorisation du composant pour éviter les rendus inutiles
 const StudentDashboardPage = React.memo(StudentDashboardPageComponent);
 
 export default StudentDashboardPage;

@@ -25,7 +25,7 @@ export default {
         try {
           const user = await prisma.user.findUnique({
             where: { email: identifier },
-            select: { firstname: true },
+            select: { firstName: true },
           });
 
           const baseUrl =
@@ -38,12 +38,12 @@ export default {
           const emailHtml = await render(
             AuthenticateEmail({
               url: modifiedUrl,
-              firstname: user?.firstname || undefined,
+              firstName: user?.firstName || undefined,
             }),
           );
 
           if (!emailHtml) {
-            console.error('Erreur lors de la génération du HTML de l\'email');
+            console.error("Erreur lors de la génération du HTML de l'email");
           }
 
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/resend`, {
@@ -64,7 +64,7 @@ export default {
           const data = await response.json();
 
           if (!response.ok) {
-            console.error(data.error || 'Erreur lors de l\'envoi de l\'email');
+            console.error(data.error || "Erreur lors de l'envoi de l'email");
           }
         } catch (error) {
           throw error;

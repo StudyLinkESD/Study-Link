@@ -1,4 +1,3 @@
-// FileUploadInput.tsx
 import { useState, ChangeEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
@@ -33,7 +32,6 @@ export default function FileUploadInput({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFileSelection = (e: ChangeEvent<HTMLInputElement>) => {
-    // Reset any previous errors
     setErrorMessage(null);
 
     const file = e.target.files?.[0] || null;
@@ -41,11 +39,9 @@ export default function FileUploadInput({
     if (!file) return;
 
     if (previewType === 'avatar' && file.type.startsWith('image/')) {
-      // For profile images, show the image editor
       setSelectedFile(file);
       setShowCropper(true);
     } else if (file) {
-      // For other file types, proceed directly to upload
       uploadFile(file);
     }
   };
@@ -55,7 +51,6 @@ export default function FileUploadInput({
     setErrorMessage(null);
 
     try {
-      // Create a synthetic event to match handleUploadFile interface
       const syntheticEvent = {
         target: {
           files: [file],
@@ -81,16 +76,12 @@ export default function FileUploadInput({
   };
 
   const handleCropperSave = (croppedFile: File) => {
-    // Close the editor
     setShowCropper(false);
     setSelectedFile(null);
-
-    // Upload the cropped file
     uploadFile(croppedFile);
   };
 
   const handleCropperCancel = () => {
-    // Close the editor without saving
     setShowCropper(false);
     setSelectedFile(null);
   };
@@ -102,7 +93,7 @@ export default function FileUploadInput({
           image={selectedFile}
           onSave={handleCropperSave}
           onCancel={handleCropperCancel}
-          isCircular={previewType === 'avatar'} // Circular profile photo
+          isCircular={previewType === 'avatar'}
         />
       )}
 

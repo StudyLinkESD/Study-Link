@@ -9,8 +9,8 @@ import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
 import JobApplicationCard from '@/components/app/students/dashboard/JobApplicationCard';
 import { Prisma } from '@prisma/client';
+import { JobApplicationFull } from '@/types/application_status.type';
 
-// Add this type using Prisma's generated types
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   include: {
     student: {
@@ -25,6 +25,39 @@ type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
     };
   };
 }>;
+
+const transformToJobApplicationFull = (app: JobRequestWithRelations): JobApplicationFull => ({
+  id: app.id,
+  studentId: app.studentId,
+  jobId: app.jobId,
+  status: app.status,
+  createdAt: app.createdAt.toISOString(),
+  updatedAt: app.updatedAt.toISOString(),
+  student: {
+    id: app.student.id,
+    userId: app.student.userId,
+    user: {
+      id: app.student.user.id,
+      createdAt: app.student.user.createdAt,
+      updatedAt: app.student.user.updatedAt,
+      deletedAt: app.student.user.deletedAt,
+      email: app.student.user.email,
+      firstName: app.student.user.firstName,
+      lastName: app.student.user.lastName,
+      profilePicture: app.student.user.profilePicture,
+      emailVerified: app.student.user.emailVerified,
+    },
+  },
+  job: {
+    id: app.job.id,
+    name: app.job.name,
+    companyId: app.job.companyId,
+    company: {
+      name: app.job.company.name,
+      logo: app.job.company.logo,
+    },
+  },
+});
 
 const STATUS_OPTIONS = {
   ALL: 'all',
@@ -68,7 +101,6 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Composant pour les filtres
 function ApplicationFilters({
   state,
   dispatch,
@@ -127,7 +159,6 @@ export default function JobApplicationsList({
   const [, setDeleteDialogOpen] = React.useState(false);
   const [, setApplicationToDelete] = React.useState<string | null>(null);
 
-  // Logique de filtrage
   const filteredApplications = useMemo(() => {
     let result = [...applications];
 
@@ -139,8 +170,8 @@ export default function JobApplicationsList({
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (app) =>
-          app.student.user.firstname.toLowerCase().includes(searchLower) ||
-          app.student.user.lastname.toLowerCase().includes(searchLower) ||
+          (app.student.user.firstName?.toLowerCase() ?? '').includes(searchLower) ||
+          (app.student.user.lastName?.toLowerCase() ?? '').includes(searchLower) ||
           app.job.name.toLowerCase().includes(searchLower) ||
           app.job.company.name.toLowerCase().includes(searchLower),
       );
@@ -149,7 +180,6 @@ export default function JobApplicationsList({
     return result;
   }, [statusFilter, searchTerm, applications]);
 
-  // Calcul de la pagination
   const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
@@ -179,17 +209,12 @@ export default function JobApplicationsList({
               applicationCount={filteredApplications.length}
             />
 
-            {/* Contenu des onglets */}
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
               <ItemGrid
                 items={currentApplications}
                 renderItem={(app) => (
                   <JobApplicationCard
-                    application={{
-                      ...app,
-                      createdAt: app.createdAt.toISOString(),
-                      updatedAt: app.updatedAt.toISOString(),
-                    }}
+                    application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
                 )}
@@ -206,11 +231,7 @@ export default function JobApplicationsList({
                 items={currentApplications}
                 renderItem={(app) => (
                   <JobApplicationCard
-                    application={{
-                      ...app,
-                      createdAt: app.createdAt.toISOString(),
-                      updatedAt: app.updatedAt.toISOString(),
-                    }}
+                    application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
                 )}
@@ -227,11 +248,7 @@ export default function JobApplicationsList({
                 items={currentApplications}
                 renderItem={(app) => (
                   <JobApplicationCard
-                    application={{
-                      ...app,
-                      createdAt: app.createdAt.toISOString(),
-                      updatedAt: app.updatedAt.toISOString(),
-                    }}
+                    application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
                 )}
@@ -248,11 +265,7 @@ export default function JobApplicationsList({
                 items={currentApplications}
                 renderItem={(app) => (
                   <JobApplicationCard
-                    application={{
-                      ...app,
-                      createdAt: app.createdAt.toISOString(),
-                      updatedAt: app.updatedAt.toISOString(),
-                    }}
+                    application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
                 )}
@@ -266,15 +279,6 @@ export default function JobApplicationsList({
           </Tabs>
         </CardContent>
       </Card>
-
-      {/* Composant de pagination */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => dispatch({ type: 'SET_PAGE', payload: page })}
-        />
-      )}
     </div>
   );
 }

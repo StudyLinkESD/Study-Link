@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ChevronRight } from 'lucide-react';
 import { useJob } from '@/context/job.context';
-
-// Import des composants communs
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StatusBadge from '@/components/app/common/StatusBadge';
 
@@ -33,7 +31,6 @@ export default function JobCard(props: JobCardProps) {
     <Card className="overflow-hidden cursor-pointer" onClick={handleClick}>
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
-          {/* Utilisation du composant ProfileAvatar */}
           <ProfileAvatar
             firstName={companyName}
             lastName={''}
@@ -47,7 +44,6 @@ export default function JobCard(props: JobCardProps) {
             <h3 className="text-lg font-semibold">{offerTitle}</h3>
 
             <div className="flex items-center gap-2 mt-1">
-              {/* Utilisation du composant StatusBadge */}
               <StatusBadge status={status} />
 
               {availability && (
@@ -60,7 +56,6 @@ export default function JobCard(props: JobCardProps) {
         <div className="mt-3">
           <h4 className="text-sm font-medium mb-2">Compétences requises</h4>
 
-          {/* Nous n'utilisons pas directement SkillsList car nous voulons limiter l'affichage à 5 skills */}
           <div className="flex flex-wrap gap-1">
             {skills.slice(0, 5).map((skill) => (
               <StatusBadge

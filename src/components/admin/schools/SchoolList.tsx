@@ -124,7 +124,6 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
         {schools.map((school) => (
           <Card key={school.id} className="overflow-hidden py-0">
             <div className="flex items-stretch">
-              {/* Section logo */}
               <div className="w-20 bg-gray-50 p-3 flex items-center justify-center border-r">
                 {school.logo ? (
                   <Image
@@ -141,7 +140,6 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
                 )}
               </div>
 
-              {/* Section informations */}
               <div className="flex-grow px-6 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div>
@@ -153,7 +151,6 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
                   </Badge>
                 </div>
 
-                {/* Section actions */}
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => setEditingSchool(school)}>
                     Modifier

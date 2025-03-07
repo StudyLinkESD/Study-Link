@@ -17,14 +17,12 @@ export async function validateSchoolDomainData(
   let errorCode: string | undefined;
 
   if ('domain' in data && data.domain !== undefined) {
-    // Validation du format du domaine
     const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
     if (!domainRegex.test(data.domain)) {
       errors.domain = 'Le format du domaine est invalide';
       errorCode = 'INVALID_FORMAT';
     }
 
-    // Vérification de l'unicité du domaine
     const existingDomain = await prisma.authorizedSchoolDomain.findFirst({
       where: {
         domain: data.domain,

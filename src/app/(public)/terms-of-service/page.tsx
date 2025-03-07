@@ -1,4 +1,3 @@
-// src/app/(public)/terms-of-service/page.tsx
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 

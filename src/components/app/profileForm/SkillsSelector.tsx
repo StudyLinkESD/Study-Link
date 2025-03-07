@@ -1,4 +1,3 @@
-// SkillsSelector.tsx
 import { useId } from 'react';
 import { Label } from '@/components/ui/label';
 import StatusBadge from '@/components/app/common/StatusBadge';

@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, Briefcase, Users, Star } from 'lucide-react';
@@ -34,7 +36,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="container mx-auto px-4 py-20 flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
@@ -91,7 +92,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-20 bg-white dark:bg-gray-950" id="how-it-works">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -163,7 +163,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Browse Students & Jobs Section */}
       <section className="py-16 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -206,7 +205,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
       <section className="py-20 bg-white dark:bg-gray-950">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -222,8 +220,7 @@ export default function HomePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center mb-4">
                   <div className="mr-4">
-                    <div
-                      className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold">
+                    <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold">
                       LD
                     </div>
                   </div>
@@ -251,8 +248,7 @@ export default function HomePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center mb-4">
                   <div className="mr-4">
-                    <div
-                      className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                    <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                       MT
                     </div>
                   </div>
@@ -277,7 +273,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Prêt à commencer votre expérience ?</h2>
@@ -293,7 +288,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer with prominent links to privacy policy and terms */}
       <footer className="bg-gray-100 dark:bg-gray-900 py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
@@ -369,7 +363,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Legal Links Banner */}
           <div className="border-t pt-8 mt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-sm text-muted-foreground mb-4 md:mb-0">

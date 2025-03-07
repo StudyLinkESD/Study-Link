@@ -3,13 +3,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type ProfileAvatarProps = {
   photoUrl?: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 };
 
-// Map des tailles déplacé en dehors du composant
 const sizeClasses = {
   sm: 'h-10 w-10',
   md: 'h-16 w-16',
@@ -17,7 +16,6 @@ const sizeClasses = {
   xl: 'h-32 w-32',
 };
 
-// Map des tailles de texte pour le fallback déplacé en dehors du composant
 const textSizeClasses = {
   sm: 'text-sm',
   md: 'text-lg',
@@ -27,8 +25,8 @@ const textSizeClasses = {
 
 const ProfileAvatarComponent = ({
   photoUrl,
-  firstName,
-  lastName,
+  firstName: firstName,
+  lastName: lastName,
   size = 'md',
   className = '',
 }: ProfileAvatarProps) => {
@@ -38,15 +36,14 @@ const ProfileAvatarComponent = ({
         <AvatarImage src={photoUrl} alt={`${firstName} ${lastName}`} />
       ) : (
         <AvatarFallback className={textSizeClasses[size]}>
-          {firstName.charAt(0)}
-          {lastName.charAt(0)}
+          {firstName?.charAt(0)}
+          {lastName?.charAt(0)}
         </AvatarFallback>
       )}
     </Avatar>
   );
 };
 
-// Mémorisation du composant pour éviter les rendus inutiles
 const ProfileAvatar = React.memo(ProfileAvatarComponent);
 
 export default ProfileAvatar;

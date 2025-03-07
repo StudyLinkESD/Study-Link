@@ -56,8 +56,8 @@ export default async function Page({ params }: PageProps) {
 
     const student = {
       id: studentData.id,
-      firstName: studentData.user?.firstname || '',
-      lastName: studentData.user?.lastname || '',
+      firstName: studentData.user?.firstName || '',
+      lastName: studentData.user?.lastName || '',
       photoUrl: studentData.user?.profilePicture
         ? `/api/files/${studentData.user.profilePicture}`
         : '',
@@ -67,9 +67,7 @@ export default async function Page({ params }: PageProps) {
       skills: skillsArray,
       alternanceRhythm: studentData.apprenticeshipRythm || '',
       description: studentData.description,
-      cvUrl: studentData.curriculumVitae
-        ? `/api/files/${studentData.curriculumVitae}`
-        : undefined,
+      cvUrl: studentData.curriculumVitae ? `/api/files/${studentData.curriculumVitae}` : undefined,
       availability: studentData.availability ? 'Disponible' : 'Non disponible',
       recommendations: [],
       experiences: [],
@@ -77,14 +75,12 @@ export default async function Page({ params }: PageProps) {
 
     return (
       <main className="container mx-auto py-4 px-4 max-w-4xl">
-        {/* Utilisation du composant BackButton */}
         <BackButton href="/students" label="Retour à la liste des étudiants" className="mb-6" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="md:col-span-1">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center">
-                {/* Utilisation du composant ProfileAvatar */}
                 <ProfileAvatar
                   firstName={student.firstName}
                   lastName={student.lastName}
@@ -97,7 +93,6 @@ export default async function Page({ params }: PageProps) {
                   {student.firstName} {student.lastName}
                 </h1>
 
-                {/* Utilisation du composant StatusBadge */}
                 <StatusBadge status={student.status} className="mt-2" />
 
                 <div className="w-full mt-6 space-y-4">
@@ -148,7 +143,6 @@ export default async function Page({ params }: PageProps) {
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6">
-                {/* Utilisation du composant SectionCard */}
                 {student.description && (
                   <SectionCard title="À propos" icon={BookOpen}>
                     <p>{student.description}</p>
@@ -156,14 +150,12 @@ export default async function Page({ params }: PageProps) {
                 )}
 
                 <SectionCard title="Compétences" icon={Award}>
-                  {/* Utilisation du composant SkillsList */}
                   <SkillsList skills={student.skills} />
                 </SectionCard>
               </TabsContent>
 
               <TabsContent value="experience" className="space-y-6">
                 <SectionCard title="Expériences professionnelles" icon={Briefcase}>
-                  {/* Utilisation du composant ExperienceTimeline */}
                   <ExperienceTimeline
                     experiences={student.experiences}
                     emptyMessage="Aucune expérience professionnelle listée."
@@ -173,7 +165,6 @@ export default async function Page({ params }: PageProps) {
 
               <TabsContent value="recommendations" className="space-y-6">
                 <SectionCard title="Recommandations" icon={Heart}>
-                  {/* Utilisation du composant RecommendationsList */}
                   <RecommendationsList
                     recommendations={student.recommendations}
                     emptyMessage="Aucune recommandation disponible."

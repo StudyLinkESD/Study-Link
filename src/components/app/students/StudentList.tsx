@@ -10,7 +10,6 @@ import Pagination from '@/components/app/common/Pagination';
 import StudentFilters, { FilterState, FilterAction } from './StudentFilters';
 import { STUDENT_STATUS } from '@/constants/status';
 
-// Constantes et types
 const STUDENTS_PER_PAGE = 9;
 
 type Student = Omit<StudentCardProps, 'skills'> & {
@@ -23,7 +22,6 @@ type StudentListProps = {
   isLoading?: boolean;
 };
 
-// Définition de l'état initial
 const initialFilterState: FilterState = {
   statusFilter: STUDENT_STATUS.ALL,
   searchTerm: '',
@@ -61,7 +59,6 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Composant principal de liste d'étudiants
 function StudentListComponent({
   students,
   title = 'Liste des étudiants',
@@ -77,7 +74,6 @@ function StudentListComponent({
     [students],
   );
 
-  // Logique de filtrage
   const filteredStudents = useMemo(() => {
     let result = [...students];
 
@@ -89,8 +85,8 @@ function StudentListComponent({
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (student) =>
-          student.firstName.toLowerCase().includes(searchLower) ||
-          student.lastName.toLowerCase().includes(searchLower) ||
+          (student.firstName?.toLowerCase() ?? '').includes(searchLower) ||
+          (student.lastName?.toLowerCase() ?? '').includes(searchLower) ||
           (student.school && student.school.toLowerCase().includes(searchLower)),
       );
     }
@@ -106,7 +102,6 @@ function StudentListComponent({
     return result;
   }, [statusFilter, searchTerm, selectedSkills, students]);
 
-  // Calcul de la pagination
   const totalPages = Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE);
   const currentStudents = useMemo(() => {
     const indexOfLastStudent = currentPage * STUDENTS_PER_PAGE;
@@ -114,7 +109,6 @@ function StudentListComponent({
     return filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
   }, [filteredStudents, currentPage]);
 
-  // Fonction de rendu des étudiants mémorisée
   const renderStudent = React.useCallback(
     (student: Student) => (
       <StudentCard
@@ -130,7 +124,6 @@ function StudentListComponent({
     [],
   );
 
-  // État de chargement
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[400px]">
@@ -194,7 +187,6 @@ function StudentListComponent({
   );
 }
 
-// Mémorisation du composant pour éviter les rendus inutiles
 const StudentList = React.memo(StudentListComponent);
 
 export default StudentList;
