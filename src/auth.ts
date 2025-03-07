@@ -12,7 +12,15 @@ declare module 'next-auth' {
       isGoogleEmail?: boolean;
       name?: string | null;
       image?: string | null;
+      studentId?: string | null;
     };
+  }
+
+  interface JWT {
+    id: string;
+    accessToken?: string;
+    isGoogleEmail?: boolean;
+    studentId?: string;
   }
 }
 
@@ -30,6 +38,20 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.accessToken = account.access_token;
         token.id = user.id;
         token.isGoogleEmail = account.provider === 'google';
+
+        // Récupérer le studentId si l'utilisateur est un étudiant
+        try {
+          const student = await prisma.student.findFirst({
+            where: { userId: user.id },
+            select: { id: true },
+          });
+
+          if (student) {
+            token.studentId = student.id;
+          }
+        } catch (error) {
+          console.error('Erreur lors de la récupération du studentId:', error);
+        }
       }
       return token;
     },
@@ -37,6 +59,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       session.accessToken = token.accessToken as string;
       session.user.id = token.id as string;
       session.user.isGoogleEmail = token.isGoogleEmail as boolean;
+      session.user.studentId = token.studentId as string | null;
       return session;
     },
     async redirect({ url, baseUrl }) {
@@ -67,7 +90,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               },
             });
           } catch (error) {
-            console.error('Erreur lors de la création de l\'utilisateur:', error);
+            console.error("Erreur lors de la création de l'utilisateur:", error);
             return false;
           }
         }
@@ -86,7 +109,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               },
             });
           } catch (error) {
-            console.error('Erreur lors de la création de l\'utilisateur:', error);
+            console.error("Erreur lors de la création de l'utilisateur:", error);
             return false;
           }
         }

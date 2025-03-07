@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { User, School, Briefcase, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -88,12 +88,14 @@ interface ErrorDetail {
 
 export default function StudentProfileForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [photoUrl, setPhotoUrl] = useState('');
   const [uploadedCv, setUploadedCv] = useState<File | null>(null);
   const [selectedTab, setSelectedTab] = useState('personal');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [studentId, setStudentId] = useState<string | null>(null);
 
   const availableSkills = [
     { id: 'react', name: 'React' },
@@ -132,6 +134,28 @@ export default function StudentProfileForm() {
       schoolEmail: '',
     },
   });
+
+  const getStudentById = async (id: string) => {
+    try {
+      console.log("Recherche de l'étudiant pour id:", id);
+      const response = await fetch(`/api/students/${id}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('Aucun étudiant trouvé pour id:', id);
+          return null;
+        }
+        throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
+      }
+
+      const data = await response.json();
+      console.log("Données de l'étudiant récupérées:", data);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'étudiant:", error);
+      return null;
+    }
+  };
 
   const getStudentByUserId = async (userId: string) => {
     try {
@@ -188,15 +212,29 @@ export default function StudentProfileForm() {
     }
   };
 
-  const updateStudent = async (userId: string, data: CreateStudentData) => {
+  const updateStudent = async (id: string, data: CreateStudentData) => {
     try {
-      console.log('Mise à jour du profil étudiant pour userId:', userId);
-      const response = await fetch(`/api/students/${userId}`, {
+      console.log('Mise à jour du profil étudiant pour id:', id);
+
+      // Créer un objet UpdateStudentDTO à partir des données
+      const updateData = {
+        status: data.status,
+        skills: data.skills,
+        apprenticeshipRythm: data.apprenticeshipRythm,
+        description: data.description,
+        curriculumVitae: data.curriculumVitae,
+        previousCompanies: data.previousCompanies,
+        availability: data.availability,
+      };
+
+      console.log('Données envoyées pour la mise à jour:', updateData);
+
+      const response = await fetch(`/api/students/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -225,58 +263,107 @@ export default function StudentProfileForm() {
   }, []);
 
   const loadStudentProfile = useCallback(async () => {
-    if (!session?.user?.id) return;
+    // Vérifier si l'ID de l'étudiant est disponible dans l'URL
+    const studentIdFromUrl = searchParams.get('studentId');
 
-    try {
-      console.log("Tentative de chargement du profil pour l'utilisateur:", session.user.id);
-      const studentData = await getStudentByUserId(session.user.id);
-      console.log("Données brutes reçues de l'API:", studentData);
-      console.log('Email scolaire reçu:', studentData?.studentEmail);
+    // Vérifier si l'ID de l'étudiant est disponible dans la session
+    const studentIdFromSession = session?.user?.studentId;
 
-      if (studentData) {
-        console.log("Données de l'étudiant à charger dans le formulaire:", {
-          firstName: studentData.user?.firstname,
-          lastName: studentData.user?.lastname,
-          status: studentData.status,
-          school: studentData.schoolId,
-          availability: studentData.availability,
-          alternanceRhythm: studentData.apprenticeshipRythm,
-          description: studentData.description,
-          skills: studentData.skills,
-          previousCompanies: studentData.previousCompanies,
-          schoolEmail: studentData.studentEmail,
-        });
+    // Utiliser l'ID de l'étudiant de l'URL ou de la session
+    const id = studentIdFromUrl || studentIdFromSession;
 
-        setPhotoUrl(studentData.user?.profilePicture || '');
+    if (id) {
+      setStudentId(id);
+      try {
+        console.log("Tentative de chargement du profil pour l'étudiant:", id);
+        const studentData = await getStudentById(id);
+        console.log("Données brutes reçues de l'API:", studentData);
 
-        // Mettre à jour les valeurs du formulaire
-        const formData = {
-          firstName: studentData.user?.firstname || '',
-          lastName: studentData.user?.lastname || '',
-          status: studentData.status || 'ACTIVE',
-          school: studentData.schoolId || '',
-          availability: studentData.availability ?? true,
-          alternanceRhythm: studentData.apprenticeshipRythm || '',
-          description: studentData.description || '',
-          skills: studentData.skills
-            ? studentData.skills.split(',').map((skill: string) => skill.trim())
-            : [],
-          previousCompanies: studentData.previousCompanies || '',
-          schoolEmail: studentData.studentEmail || '',
-        };
+        if (studentData) {
+          console.log("Données de l'étudiant à charger dans le formulaire:", {
+            firstName: studentData.user?.firstname,
+            lastName: studentData.user?.lastname,
+            status: studentData.status,
+            school: studentData.schoolId,
+            availability: studentData.availability,
+            alternanceRhythm: studentData.apprenticeshipRythm,
+            description: studentData.description,
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies,
+            schoolEmail: studentData.studentEmail,
+          });
 
-        console.log('Données formatées pour le formulaire:', formData);
-        console.log('Email scolaire dans formData:', formData.schoolEmail);
-        form.reset(formData);
-        console.log('Valeur du champ email scolaire après reset:', form.getValues('schoolEmail'));
+          setPhotoUrl(studentData.user?.profilePicture || '');
+
+          // Remplir le formulaire avec les données existantes
+          form.reset({
+            firstName: studentData.user?.firstname || '',
+            lastName: studentData.user?.lastname || '',
+            status: studentData.status || 'ACTIVE',
+            school: studentData.schoolId || '',
+            availability: studentData.availability !== undefined ? studentData.availability : true,
+            alternanceRhythm: studentData.apprenticeshipRythm || '',
+            description: studentData.description || '',
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies || '',
+            schoolEmail: studentData.studentEmail || '',
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du profil de l'étudiant:", error);
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement du profil:', error);
-      toast.error('Impossible de charger votre profil');
-    } finally {
-      setIsLoading(false);
+    } else if (session?.user?.id) {
+      try {
+        console.log("Tentative de chargement du profil pour l'utilisateur:", session.user.id);
+        const studentData = await getStudentByUserId(session.user.id);
+        console.log("Données brutes reçues de l'API:", studentData);
+
+        if (studentData) {
+          setStudentId(studentData.id);
+          console.log("Données de l'étudiant à charger dans le formulaire:", {
+            firstName: studentData.user?.firstname,
+            lastName: studentData.user?.lastname,
+            status: studentData.status,
+            school: studentData.schoolId,
+            availability: studentData.availability,
+            alternanceRhythm: studentData.apprenticeshipRythm,
+            description: studentData.description,
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies,
+            schoolEmail: studentData.studentEmail,
+          });
+
+          setPhotoUrl(studentData.user?.profilePicture || '');
+
+          // Remplir le formulaire avec les données existantes
+          form.reset({
+            firstName: studentData.user?.firstname || '',
+            lastName: studentData.user?.lastname || '',
+            status: studentData.status || 'ACTIVE',
+            school: studentData.schoolId || '',
+            availability: studentData.availability !== undefined ? studentData.availability : true,
+            alternanceRhythm: studentData.apprenticeshipRythm || '',
+            description: studentData.description || '',
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies || '',
+            schoolEmail: studentData.studentEmail || '',
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du profil de l'utilisateur:", error);
+      }
     }
-  }, [session?.user?.id, form]);
+
+    setIsLoading(false);
+  }, [searchParams, session?.user?.id, session?.user?.studentId, form]);
 
   useEffect(() => {
     // Rediriger si non connecté
@@ -315,16 +402,16 @@ export default function StudentProfileForm() {
         } as unknown as React.ChangeEvent<HTMLInputElement>;
 
         // Upload du fichier vers Supabase
-        const result = await handleUploadFile(syntheticEvent, 'studylink_images');
+        const uploadResult = await handleUploadFile(syntheticEvent, 'studylink_images');
 
-        if (!result.url) {
+        if (!uploadResult.url) {
           console.error("L'upload a échoué - aucune URL retournée");
-          throw new Error(result.error || "Échec de l'upload du CV");
+          throw new Error(uploadResult.error || "Échec de l'upload du CV");
         }
 
-        console.log('Upload réussi:', result);
+        console.log('Upload réussi:', uploadResult);
         setUploadedCv(file);
-        return result.url;
+        return uploadResult.url;
       } catch (error) {
         console.error("Erreur détaillée lors de l'upload du CV:", error);
         toast.error("Erreur lors de l'upload du CV");
@@ -335,43 +422,79 @@ export default function StudentProfileForm() {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
-    if (!session?.user?.id) {
-      toast.error('Vous devez être connecté pour enregistrer votre profil');
-      return;
-    }
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
-      console.log('Submitting form with data:', data);
-
-      // Validate school email domain
+      // Valider l'email scolaire
       const isValidSchoolEmail = await validateSchoolEmail(data.schoolEmail);
       if (!isValidSchoolEmail) {
-        toast.error("L'email scolaire doit correspondre à une école enregistrée");
+        toast.error("L'email scolaire n'est pas valide pour l'école sélectionnée");
         setIsSubmitting(false);
         return;
       }
 
-      // Validation des données requises
-      if (!data.firstName || !data.lastName || !data.status || !data.school) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
-        return;
+      // Préparer les données pour l'API
+      const studentData: CreateStudentData = {
+        userId: session?.user?.id || '',
+        schoolId: data.school,
+        studentEmail: data.schoolEmail,
+        status: data.status,
+        skills: data.skills.join(', '),
+        apprenticeshipRythm: data.alternanceRhythm || null,
+        description:
+          data.description ||
+          'Je suis un étudiant en alternance passionné par le développement web. Je recherche une entreprise pour mettre en pratique mes compétences et continuer mon apprentissage. Mon objectif est de contribuer à des projets innovants tout en développant mes compétences techniques et professionnelles.',
+        previousCompanies: data.previousCompanies || 'Aucune expérience précédente',
+        availability: data.availability || true,
+        createdAt: new Date(),
+      };
+
+      console.log("Données envoyées à l'API:", studentData);
+
+      // Vérifier que toutes les données requises sont présentes
+      if (
+        !studentData.userId ||
+        !studentData.schoolId ||
+        !studentData.status ||
+        !studentData.skills ||
+        !studentData.description ||
+        !studentData.previousCompanies ||
+        studentData.availability === undefined
+      ) {
+        console.error('Données manquantes:', {
+          userId: !studentData.userId,
+          schoolId: !studentData.schoolId,
+          status: !studentData.status,
+          skills: !studentData.skills,
+          description: !studentData.description,
+          previousCompanies: !studentData.previousCompanies,
+          availability: studentData.availability === undefined,
+        });
+        throw new Error('Toutes les données requises ne sont pas présentes');
       }
 
-      if (data.status === 'ACTIVE' && !data.alternanceRhythm) {
-        toast.error("Veuillez renseigner votre rythme d'alternance");
-        return;
-      }
-
-      if (!data.skills || data.skills.length < 3) {
-        toast.error('Veuillez sélectionner au moins 3 compétences');
-        return;
-      }
-
-      // Mise à jour des informations utilisateur si nécessaire
-      if (data.firstName || data.lastName) {
+      // Gérer l'upload du CV si présent
+      if (uploadedCv) {
         try {
-          const userResponse = await fetch(`/api/users/${session.user.id}`, {
+          const cvUrl = await handleCvUpload(uploadedCv);
+          if (cvUrl) {
+            studentData.curriculumVitae = cvUrl;
+          }
+        } catch (error) {
+          console.error('Erreur lors du téléchargement du CV:', error);
+          toast.error('Erreur lors du téléchargement du CV');
+        }
+      }
+
+      let result;
+
+      // Si nous avons un ID d'étudiant, mettre à jour le profil existant
+      if (studentId) {
+        console.log('Mise à jour du profil étudiant avec ID:', studentId);
+        // Mettre à jour d'abord l'utilisateur
+        try {
+          const userResponse = await fetch(`/api/users/${session?.user?.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -383,73 +506,37 @@ export default function StudentProfileForm() {
           });
 
           if (!userResponse.ok) {
-            const userError = await userResponse.json();
-            console.error("Erreur lors de la mise à jour de l'utilisateur:", userError);
-            throw new Error(userError.error || "Erreur lors de la mise à jour de l'utilisateur");
+            throw new Error('Erreur lors de la mise à jour des informations utilisateur');
           }
         } catch (error) {
           console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
-          // Continuer malgré l'erreur
-        }
-      }
-
-      let cvData = null;
-      if (uploadedCv) {
-        try {
-          const uploadResult = await handleCvUpload(uploadedCv);
-          if (!uploadResult) {
-            throw new Error("Échec de l'upload du CV");
-          }
-          cvData = uploadResult;
-        } catch (error) {
-          console.error("Erreur lors de l'upload du CV:", error);
-          toast.error("Erreur lors de l'upload du CV");
+          toast.error('Erreur lors de la mise à jour des informations utilisateur');
           return;
         }
-      }
 
-      const studentData: CreateStudentData = {
-        userId: session.user.id,
-        schoolId: data.school,
-        status: data.status,
-        skills: data.skills.join(', '),
-        apprenticeshipRythm: data.status === 'ACTIVE' ? data.alternanceRhythm || null : null,
-        description: data.description || '',
-        curriculumVitae: cvData,
-        previousCompanies: data.previousCompanies || 'Aucune expérience',
-        availability: data.availability,
-        studentEmail: data.schoolEmail,
-        createdAt: new Date(),
-      };
-
-      console.log('Données du formulaire:', data);
-      console.log('Données préparées pour le serveur:', studentData);
-
-      // Vérifier si un étudiant existe déjà pour cet utilisateur
-      console.log("Vérification de l'existence d'un étudiant pour userId:", session.user.id);
-      const existingStudent = await getStudentByUserId(session.user.id);
-      console.log('Résultat de la vérification:', existingStudent);
-
-      if (existingStudent) {
-        console.log('Mise à jour du profil existant pour userId:', session.user.id);
-        // Mise à jour d'un profil existant
-        const response = await updateStudent(session.user.id, studentData);
-        console.log('Réponse du serveur (update):', response);
+        // Ensuite, mettre à jour le profil étudiant
+        result = await updateStudent(studentId, studentData);
         toast.success('Profil mis à jour avec succès');
-      } else {
+      }
+      // Sinon, créer un nouveau profil
+      else {
         console.log("Création d'un nouveau profil étudiant");
-        // Création d'un nouveau profil
-        const response = await createStudent(studentData);
-        console.log('Réponse du serveur (create):', response);
+        result = await createStudent(studentData);
+        // Stocker l'ID de l'étudiant pour les futures mises à jour
+        if (result && result.id) {
+          setStudentId(result.id);
+        }
         toast.success('Profil créé avec succès');
       }
 
-      // Rediriger vers la page du profil étudiant
-      router.push('/students/profile');
+      // Rediriger vers la page de profil
+      router.push(`/students/profile?studentId=${result.id}`);
     } catch (error) {
-      console.error('Erreur détaillée:', error);
+      console.error('Erreur lors de la soumission du formulaire:', error);
       toast.error(
-        error instanceof Error ? error.message : "Erreur lors de l'enregistrement du profil",
+        error instanceof Error
+          ? error.message
+          : 'Une erreur est survenue lors de la création du profil',
       );
     } finally {
       setIsSubmitting(false);
@@ -840,7 +927,7 @@ export default function StudentProfileForm() {
               lastName={formValues.lastName}
               photoUrl={photoUrl}
               status={formValues.status as 'ACTIVE' | 'INACTIVE'}
-              school={formValues.school}
+              school={schools.find((s) => s.id === formValues.school)?.name || formValues.school}
               alternanceRhythm={formValues.alternanceRhythm}
               availability={formValues.availability}
             />

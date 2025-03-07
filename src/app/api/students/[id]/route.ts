@@ -100,16 +100,12 @@ export async function PUT(
     const { id } = await params;
     const body = (await request.json()) as UpdateStudentDTO;
 
-    const user = await prisma.user.findUnique({
-      where: { id: id },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
-    }
-
     const existingStudent = await prisma.student.findUnique({
-      where: { userId: id },
+      where: { id: id },
+      include: {
+        user: true,
+        school: true,
+      },
     });
 
     if (!existingStudent) {
@@ -129,11 +125,17 @@ export async function PUT(
 
     const cvData = body.curriculumVitae || null;
 
+    // Mettre à jour l'étudiant
     const student = await prisma.student.update({
-      where: { userId: id },
+      where: { id: id },
       data: {
-        ...body,
+        status: body.status,
+        skills: body.skills,
+        apprenticeshipRythm: body.apprenticeshipRythm,
+        description: body.description,
         curriculumVitae: cvData,
+        previousCompanies: body.previousCompanies,
+        availability: body.availability,
       },
       include: {
         user: true,

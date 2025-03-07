@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BookOpen,
   Briefcase,
@@ -26,23 +26,45 @@ import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
 import RecommendationsList from '@/components/app/common/RecommendationsList';
 import { toast } from 'sonner';
 import { StudentResponseDTO } from '@/dto/student.dto';
-import { getStudentByUserId } from '@/services/student.service';
+import { getStudentById } from '@/services/student.service';
 
 export default function StudentProfilePage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [student, setStudent] = useState<StudentResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStudent = async () => {
-      if (!session?.user?.id) {
-        setLoading(false);
-        return;
-      }
-
       try {
-        const studentData = await getStudentByUserId(session.user.id);
+        // Vérifier si l'ID de l'étudiant est disponible dans l'URL
+        const studentIdFromUrl = searchParams.get('studentId');
+
+        // Vérifier si l'ID de l'étudiant est disponible dans la session
+        const studentIdFromSession = session?.user?.studentId;
+
+        // Utiliser l'ID de l'étudiant de l'URL ou de la session
+        const studentId = studentIdFromUrl || studentIdFromSession;
+
+        if (!studentId) {
+          console.log('No student ID available, redirecting to profile creation');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Fetching student with ID:', studentId);
+        const studentData = await getStudentById(studentId);
+
+        if (!studentData) {
+          console.log('Student not found, redirecting to profile creation');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Student data received:', studentData);
+        console.log('Student email:', studentData.studentEmail);
+        console.log('User data:', studentData.user);
         setStudent(studentData);
       } catch (error) {
         console.error('Error fetching student:', error);
@@ -53,7 +75,7 @@ export default function StudentProfilePage() {
     };
 
     fetchStudent();
-  }, [session?.user?.id]);
+  }, [searchParams, session?.user?.studentId]);
 
   if (loading) {
     return (
@@ -71,8 +93,8 @@ export default function StudentProfilePage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Profil non trouvé</h1>
           <p className="text-gray-600">
-            Votre profil étudiant n&apos;existe pas encore. Veuillez le créer en complétant le
-            formulaire.
+            Votre profil étudiant n&apos;existe pas encore ou n&apos;a pas pu être chargé. Veuillez
+            le créer en complétant le formulaire.
           </p>
           <Button onClick={() => router.push('/students/profile-info')} className="mt-4">
             Créer mon profil
@@ -91,7 +113,10 @@ export default function StudentProfilePage() {
             Les informations de l&apos;utilisateur sont manquantes. Veuillez mettre à jour votre
             profil.
           </p>
-          <Button onClick={() => router.push('/students/profile-info')} className="mt-4">
+          <Button
+            onClick={() => router.push(`/students/profile-info?studentId=${student.id}`)}
+            className="mt-4"
+          >
             Mettre à jour mon profil
           </Button>
         </div>
@@ -99,9 +124,9 @@ export default function StudentProfilePage() {
     );
   }
 
-  const firstName = student.user.firstname || session?.user?.name?.split(' ')[0] || '';
-  const lastName = student.user.lastname || session?.user?.name?.split(' ')[1] || '';
-  const photoUrl = student.user.profilePicture
+  const firstName = student.user?.firstname || '';
+  const lastName = student.user?.lastname || '';
+  const photoUrl = student.user?.profilePicture
     ? `/api/files/${student.user.profilePicture}`
     : session?.user?.image || undefined;
 
@@ -122,7 +147,7 @@ export default function StudentProfilePage() {
     <main className="container mx-auto py-4 px-4 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Mon Profil</h1>
-        <Button onClick={() => router.push('/students/profile-info')}>
+        <Button onClick={() => router.push(`/students/profile-info?studentId=${student.id}`)}>
           <Edit className="w-4 h-4 mr-2" />
           Modifier mon profil
         </Button>

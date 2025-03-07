@@ -9,6 +9,10 @@ export interface CreateStudentDTO {
   curriculumVitae?: string | null;
   previousCompanies: string;
   availability: boolean;
+  user?: {
+    firstname: string | null;
+    lastname: string | null;
+  };
 }
 
 export interface UpdateStudentDTO
