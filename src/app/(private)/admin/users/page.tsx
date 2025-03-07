@@ -17,16 +17,22 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Admin, CompanyOwner, School, SchoolOwner, Student, User } from '@prisma/client';
+<<<<<<< HEAD
 import { Suspense } from 'react';
+=======
+>>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
 
 type AppUser = User & {
   admin: Admin | null;
   schoolOwner: (SchoolOwner & { school: School | null }) | null;
   companyOwner: (CompanyOwner & { company: { id: string; name: string } | null }) | null;
   student: (Student & { school: School | null }) | null;
+<<<<<<< HEAD
   firstName: string | null;
   lastName: string | null;
   profilePicture: string | null;
+=======
+>>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
 };
 
 const ITEMS_PER_PAGE = 20;
@@ -77,8 +83,13 @@ const UsersList = () => {
         const matchesSchool = !school || getSchoolId(user) === school;
         const matchesSearch =
           !searchTerm ||
+<<<<<<< HEAD
           user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+=======
+          user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+>>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
           user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesType && matchesSchool && matchesSearch;
@@ -233,23 +244,38 @@ const UsersList = () => {
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+<<<<<<< HEAD
                       {user.profilePicture ? (
                         <Image
                           src={user.profilePicture}
                           alt={`${user.firstName} ${user.lastName}`}
+=======
+                      {user.profilePictureId ? (
+                        <Image
+                          src={user.profilePictureId}
+                          alt={`${user.firstname} ${user.lastname}`}
+>>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
                           width={40}
                           height={40}
                           className="rounded-full object-cover"
                         />
                       ) : (
                         <span className="text-gray-500 text-lg font-semibold">
+<<<<<<< HEAD
                           {user.firstName?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+=======
+                          {user.firstname?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+>>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
                         </span>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+<<<<<<< HEAD
                     {user.firstName} {user.lastName}
+=======
+                    {user.firstname} {user.lastname}
+>>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -279,6 +305,7 @@ const UsersList = () => {
   );
 };
 
+<<<<<<< HEAD
 const UsersPage = () => {
   return (
     <Suspense fallback={<div>Chargement...</div>}>
@@ -288,3 +315,6 @@ const UsersPage = () => {
 };
 
 export default UsersPage;
+=======
+export default UsersList;
+>>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
