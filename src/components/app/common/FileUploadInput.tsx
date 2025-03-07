@@ -27,7 +27,6 @@ export default function FileUploadInput({
   hint,
 }: FileUploadInputProps) {
   const [uploadProgress, setUploadProgress] = useState<boolean>(false);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showCropper, setShowCropper] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -64,18 +63,12 @@ export default function FileUploadInput({
 
       const result = await handleUploadFile(syntheticEvent, 'studylink_images');
 
-      if (!result) {
-        setErrorMessage("Erreur lors de l'upload du fichier");
+      if (!result.url) {
+        setErrorMessage(result.error || "Erreur lors de l'upload du fichier");
         return;
       }
 
-      if ('code' in result) {
-        setErrorMessage(result.message);
-        return;
-      }
-
-      setFileUrl(result.fileUrl);
-      onChange(file, result.fileUrl);
+      onChange(file, result.url);
     } catch (error) {
       console.error("Erreur lors de l'upload du fichier:", error);
       setErrorMessage(
@@ -122,9 +115,6 @@ export default function FileUploadInput({
                 lastName={lastName || 'B'}
                 size="sm"
               />
-              {fileUrl && (
-                <span className="text-xs text-muted-foreground">Photo uploadée avec succès</span>
-              )}
             </div>
           )}
 

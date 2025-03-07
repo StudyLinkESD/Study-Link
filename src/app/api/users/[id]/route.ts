@@ -73,6 +73,7 @@ export async function GET(
       lastname: user.lastname,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+      profilePicture: user.profilePicture,
       student: user.student
         ? {
             id: user.student.id,
@@ -95,31 +96,16 @@ export async function GET(
               updatedAt: user.student.school.updatedAt,
               deletedAt: user.student.school.deletedAt,
             },
-            curriculumVitae: user.student.curriculumVitae
-              ? {
-                  uuid: user.student.curriculumVitae,
-                  fileUrl: user.student.curriculumVitae,
-                }
-              : null,
+            curriculumVitae: user.student.curriculumVitae,
             jobRequests: user.student.jobRequests.map((request) => ({
               ...request,
               job: {
                 ...request.job,
                 company: {
                   ...request.job.company,
-                  logo: request.job.company.logo
-                    ? {
-                        uuid: request.job.company.logo,
-                        fileUrl: request.job.company.logo,
-                      }
-                    : null,
+                  logo: request.job.company.logo,
                 },
-                featuredImage: request.job.featuredImage
-                  ? {
-                      uuid: request.job.featuredImage,
-                      fileUrl: request.job.featuredImage,
-                    }
-                  : null,
+                featuredImage: request.job.featuredImage,
               },
             })),
             recommendations: user.student.recommendations.map((rec) => ({
@@ -141,12 +127,7 @@ export async function GET(
               id: user.schoolOwner.school.id,
               name: user.schoolOwner.school.name,
               domain: user.schoolOwner.school.domain,
-              logo: user.schoolOwner.school.logo
-                ? {
-                    uuid: user.schoolOwner.school.logo,
-                    fileUrl: user.schoolOwner.school.logo,
-                  }
-                : null,
+              logo: user.schoolOwner.school.logo,
             },
           }
         : null,
@@ -158,12 +139,7 @@ export async function GET(
             company: {
               id: user.companyOwner.company.id,
               name: user.companyOwner.company.name,
-              logo: user.companyOwner.company.logo
-                ? {
-                    uuid: user.companyOwner.company.logo,
-                    fileUrl: user.companyOwner.company.logo,
-                  }
-                : null,
+              logo: user.companyOwner.company.logo,
               jobs: user.companyOwner.company.jobs,
             },
           }
@@ -172,12 +148,6 @@ export async function GET(
         ? {
             id: user.admin.id,
             userId: user.admin.userId,
-          }
-        : null,
-      profilePicture: user.profilePicture
-        ? {
-            uuid: user.profilePicture,
-            fileUrl: user.profilePicture,
           }
         : null,
     };
@@ -218,7 +188,7 @@ export async function PUT(
         ...(body.firstname && { firstname: body.firstname }),
         ...(body.lastname && { lastname: body.lastname }),
         ...(body.profilePicture !== undefined && {
-          profilePicture: body.profilePicture?.fileUrl || null,
+          profilePicture: body.profilePicture || null,
         }),
       },
       include: {
@@ -267,12 +237,7 @@ export async function PUT(
       lastname: updatedUser.lastname,
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt,
-      profilePicture: updatedUser.profilePicture
-        ? {
-            uuid: updatedUser.profilePicture,
-            fileUrl: updatedUser.profilePicture,
-          }
-        : null,
+      profilePicture: updatedUser.profilePicture,
       student: updatedUser.student
         ? {
             id: updatedUser.student.id,
@@ -295,31 +260,16 @@ export async function PUT(
               updatedAt: updatedUser.student.school.updatedAt,
               deletedAt: updatedUser.student.school.deletedAt,
             },
-            curriculumVitae: updatedUser.student.curriculumVitae
-              ? {
-                  uuid: updatedUser.student.curriculumVitae,
-                  fileUrl: updatedUser.student.curriculumVitae,
-                }
-              : null,
+            curriculumVitae: updatedUser.student.curriculumVitae,
             jobRequests: updatedUser.student.jobRequests.map((request) => ({
               ...request,
               job: {
                 ...request.job,
                 company: {
                   ...request.job.company,
-                  logo: request.job.company.logo
-                    ? {
-                        uuid: request.job.company.logo,
-                        fileUrl: request.job.company.logo,
-                      }
-                    : null,
+                  logo: request.job.company.logo,
                 },
-                featuredImage: request.job.featuredImage
-                  ? {
-                      uuid: request.job.featuredImage,
-                      fileUrl: request.job.featuredImage,
-                    }
-                  : null,
+                featuredImage: request.job.featuredImage,
               },
             })),
             recommendations: updatedUser.student.recommendations.map((rec) => ({
@@ -341,12 +291,7 @@ export async function PUT(
               id: updatedUser.schoolOwner.school.id,
               name: updatedUser.schoolOwner.school.name,
               domain: updatedUser.schoolOwner.school.domain,
-              logo: updatedUser.schoolOwner.school.logo
-                ? {
-                    uuid: updatedUser.schoolOwner.school.logo,
-                    fileUrl: updatedUser.schoolOwner.school.logo,
-                  }
-                : null,
+              logo: updatedUser.schoolOwner.school.logo,
             },
           }
         : null,
@@ -358,12 +303,7 @@ export async function PUT(
             company: {
               id: updatedUser.companyOwner.company.id,
               name: updatedUser.companyOwner.company.name,
-              logo: updatedUser.companyOwner.company.logo
-                ? {
-                    uuid: updatedUser.companyOwner.company.logo,
-                    fileUrl: updatedUser.companyOwner.company.logo,
-                  }
-                : null,
+              logo: updatedUser.companyOwner.company.logo,
               jobs: updatedUser.companyOwner.company.jobs,
             },
           }

@@ -98,7 +98,7 @@ export const validateStudentData = async (
 
   if (data.curriculumVitae) {
     try {
-      const url = new URL(data.curriculumVitae.fileUrl);
+      const url = new URL(data.curriculumVitae);
       if (!url.href.startsWith('https://')) {
         errors.push({
           field: 'curriculumVitae',

@@ -43,71 +43,29 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(school.logo);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const result = await handleUploadFile(e, 'studylink_images');
 
-    if (!file) {
-      setFormData((prev) => ({ ...prev, logo: null }));
-      setLogoUrl(null);
-      return;
-    }
+        if (!result.url) {
+          setErrorMessage(result.error || "Erreur lors de l'upload du logo");
+          return;
+        }
 
-    // Validation stricte du type de fichier
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-
-    if (!allowedTypes.includes(file.type)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        logo: 'Type de fichier non supporté. Types acceptés : jpg, jpeg, png, gif, webp',
-      }));
-      e.target.value = '';
-      return;
-    }
-
-    try {
-      setFormData((prev) => ({ ...prev, logo: file }));
-      setFormErrors((prev) => ({ ...prev, logo: undefined }));
-
-      const result = await handleUploadFile(e, 'studylink_images');
-
-      if (!result) {
+        setLogoUrl(result.url);
+      } catch {
         setFormErrors((prev) => ({
           ...prev,
           logo: "Erreur lors de l'upload du fichier",
         }));
-        e.target.value = '';
-        setFormData((prev) => ({ ...prev, logo: null }));
-        return;
       }
-
-      if ('code' in result) {
-        setFormErrors((prev) => ({
-          ...prev,
-          logo: result.message,
-        }));
-        e.target.value = '';
-        setFormData((prev) => ({ ...prev, logo: null }));
-        return;
-      }
-
-      setLogoUrl(result.fileUrl);
-    } catch {
-      setFormErrors((prev) => ({
-        ...prev,
-        logo: "Une erreur inattendue s'est produite",
-      }));
-      e.target.value = '';
-      setFormData((prev) => ({ ...prev, logo: null }));
+    } else {
+      setLogoUrl(null);
     }
-  };
-
-  const handleInvalidFile = (e: React.InvalidEvent<HTMLInputElement>) => {
-    setFormErrors((prev) => ({
-      ...prev,
-      logo: 'Type de fichier non supporté. Types acceptés : jpg, jpeg, png, gif, webp',
-    }));
-    e.target.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -194,13 +152,12 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
               <Input
                 id="logo"
                 type="file"
-                accept="image/jpeg,image/png,image/gif,image/webp"
+                accept="image/*"
                 onChange={handleLogoChange}
-                onInvalid={handleInvalidFile}
                 className={formErrors.logo ? 'border-red-500' : ''}
                 disabled={isSubmitting}
               />
-              {formErrors.logo && <p className="text-sm text-red-500 mt-1">{formErrors.logo}</p>}
+              {errorMessage && <p className="text-xs text-destructive mt-1">{errorMessage}</p>}
               {logoUrl && (
                 <div className="mt-2">
                   <Image

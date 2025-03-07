@@ -56,12 +56,7 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
       lastname: user.lastname,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      profilePicture: user.profilePicture
-        ? {
-            uuid: user.profilePicture,
-            fileUrl: user.profilePicture,
-          }
-        : null,
+      profilePicture: user.profilePicture,
       student: user.student
         ? {
             id: user.student.id,
@@ -84,12 +79,7 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
               updatedAt: user.student.school.updatedAt,
               deletedAt: user.student.school.deletedAt,
             },
-            curriculumVitae: user.student.curriculumVitae
-              ? {
-                  uuid: user.student.curriculumVitae,
-                  fileUrl: user.student.curriculumVitae,
-                }
-              : null,
+            curriculumVitae: user.student.curriculumVitae,
             jobRequests: user.student.jobRequests.map((request) => ({
               id: request.id,
               studentId: request.studentId,
@@ -107,19 +97,9 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
                 company: {
                   id: request.job.company.id,
                   name: request.job.company.name,
-                  logo: request.job.company.logo
-                    ? {
-                        uuid: request.job.company.logo,
-                        fileUrl: request.job.company.logo,
-                      }
-                    : null,
+                  logo: request.job.company.logo,
                 },
-                featuredImage: request.job.featuredImage
-                  ? {
-                      uuid: request.job.featuredImage,
-                      fileUrl: request.job.featuredImage,
-                    }
-                  : null,
+                featuredImage: request.job.featuredImage,
               },
             })),
             recommendations: user.student.recommendations.map((rec) => ({
@@ -141,12 +121,7 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
               id: user.schoolOwner.school.id,
               name: user.schoolOwner.school.name,
               domain: user.schoolOwner.school.domain,
-              logo: user.schoolOwner.school.logo
-                ? {
-                    uuid: user.schoolOwner.school.logo,
-                    fileUrl: user.schoolOwner.school.logo,
-                  }
-                : null,
+              logo: user.schoolOwner.school.logo,
             },
           }
         : null,
@@ -158,12 +133,7 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
             company: {
               id: user.companyOwner.company.id,
               name: user.companyOwner.company.name,
-              logo: user.companyOwner.company.logo
-                ? {
-                    uuid: user.companyOwner.company.logo,
-                    fileUrl: user.companyOwner.company.logo,
-                  }
-                : null,
+              logo: user.companyOwner.company.logo,
               jobs: user.companyOwner.company.jobs,
             },
           }
@@ -208,7 +178,7 @@ export async function POST(
         email: body.email.toLowerCase() ?? '',
         firstname: body.firstname,
         lastname: body.lastname,
-        profilePicture: body.profilePicture?.fileUrl || null,
+        profilePicture: body.profilePicture || null,
       },
     });
 
@@ -241,12 +211,7 @@ export async function POST(
       lastname: user.lastname,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      profilePicture: user.profilePicture
-        ? {
-            uuid: user.profilePicture,
-            fileUrl: user.profilePicture,
-          }
-        : null,
+      profilePicture: user.profilePicture,
       student: null,
       schoolOwner: null,
       companyOwner: null,

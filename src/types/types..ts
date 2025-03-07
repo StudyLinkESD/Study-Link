@@ -7,10 +7,7 @@ export type Timestamps = {
   deletedAt?: Date;
 };
 
-export type UploadFile = {
-  uuid: string;
-  fileUrl: string;
-};
+export type UploadFile = string | null;
 
 // Types pour les formulaires
 export type UserFormData = Pick<User, 'firstname' | 'lastname' | 'email' | 'profilePicture'>;

@@ -5,7 +5,7 @@ export interface BaseCreateUserDTO {
   firstname?: string | null;
   lastname?: string | null;
   type: UserType;
-  profilePicture?: { uuid: string; fileUrl: string } | null;
+  profilePicture?: string | null;
 }
 
 export interface CreateStudentUserDTO extends BaseCreateUserDTO {
@@ -22,10 +22,10 @@ export interface CreateCompanyOwnerUserDTO extends BaseCreateUserDTO {
 export type CreateUserDTO = CreateStudentUserDTO | CreateCompanyOwnerUserDTO;
 
 export interface UpdateUserDTO {
-  email: string;
+  email?: string;
   firstname?: string;
   lastname?: string;
-  profilePicture?: { uuid: string; fileUrl: string } | null;
+  profilePicture?: string | null;
 }
 
 export interface UserResponseDTO {
@@ -56,10 +56,7 @@ export interface UserResponseDTO {
       updatedAt: Date;
       deletedAt?: Date | null;
     };
-    curriculumVitae: {
-      uuid: string;
-      fileUrl: string;
-    } | null;
+    curriculumVitae: string | null;
     jobRequests: Array<{
       id: string;
       studentId: string;
@@ -77,15 +74,9 @@ export interface UserResponseDTO {
         company: {
           id: string;
           name: string;
-          logo: {
-            uuid: string;
-            fileUrl: string;
-          } | null;
+          logo: string | null;
         };
-        featuredImage: {
-          uuid: string;
-          fileUrl: string;
-        } | null;
+        featuredImage: string | null;
       };
     }>;
     recommendations: Array<{
@@ -108,10 +99,7 @@ export interface UserResponseDTO {
         id: string;
         domain: string;
       };
-      logo: {
-        uuid: string;
-        fileUrl: string;
-      } | null;
+      logo: string | null;
     };
   } | null;
   companyOwner?: {
@@ -121,10 +109,7 @@ export interface UserResponseDTO {
     company: {
       id: string;
       name: string;
-      logo: {
-        uuid: string;
-        fileUrl: string;
-      } | null;
+      logo: string | null;
       jobs: Array<{
         id: string;
         name: string;
@@ -139,8 +124,5 @@ export interface UserResponseDTO {
     id: string;
     userId: string;
   } | null;
-  profilePicture: {
-    uuid: string;
-    fileUrl: string;
-  } | null;
+  profilePicture: string | null;
 }

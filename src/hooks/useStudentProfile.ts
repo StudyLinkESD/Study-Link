@@ -20,12 +20,12 @@ interface StudentProfileResponse extends StudentProfileFormData {
     email: string;
     firstname: string | null;
     lastname: string | null;
-    profilePicture: { uuid: string; fileUrl: string } | null;
+    profilePicture: string | null;
   };
   school: {
     id: string;
     name: string;
-    logo: { uuid: string; fileUrl: string } | null;
+    logo: string | null;
   } | null;
 }
 

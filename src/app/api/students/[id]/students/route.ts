@@ -36,9 +36,7 @@ export async function GET(
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || null,
       description: student.description,
-      curriculumVitae: student.curriculumVitae
-        ? { fileUrl: student.curriculumVitae, fileId: student.curriculumVitae }
-        : null,
+      curriculumVitae: student.curriculumVitae,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,

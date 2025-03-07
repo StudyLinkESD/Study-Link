@@ -20,9 +20,7 @@ export async function GET() {
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || null,
       description: student.description,
-      curriculumVitae: student.curriculumVitae
-        ? { fileUrl: student.curriculumVitae, fileId: student.curriculumVitae }
-        : null,
+      curriculumVitae: student.curriculumVitae,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
@@ -93,7 +91,7 @@ export async function POST(request: Request) {
           skills: body.skills,
           apprenticeshipRythm: body.apprenticeshipRythm,
           description: body.description,
-          curriculumVitae: body.curriculumVitae?.fileUrl || null,
+          curriculumVitae: body.curriculumVitae || null,
           previousCompanies: body.previousCompanies,
           availability: body.availability,
         },
@@ -112,9 +110,7 @@ export async function POST(request: Request) {
         skills: student.skills,
         apprenticeshipRythm: student.apprenticeshipRythm || null,
         description: student.description,
-        curriculumVitae: student.curriculumVitae
-          ? { fileUrl: student.curriculumVitae, fileId: student.curriculumVitae }
-          : null,
+        curriculumVitae: student.curriculumVitae,
         previousCompanies: student.previousCompanies,
         availability: student.availability,
         studentEmail: student.studentEmail,

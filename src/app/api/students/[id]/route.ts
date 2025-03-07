@@ -61,9 +61,7 @@ export async function GET(
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || null,
       description: student.description,
-      curriculumVitae: student.curriculumVitae
-        ? { fileUrl: student.curriculumVitae, fileId: student.curriculumVitae }
-        : null,
+      curriculumVitae: student.curriculumVitae,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
@@ -129,8 +127,7 @@ export async function PUT(
       );
     }
 
-    // Convertir le format du CV pour la base de données
-    const cvData = body.curriculumVitae?.fileUrl || null;
+    const cvData = body.curriculumVitae || null;
 
     const student = await prisma.student.update({
       where: { userId: id },
@@ -153,9 +150,7 @@ export async function PUT(
       skills: student.skills,
       apprenticeshipRythm: student.apprenticeshipRythm || null,
       description: student.description,
-      curriculumVitae: student.curriculumVitae
-        ? { fileUrl: student.curriculumVitae, fileId: student.curriculumVitae }
-        : null,
+      curriculumVitae: student.curriculumVitae,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,

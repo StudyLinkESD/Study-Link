@@ -59,6 +59,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDomainSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,27 +97,12 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
     if (file) {
       const result = await handleUploadFile(e, 'studylink_images');
 
-      if (!result) {
-        setFormErrors((prev) => ({
-          ...prev,
-          logo: "Erreur lors de l'upload du fichier",
-        }));
-        e.target.value = '';
-        setFormData((prev) => ({ ...prev, logo: null }));
+      if (!result.url) {
+        setErrorMessage(result.error || "Erreur lors de l'upload du logo");
         return;
       }
 
-      if ('code' in result) {
-        setFormErrors((prev) => ({
-          ...prev,
-          logo: result.message,
-        }));
-        e.target.value = '';
-        setFormData((prev) => ({ ...prev, logo: null }));
-        return;
-      }
-
-      setLogoUrl(result.fileUrl);
+      setLogoUrl(result.url);
     } else {
       setLogoUrl(null);
     }
@@ -382,9 +368,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
                     className={formErrors.logo ? 'border-red-500' : ''}
                     disabled={isSubmitting}
                   />
-                  {formErrors.logo && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.logo}</p>
-                  )}
+                  {errorMessage && <p className="text-xs text-destructive mt-1">{errorMessage}</p>}
                   {logoUrl && (
                     <div className="mt-2">
                       <Image

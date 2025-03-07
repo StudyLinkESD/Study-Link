@@ -31,7 +31,7 @@ import NavigationButtons from '@/components/app/profileForm/NavigationButton';
 import { cn } from '@/lib/utils';
 import { CreateStudentData } from '@/dto/student.dto';
 import { validateSchoolEmail } from '@/services/school.service';
-import { uploadFileToSupabase } from '@/services/uploadFile';
+import { handleUploadFile } from '@/services/uploadFile';
 
 const profileSchema = z.object({
   firstName: z
@@ -307,22 +307,24 @@ export default function StudentProfileForm() {
           fileSize: file.size,
         });
 
+        // Créer un événement synthétique pour handleUploadFile
+        const syntheticEvent = {
+          target: {
+            files: [file],
+          },
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
+
         // Upload du fichier vers Supabase
-        const result = await uploadFileToSupabase(file, 'studylink_images');
+        const result = await handleUploadFile(syntheticEvent, 'studylink_images');
 
-        if (!result) {
+        if (!result.url) {
           console.error("L'upload a échoué - aucune URL retournée");
-          throw new Error("Échec de l'upload du CV");
-        }
-
-        if ('code' in result) {
-          console.error('Erreur de validation:', result.message);
-          throw new Error(result.message);
+          throw new Error(result.error || "Échec de l'upload du CV");
         }
 
         console.log('Upload réussi:', result);
         setUploadedCv(file);
-        return result;
+        return result.url;
       } catch (error) {
         console.error("Erreur détaillée lors de l'upload du CV:", error);
         toast.error("Erreur lors de l'upload du CV");
@@ -395,13 +397,10 @@ export default function StudentProfileForm() {
       if (uploadedCv) {
         try {
           const uploadResult = await handleCvUpload(uploadedCv);
-          if (!uploadResult || 'error' in uploadResult || !('fileUrl' in uploadResult)) {
+          if (!uploadResult) {
             throw new Error("Échec de l'upload du CV");
           }
-          cvData = {
-            fileUrl: uploadResult.fileUrl,
-            fileId: uploadResult.fileUrl, // Utiliser l'URL comme ID pour le moment
-          };
+          cvData = uploadResult;
         } catch (error) {
           console.error("Erreur lors de l'upload du CV:", error);
           toast.error("Erreur lors de l'upload du CV");

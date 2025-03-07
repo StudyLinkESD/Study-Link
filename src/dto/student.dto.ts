@@ -6,7 +6,7 @@ export interface CreateStudentDTO {
   skills: string;
   apprenticeshipRythm: string | null;
   description: string;
-  curriculumVitae?: { fileUrl: string; fileId: string } | null;
+  curriculumVitae?: string | null;
   previousCompanies: string;
   availability: boolean;
 }

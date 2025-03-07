@@ -15,7 +15,7 @@ import FormField from '@/components/app/profileForm/FormField';
 import FileUploadInput from '@/components/app/common/FileUploadInput';
 import NavigationButtons from '@/components/app/profileForm/NavigationButton';
 import { Company } from '@prisma/client';
-import { uploadFileToSupabase } from '@/services/uploadFile';
+import { handleUploadFile } from '@/services/uploadFile';
 
 const profileSchema = z.object({
   name: z
@@ -68,11 +68,20 @@ export default function CompanyProfileForm() {
 
   const uploadLogo = async (file: File): Promise<string | null> => {
     try {
-      const result = await uploadFileToSupabase(file, 'studylink_images');
-      if (!result || 'error' in result || !('fileUrl' in result)) {
-        throw new Error("Erreur lors de l'upload du logo");
+      // Créer un événement synthétique pour handleUploadFile
+      const syntheticEvent = {
+        target: {
+          files: [file],
+        },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+      const result = await handleUploadFile(syntheticEvent, 'studylink_images');
+
+      if (!result.url) {
+        throw new Error(result.error || "Erreur lors de l'upload du logo");
       }
-      return result.fileUrl;
+
+      return result.url;
     } catch (error) {
       console.error("Erreur lors de l'upload du logo:", error);
       throw error;
@@ -119,21 +128,7 @@ export default function CompanyProfileForm() {
       if (uploadedLogo) {
         const logoUrl = await uploadLogo(uploadedLogo);
         if (logoUrl) {
-          // Créer une entrée dans la table UploadFile
-          const uploadResponse = await fetch('/api/upload-files', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fileUrl: logoUrl,
-            }),
-          });
-          if (!uploadResponse.ok) {
-            throw new Error("Erreur lors de la création de l'entrée du fichier");
-          }
-          const uploadData = await uploadResponse.json();
-          logo = uploadData.uuid;
+          logo = logoUrl;
         }
       }
 
@@ -175,11 +170,7 @@ export default function CompanyProfileForm() {
 
             // Charger le logo si disponible
             if (companyData.logo) {
-              const logoResponse = await fetch(`/api/upload-files/${companyData.logo}`);
-              if (logoResponse.ok) {
-                const logoData = await logoResponse.json();
-                setLogoUrl(logoData.fileUrl);
-              }
+              setLogoUrl(companyData.logo);
             }
           }
         } catch (error) {

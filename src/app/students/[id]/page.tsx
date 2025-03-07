@@ -73,7 +73,7 @@ export default async function Page({ params }: PageProps) {
       skills: skillsArray,
       previousCompanies: studentData.previousCompanies || 'Aucune expérience',
       availability: studentData.availability ? 'Disponible' : 'Non disponible',
-      curriculumVitae: studentData.curriculumVitae?.fileUrl || undefined,
+      curriculumVitae: studentData.curriculumVitae || undefined,
       experiences: [],
       recommendations: [],
     };
