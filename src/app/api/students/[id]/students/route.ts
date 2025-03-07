@@ -42,8 +42,8 @@ export async function GET(
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
-      createdAt: student.createdAt,
-      updatedAt: student.updatedAt,
+      createdAt: student.user.createdAt,
+      updatedAt: student.user.updatedAt,
       user: {
         id: student.user.id,
         email: student.user.email,

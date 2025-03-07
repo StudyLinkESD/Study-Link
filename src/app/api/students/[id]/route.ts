@@ -28,8 +28,6 @@ export async function GET(
         previousCompanies: true,
         availability: true,
         studentEmail: true,
-        createdAt: true,
-        updatedAt: true,
         user: {
           select: {
             id: true,
@@ -37,6 +35,8 @@ export async function GET(
             firstname: true,
             lastname: true,
             profilePicture: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
         school: {
@@ -67,8 +67,8 @@ export async function GET(
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
-      createdAt: student.createdAt,
-      updatedAt: student.updatedAt,
+      createdAt: student.user.createdAt,
+      updatedAt: student.user.updatedAt,
       user: {
         id: student.user.id,
         email: student.user.email,
@@ -159,8 +159,8 @@ export async function PUT(
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
-      createdAt: student.createdAt,
-      updatedAt: student.updatedAt,
+      createdAt: student.user.createdAt,
+      updatedAt: student.user.updatedAt,
       user: {
         id: student.user.id,
         email: student.user.email,
