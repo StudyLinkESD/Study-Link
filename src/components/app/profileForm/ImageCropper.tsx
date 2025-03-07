@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 type ImageCropperProps = {
   image: File | string;
@@ -37,9 +36,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       const canvas = editorRef.current.getImageScaledToCanvas();
 
       const sizes = {
-        sm: 40,
-        md: 64,
-        lg: 96,
         sm: 40,
         md: 64,
         lg: 96,

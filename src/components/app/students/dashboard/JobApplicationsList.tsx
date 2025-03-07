@@ -9,8 +9,6 @@ import ItemGrid from '@/components/app/common/ItemGrid';
 import JobApplicationCard from '@/components/app/students/dashboard/JobApplicationCard';
 import { Prisma } from '@prisma/client';
 import { JobApplicationFull } from '@/types/application_status.type';
-import { JobApplicationFull } from '@/types/application_status.type';
-import { JobApplicationFull } from '@/types/application_status.type';
 
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   include: {
@@ -173,10 +171,6 @@ export default function JobApplicationsList({
         (app) =>
           (app.student.user.firstName?.toLowerCase() ?? '').includes(searchLower) ||
           (app.student.user.lastName?.toLowerCase() ?? '').includes(searchLower) ||
-          (app.student.user.firstName?.toLowerCase() ?? '').includes(searchLower) ||
-          (app.student.user.lastName?.toLowerCase() ?? '').includes(searchLower) ||
-          (app.student.user.firstName?.toLowerCase() ?? '').includes(searchLower) ||
-          (app.student.user.lastName?.toLowerCase() ?? '').includes(searchLower) ||
           app.job.name.toLowerCase().includes(searchLower) ||
           app.job.company.name.toLowerCase().includes(searchLower),
       );
@@ -185,7 +179,6 @@ export default function JobApplicationsList({
     return result;
   }, [statusFilter, searchTerm, applications]);
 
-  const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
     const indexOfFirstItem = indexOfLastItem - APPLICATIONS_PER_PAGE;
@@ -220,8 +213,6 @@ export default function JobApplicationsList({
                 renderItem={(app) => (
                   <JobApplicationCard
                     application={transformToJobApplicationFull(app)}
-                    application={transformToJobApplicationFull(app)}
-                    application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
                 )}
@@ -238,8 +229,6 @@ export default function JobApplicationsList({
                 items={currentApplications}
                 renderItem={(app) => (
                   <JobApplicationCard
-                    application={transformToJobApplicationFull(app)}
-                    application={transformToJobApplicationFull(app)}
                     application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
@@ -258,8 +247,6 @@ export default function JobApplicationsList({
                 renderItem={(app) => (
                   <JobApplicationCard
                     application={transformToJobApplicationFull(app)}
-                    application={transformToJobApplicationFull(app)}
-                    application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
                 )}
@@ -276,8 +263,6 @@ export default function JobApplicationsList({
                 items={currentApplications}
                 renderItem={(app) => (
                   <JobApplicationCard
-                    application={transformToJobApplicationFull(app)}
-                    application={transformToJobApplicationFull(app)}
                     application={transformToJobApplicationFull(app)}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />

@@ -10,7 +10,49 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+      include: {
+        student: {
+          include: {
+            school: true,
+            jobRequests: {
+              where: { deletedAt: null },
+              include: {
+                job: {
+                  include: {
+                    company: true,
+                  },
+                },
+              },
+            },
+            recommendations: true,
+          },
+        },
+        schoolOwner: {
+          include: {
+            school: {
+              include: {
+                domain: true,
+              },
+            },
+          },
+        },
+        companyOwner: {
+          include: {
+            company: {
+              include: {
+                jobs: {
+                  where: { deletedAt: null },
+                },
+              },
+            },
+          },
+        },
+        admin: true,
+      },
     });
 
     if (!user) {
@@ -38,7 +80,6 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 
     const updatedUser = await prisma.user.update({
       where: { id },
-      where: { id },
       data: {
         ...(body.email && { email: body.email.toLowerCase() }),
         ...(body.firstName && { firstName: body.firstName }),
@@ -58,19 +99,13 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
-export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    if (!id) {
-      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
-    }
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {
       return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { id },
       where: { id },
       include: {
         student: true,
@@ -129,7 +164,6 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       }
 
       await tx.user.update({
-        where: { id },
         where: { id },
         data: {
           deletedAt: new Date(),
