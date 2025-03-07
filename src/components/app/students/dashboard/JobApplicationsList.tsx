@@ -9,7 +9,6 @@ import ItemGrid from '@/components/app/common/ItemGrid';
 import JobApplicationCard from '@/components/app/students/dashboard/JobApplicationCard';
 import { Prisma } from '@prisma/client';
 import { JobApplicationFull } from '@/types/application_status.type';
-import { JobApplicationFull } from '@/types/application_status.type';
 
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   include: {

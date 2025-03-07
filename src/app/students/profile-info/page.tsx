@@ -335,12 +335,10 @@ export default function StudentProfileForm() {
             body: JSON.stringify({
               firstName: data.firstName,
               lastName: data.lastName,
-              // Si vous avez uploadé une photo de profil, vous devriez envoyer son ID ici
             }),
           });
         } catch (error) {
           console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
-          // Continuer malgré l'erreur
         }
       }
 
