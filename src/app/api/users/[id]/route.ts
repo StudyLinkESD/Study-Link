@@ -6,63 +6,29 @@ import { validateUserUpdate, ValidationError } from '@/utils/validation/user.val
 const prisma = new PrismaClient();
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<UserByIdResponseDTO | { error: string }>> {
+  request: NextRequest,
+  context: { params: { id: string } },
+): Promise<NextResponse<UserResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
-
     const user = await prisma.user.findUnique({
-      where: {
-        id: id,
-        deletedAt: null,
-      },
-      include: {
-        student: {
-          include: {
-            school: true,
-            jobRequests: {
-              where: { deletedAt: null },
-              include: {
-                job: {
-                  include: {
-                    company: true,
-                  },
-                },
-              },
-            },
-            recommendations: true,
-          },
-        },
-        schoolOwner: {
-          include: {
-            school: {
-              include: {
-                domain: true,
-              },
-            },
-          },
-        },
-        companyOwner: {
-          include: {
-            company: {
-              include: {
-                jobs: {
-                  where: { deletedAt: null },
-                },
-              },
-            },
-          },
-        },
-        admin: true,
-      },
+      where: { id: context.params.id },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    return NextResponse.json(user as UserByIdResponseDTO);
+    const userResponse: UserResponseDTO = {
+      id: user.id,
+      email: user.email,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      profilePicture: user.profilePicture,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    return NextResponse.json(userResponse);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
@@ -74,10 +40,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  context: { params: { id: string } },
 ): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {
   try {
-    const userId = (await params).id;
+    const userId = context.params.id;
     const body = (await request.json()) as UpdateUserDTO;
 
     const validationResult = await validateUserUpdate(body, userId);
@@ -101,7 +67,17 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedUser);
+    const userResponse: UserResponseDTO = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstname: updatedUser.firstname,
+      lastname: updatedUser.lastname,
+      profilePicture: updatedUser.profilePicture,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+    };
+
+    return NextResponse.json(userResponse);
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(

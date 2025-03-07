@@ -4,7 +4,6 @@ import { AuthorizedSchoolDomain } from '@prisma/client';
 import { useEffect, useState } from 'react';
 import { EditSchoolForm } from './EditSchoolForm';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -14,6 +13,10 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import Link from 'next/link';
+import { Search, Users } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
+import { Input } from '@/components/ui/input';
 
 type SchoolWithDomain = {
   id: string;
@@ -32,12 +35,17 @@ interface SchoolListProps {
   onEditEnd: () => void;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
   const [schools, setSchools] = useState<SchoolWithDomain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [error, setError] = useState<string | null>(null);
   const [editingSchool, setEditingSchool] = useState<SchoolWithDomain | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filteredSchools, setFilteredSchools] = useState<SchoolWithDomain[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchSchools = async (filter: string) => {
     try {
@@ -46,6 +54,7 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setSchools(data);
+      setFilteredSchools(data);
       setError(null);
     } catch (error) {
       console.error('Erreur lors de la récupération des écoles:', error);
@@ -62,6 +71,30 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
   useEffect(() => {
     fetchSchools(activeFilter);
   }, [activeFilter]);
+
+  useEffect(() => {
+    const filtered = schools.filter((school) => {
+      const matchesFilter =
+        activeFilter === 'all'
+          ? true
+          : activeFilter === 'active'
+            ? school.isActive
+            : !school.isActive;
+      const matchesSearch =
+        searchTerm === ''
+          ? true
+          : school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            school.domain.domain.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+    setFilteredSchools(filtered);
+    setCurrentPage(1);
+  }, [schools, activeFilter, searchTerm]);
+
+  const paginatedSchools = filteredSchools.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
   const handleEditSuccess = () => {
     setEditingSchool(null);
@@ -107,7 +140,7 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-4">
         <Select value={activeFilter} onValueChange={setActiveFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrer par statut" />
@@ -118,6 +151,17 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
             <SelectItem value="inactive">Écoles inactives</SelectItem>
           </SelectContent>
         </Select>
+
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            type="text"
+            placeholder="Rechercher une école..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -166,6 +210,16 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
           </Card>
         )}
       </div>
+
+      {filteredSchools.length > 0 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredSchools.length / ITEMS_PER_PAGE)}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
 }
