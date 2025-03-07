@@ -1,5 +1,6 @@
-import { CreateSchoolOwnerDTO, UpdateSchoolOwnerDTO } from '@/dto/school-owner.dto';
 import { PrismaClient } from '@prisma/client';
+
+import { CreateSchoolOwnerDTO, UpdateSchoolOwnerDTO } from '@/dto/school-owner.dto';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,7 @@ export async function validateSchoolOwnerData(
       where: { id: data.userId },
     });
     if (!user) {
-      errors.userId = 'L\'utilisateur spécifié n\'existe pas';
+      errors.userId = "L'utilisateur spécifié n'existe pas";
     }
   }
 
@@ -27,7 +28,7 @@ export async function validateSchoolOwnerData(
       where: { id: data.schoolId },
     });
     if (!school) {
-      errors.schoolId = 'L\'école spécifiée n\'existe pas';
+      errors.schoolId = "L'école spécifiée n'existe pas";
     }
   }
 

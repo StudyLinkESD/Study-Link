@@ -1,34 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StudyLink 🎓
 
-## Getting Started
+StudyLink est une plateforme moderne conçue pour faciliter l'apprentissage collaboratif et le partage de connaissances entre étudiants.
 
-First, run the development server:
+## 📚 À propos du projet
+
+Ce projet a été développé dans le cadre d'un cursus académique en développement web, mais il a été conçu et réalisé avec une approche professionnelle et commerciale. StudyLink représente un exemple concret de ce que pourrait être une véritable plateforme SaaS (Software as a Service) destinée au marché de l'éducation.
+
+### 🎓 Contexte académique
+
+- Projet réalisé dans le cadre d'une formation en développement web
+- Application des meilleures pratiques de l'industrie
+- Utilisation des technologies modernes du marché
+
+### 💼 Potentiel commercial
+
+- Architecture évolutive prête pour la mise à l'échelle
+- Fonctionnalités complètes de bout en bout
+- Respect des standards de sécurité et de protection des données
+- Interface utilisateur professionnelle et intuitive
+
+## 🎯 Fonctionnalités principales
+
+- 👥 Authentification avec Google
+- 📚 Gestion de profil étudiant
+- 📧 Système de notifications par email
+- 🔄 Interface utilisateur réactive et moderne
+- 🛡️ Sécurité renforcée avec Next.js et NextAuth
+- 💾 Base de données PostgreSQL avec Prisma
+
+## 🚀 Démarrage rapide
+
+### Prérequis
+
+- Node.js (v18 ou supérieur)
+- PostgreSQL
+- Docker (optionnel)
+
+### Installation
+
+1. Clonez le dépôt :
+
+```bash
+git clone https://github.com/StudyLinkESD/Study-Link.git
+cd Study-Link
+```
+
+2. Installez les dépendances :
+
+```bash
+npm install --legacy-peer-deps
+```
+
+3. Configurez les variables d'environnement :
+
+```bash
+cp .env-example .env
+```
+
+Remplissez le fichier `.env` avec vos propres valeurs.
+
+4. Lancez la base de données (avec Docker) :
+
+```bash
+docker-compose up -d
+```
+
+5. Créez les tables de la base de données :
+
+```bash
+npx prisma db push
+```
+
+5. Remplir la base de données avec des données de test :
+
+```bash
+npm run db:seed
+```
+
+6. Lancez le serveur de développement :
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Scripts disponibles
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm run dev` - Lance le serveur de développement
+- `npm run build` - Compile le projet pour la production
+- `npm run start` - Lance le serveur de production
+- `npm run lint` - Vérifie le code avec ESLint
+- `npm run format` - Formate le code avec Prettier
+- `npm run db:seed` - Remplit la base de données avec des données de test
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔧 Technologies utilisées
 
-## Learn More
+- Next.js 15
+- React 19
+- TypeScript
+- Prisma
+- NextAuth.js
+- TailwindCSS
+- Supabase
+- Docker
 
-To learn more about Next.js, take a look at the following resources:
+## 📄 Licence
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.

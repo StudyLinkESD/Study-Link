@@ -1,9 +1,10 @@
-// FileUploadInput.tsx
-import { useState, ChangeEvent } from 'react';
-import { Input } from '@/components/ui/input';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import { handleUploadFile } from '@/services/uploadFile';
+import { ChangeEvent, useState } from 'react';
+
 import ImageCropper from '@/components/app/profileForm/ImageCropper';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Input } from '@/components/ui/input';
+
+import { handleUploadFile } from '@/services/uploadFile';
 
 type FileUploadInputProps = {
   id: string;
@@ -33,7 +34,6 @@ export default function FileUploadInput({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFileSelection = (e: ChangeEvent<HTMLInputElement>) => {
-    // Reset any previous errors
     setErrorMessage(null);
 
     const file = e.target.files?.[0] || null;
@@ -41,11 +41,9 @@ export default function FileUploadInput({
     if (!file) return;
 
     if (previewType === 'avatar' && file.type.startsWith('image/')) {
-      // For profile images, show the image editor
       setSelectedFile(file);
       setShowCropper(true);
     } else if (file) {
-      // For other file types, proceed directly to upload
       uploadFile(file);
     }
   };
@@ -55,22 +53,19 @@ export default function FileUploadInput({
     setErrorMessage(null);
 
     try {
-      // Create a synthetic event to match handleUploadFile interface
       const syntheticEvent = {
         target: {
           files: [file],
         },
       } as unknown as React.ChangeEvent<HTMLInputElement>;
 
-      const url = await handleUploadFile(syntheticEvent);
+      const { url, error } = await handleUploadFile(syntheticEvent, 'studylink_images');
 
       if (url) {
         setFileUrl(url);
         onChange(file, url);
-      } else {
-        // Handle the case when URL is null but no error was thrown
-        setErrorMessage("L'upload a échoué. Veuillez réessayer.");
-        onChange(file);
+      } else if (error) {
+        setErrorMessage(error);
       }
     } catch (error) {
       console.error("Erreur lors de l'upload du fichier:", error);
@@ -83,16 +78,12 @@ export default function FileUploadInput({
   };
 
   const handleCropperSave = (croppedFile: File) => {
-    // Close the editor
     setShowCropper(false);
     setSelectedFile(null);
-
-    // Upload the cropped file
     uploadFile(croppedFile);
   };
 
   const handleCropperCancel = () => {
-    // Close the editor without saving
     setShowCropper(false);
     setSelectedFile(null);
   };
@@ -104,7 +95,7 @@ export default function FileUploadInput({
           image={selectedFile}
           onSave={handleCropperSave}
           onCancel={handleCropperCancel}
-          isCircular={previewType === 'avatar'} // Circular profile photo
+          isCircular={previewType === 'avatar'}
         />
       )}
 
@@ -119,7 +110,7 @@ export default function FileUploadInput({
                 size="sm"
               />
               {fileUrl && (
-                <span className="text-xs text-muted-foreground">Photo uploadée avec succès</span>
+                <span className="text-muted-foreground text-xs">Photo uploadée avec succès</span>
               )}
             </div>
           )}
@@ -133,14 +124,14 @@ export default function FileUploadInput({
           />
 
           {uploadProgress && (
-            <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-              <div className="bg-primary h-1.5 rounded-full animate-pulse w-full"></div>
+            <div className="bg-muted mt-1 h-1.5 w-full rounded-full">
+              <div className="bg-primary h-1.5 w-full animate-pulse rounded-full"></div>
             </div>
           )}
 
-          {errorMessage && <p className="text-xs text-destructive mt-1">{errorMessage}</p>}
+          {errorMessage && <p className="text-destructive mt-1 text-xs">{errorMessage}</p>}
 
-          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+          {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
         </>
       )}
     </div>

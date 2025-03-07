@@ -1,7 +1,7 @@
-// SkillsSelector.tsx
 import { useId } from 'react';
-import { Label } from '@/components/ui/label';
+
 import StatusBadge from '@/components/app/common/StatusBadge';
+import { Label } from '@/components/ui/label';
 
 type Skill = {
   id: string;
@@ -33,7 +33,7 @@ export default function SkillsSelector({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {availableSkills.map((skill) => (
           <div key={skill.id} className="flex items-center space-x-2">
             <input
@@ -42,7 +42,7 @@ export default function SkillsSelector({
               value={skill.name}
               checked={selectedSkills.includes(skill.name)}
               onChange={(e) => handleSkillToggle(skill.name, e.target.checked)}
-              className="rounded text-primary"
+              className="text-primary rounded"
             />
             <Label htmlFor={`${groupId}-skill-${skill.id}`} className="cursor-pointer">
               {skill.name}

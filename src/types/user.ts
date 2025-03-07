@@ -1,9 +1,9 @@
 interface IUser {
   id: string;
   email: string;
-  firstname: string;
-  lastname: string;
-  profilePictureId?: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profilePicture?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

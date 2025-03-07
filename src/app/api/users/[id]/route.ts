@@ -1,76 +1,92 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
-import { checkUserExists, validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
+import { User } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<UserResponseDTO | { error: string }>> {
+import { prisma } from '@/lib/prisma';
+
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    const id = (await params).id;
-    const userCheck = await checkUserExists(id);
+    const id = request.nextUrl.pathname.split('/').pop();
+    if (!id) {
+      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
+    }
 
-    if (!userCheck.exists) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+      include: {
+        student: {
+          include: {
+            school: true,
+            jobRequests: {
+              where: { deletedAt: null },
+              include: {
+                job: {
+                  include: {
+                    company: true,
+                  },
+                },
+              },
+            },
+            recommendations: true,
+          },
+        },
+        schoolOwner: {
+          include: {
+            school: {
+              include: {
+                domain: true,
+              },
+            },
+          },
+        },
+        companyOwner: {
+          include: {
+            company: {
+              include: {
+                jobs: {
+                  where: { deletedAt: null },
+                },
+              },
+            },
+          },
+        },
+        admin: true,
+      },
+    });
+
+    if (!user) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    if (userCheck.isDeleted) {
-      return NextResponse.json({ error: 'Cet utilisateur a été supprimé' }, { status: 410 });
-    }
-
-    if (!userCheck.user) {
-      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
-    }
-
-    const userResponse: UserResponseDTO = {
-      id: userCheck.user.id,
-      email: userCheck.user.email,
-      firstname: userCheck.user.firstname,
-      lastname: userCheck.user.lastname,
-      profilePictureId: userCheck.user.profilePictureId,
-      createdAt: userCheck.user.createdAt,
-      updatedAt: userCheck.user.updatedAt,
-    };
-
-    return NextResponse.json(userResponse);
+    return NextResponse.json(user);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération de l'utilisateur" },
+      { error: "Une erreur est survenue lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {
+export async function PUT(request: NextRequest): Promise<NextResponse> {
   try {
-    const userId = (await params).id;
-    const body = (await request.json()) as UpdateUserDTO;
-
-    const validationResult = await validateUserUpdate(body, userId);
-    if (!validationResult.isValid) {
-      return NextResponse.json(
-        {
-          error: 'Données invalides',
-          details: validationResult.errors,
-        },
-        { status: 400 },
-      );
+    const id = request.nextUrl.pathname.split('/').pop();
+    if (!id) {
+      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
 
+    const body = (await request.json()) as Partial<User>;
+
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { id },
       data: {
         ...(body.email && { email: body.email.toLowerCase() }),
-        ...(body.firstname && { firstname: body.firstname }),
-        ...(body.lastname && { lastname: body.lastname }),
-        ...(body.profilePictureId !== undefined && { profilePictureId: body.profilePictureId }),
+        ...(body.firstName && { firstName: body.firstName }),
+        ...(body.lastName && { lastName: body.lastName }),
+        ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
       },
     });
 
@@ -84,15 +100,15 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
-    const id = (await params).id;
+    const id = request.nextUrl.pathname.split('/').pop();
+    if (!id) {
+      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
+    }
 
     const existingUser = await prisma.user.findUnique({
-      where: { id: id },
+      where: { id },
       include: {
         student: true,
         schoolOwner: true,
@@ -105,9 +121,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    // Transaction is used to cascade values
-    // Used here to delete all information related to the user
-    // If one transaction fail, other tx are not executed and a rollback is executed
     await prisma.$transaction(async (tx) => {
       if (existingUser.student) {
         await tx.recommendation.deleteMany({
@@ -146,12 +159,14 @@ export async function DELETE(
         });
       }
 
-      await tx.verificationToken.deleteMany({
-        where: { identifier: existingUser.email },
-      });
+      if (existingUser.email) {
+        await tx.verificationToken.deleteMany({
+          where: { identifier: existingUser.email },
+        });
+      }
 
       await tx.user.update({
-        where: { id: id },
+        where: { id },
         data: {
           deletedAt: new Date(),
         },

@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { SchoolResponseDTO, UpdateSchoolDTO } from '../../../../dto/school.dto';
-import { validateSchoolData } from '../../../../utils/validation/school.validation';
+
+import { NextResponse } from 'next/server';
+
+import { validateSchoolData } from '@/utils/validation/school.validation';
+
+import { SchoolResponseDTO, UpdateSchoolDTO } from '@/dto/school.dto';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +21,6 @@ export async function GET(
       },
       include: {
         domain: true,
-        logo: true,
       },
     });
 
@@ -63,11 +65,10 @@ export async function PUT(
       data: {
         name: body.name,
         domainId: body.domainId,
-        logoId: body.logoId,
+        logo: body.logo,
       },
       include: {
         domain: true,
-        logo: true,
       },
     });
 
@@ -84,20 +85,25 @@ export async function PUT(
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+): Promise<NextResponse<{ success: boolean } | { error: string }>> {
   try {
     const id = (await params).id;
+    const existingSchool = await prisma.school.findUnique({
+      where: { id },
+    });
+
+    if (!existingSchool) {
+      return NextResponse.json({ error: 'École non trouvée' }, { status: 404 });
+    }
+
     await prisma.school.update({
-      where: {
-        id: id,
-        deletedAt: null,
-      },
+      where: { id },
       data: {
         deletedAt: new Date(),
       },
     });
 
-    return NextResponse.json({ message: 'École supprimée avec succès' }, { status: 200 });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erreur lors de la suppression de l'école:", error);
     return NextResponse.json(

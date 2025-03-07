@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+
+import { NextResponse } from 'next/server';
+
 import { EnrichedJobRequestResponseDTO } from '@/dto/job-request.dto';
 
 const prisma = new PrismaClient();
@@ -50,11 +52,7 @@ export async function GET(
                 name: true,
                 createdAt: true,
                 updatedAt: true,
-                logo: {
-                  select: {
-                    fileUrl: true,
-                  },
-                },
+                logo: true,
               },
             },
             featuredImage: true,

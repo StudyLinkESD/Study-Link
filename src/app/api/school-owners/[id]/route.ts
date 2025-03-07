@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { SchoolOwnerResponseDTO, UpdateSchoolOwnerDTO } from '@/dto/school-owner.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateSchoolOwnerData } from '@/utils/validation/school-owner.validation';
+
+import { SchoolOwnerResponseDTO, UpdateSchoolOwnerDTO } from '@/dto/school-owner.dto';
 
 const prisma = new PrismaClient();
 

@@ -1,26 +1,29 @@
-import { notFound } from 'next/navigation';
 import {
+  Award,
   BookOpen,
   Briefcase,
-  Heart,
-  Award,
-  Download,
-  School,
   Calendar,
   Clock,
+  Download,
+  Heart,
   Mail,
+  School,
 } from 'lucide-react';
+
+import { notFound } from 'next/navigation';
+
+import BackButton from '@/components/app/common/BackButton';
+import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
+import InfoItem from '@/components/app/common/InfoItems';
+import RecommendationsList from '@/components/app/common/RecommendationsList';
+import SectionCard from '@/components/app/common/SectionCard';
+import SkillsList from '@/components/app/common/SkillsList';
+import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import BackButton from '@/components/app/common/BackButton';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
-import InfoItem from '@/components/app/common/InfoItems';
-import SectionCard from '@/components/app/common/SectionCard';
-import SkillsList from '@/components/app/common/SkillsList';
-import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
-import RecommendationsList from '@/components/app/common/RecommendationsList';
+
 import { getStudentById } from '@/services/student.service';
 
 interface PageProps {
@@ -39,15 +42,12 @@ export default async function Page({ params }: PageProps) {
       notFound();
     }
 
-    // Convertir les compétences en tableau
     const skillsArray = studentData.skills
       .split(',')
       .map((s) => ({ id: s.trim(), name: s.trim() }));
 
-    // Déterminer le statut en fonction des compétences
-    let status: 'Alternant' | 'Stagiaire' = 'Stagiaire'; // Par défaut
+    let status: 'Alternant' | 'Stagiaire' = 'Stagiaire';
 
-    // Si l'étudiant a des compétences liées à l'alternance, il est alternant
     const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
     if (
       skillsArray.some((skill) =>
@@ -57,38 +57,33 @@ export default async function Page({ params }: PageProps) {
       status = 'Alternant';
     }
 
-    // Formatter les données pour correspondre à ce qu'attend la page
     const student = {
       id: studentData.id,
-      firstName: studentData.user?.firstname || '',
-      lastName: studentData.user?.lastname || '',
-      photoUrl: studentData.user?.profilePictureId
-        ? `/api/files/${studentData.user.profilePictureId}`
+      firstName: studentData.user?.firstName || '',
+      lastName: studentData.user?.lastName || '',
+      photoUrl: studentData.user?.profilePicture
+        ? `/api/files/${studentData.user.profilePicture}`
         : '',
       email: studentData.user?.email || '',
       status,
       school: studentData.school?.name || '',
       skills: skillsArray,
-      alternanceRhythm: studentData.apprenticeshipRythm || '',
+      alternanceRhythm: studentData.apprenticeshipRhythm || '',
       description: studentData.description,
-      cvUrl: studentData.curriculumVitaeId
-        ? `/api/files/${studentData.curriculumVitaeId}`
-        : undefined,
+      cvUrl: studentData.curriculumVitae ? `/api/files/${studentData.curriculumVitae}` : undefined,
       availability: studentData.availability ? 'Disponible' : 'Non disponible',
       recommendations: [],
       experiences: [],
     };
 
     return (
-      <main className="container mx-auto py-4 px-4 max-w-4xl">
-        {/* Utilisation du composant BackButton */}
+      <main className="container mx-auto max-w-4xl px-4 py-4">
         <BackButton href="/students" label="Retour à la liste des étudiants" className="mb-6" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card className="md:col-span-1">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center">
-                {/* Utilisation du composant ProfileAvatar */}
                 <ProfileAvatar
                   firstName={student.firstName}
                   lastName={student.lastName}
@@ -97,14 +92,13 @@ export default async function Page({ params }: PageProps) {
                   className="mb-4"
                 />
 
-                <h1 className="text-xl font-bold text-center">
+                <h1 className="text-center text-xl font-bold">
                   {student.firstName} {student.lastName}
                 </h1>
 
-                {/* Utilisation du composant StatusBadge */}
                 <StatusBadge status={student.status} className="mt-2" />
 
-                <div className="w-full mt-6 space-y-4">
+                <div className="mt-6 w-full space-y-4">
                   {student.school && <InfoItem icon={School}>{student.school}</InfoItem>}
 
                   {student.alternanceRhythm && (
@@ -131,14 +125,14 @@ export default async function Page({ params }: PageProps) {
                     rel="noopener noreferrer"
                     className="block w-full"
                   >
-                    <Button className="w-full mt-6">
+                    <Button className="mt-6 w-full">
                       <Download className="mr-2 h-4 w-4" />
                       Télécharger le CV
                     </Button>
                   </a>
                 )}
 
-                <Button className="w-full mt-4">Contacter</Button>
+                <Button className="mt-4 w-full">Contacter</Button>
               </div>
             </CardContent>
           </Card>
@@ -152,7 +146,6 @@ export default async function Page({ params }: PageProps) {
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6">
-                {/* Utilisation du composant SectionCard */}
                 {student.description && (
                   <SectionCard title="À propos" icon={BookOpen}>
                     <p>{student.description}</p>
@@ -160,14 +153,12 @@ export default async function Page({ params }: PageProps) {
                 )}
 
                 <SectionCard title="Compétences" icon={Award}>
-                  {/* Utilisation du composant SkillsList */}
                   <SkillsList skills={student.skills} />
                 </SectionCard>
               </TabsContent>
 
               <TabsContent value="experience" className="space-y-6">
                 <SectionCard title="Expériences professionnelles" icon={Briefcase}>
-                  {/* Utilisation du composant ExperienceTimeline */}
                   <ExperienceTimeline
                     experiences={student.experiences}
                     emptyMessage="Aucune expérience professionnelle listée."
@@ -177,7 +168,6 @@ export default async function Page({ params }: PageProps) {
 
               <TabsContent value="recommendations" className="space-y-6">
                 <SectionCard title="Recommandations" icon={Heart}>
-                  {/* Utilisation du composant RecommendationsList */}
                   <RecommendationsList
                     recommendations={student.recommendations}
                     emptyMessage="Aucune recommandation disponible."

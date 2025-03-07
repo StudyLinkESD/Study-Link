@@ -1,11 +1,12 @@
 export interface CreateStudentDTO {
   userId: string;
   schoolId: string;
+  studentEmail: string;
   status: string;
   skills: string;
-  apprenticeshipRythm?: string;
+  apprenticeshipRhythm?: string;
   description: string;
-  curriculumVitaeId?: string;
+  curriculumVitae?: string;
   previousCompanies: string;
   availability: boolean;
 }
@@ -13,9 +14,9 @@ export interface CreateStudentDTO {
 export interface UpdateStudentDTO {
   status?: string;
   skills?: string;
-  apprenticeshipRythm?: string;
+  apprenticeshipRhythm?: string;
   description?: string;
-  curriculumVitaeId?: string;
+  curriculumVitae?: string;
   previousCompanies?: string;
   availability?: boolean;
 }
@@ -27,17 +28,17 @@ export interface StudentResponseDTO {
   primaryRecommendationId?: string;
   status: string;
   skills: string;
-  apprenticeshipRythm?: string;
+  apprenticeshipRhythm?: string;
   description: string;
-  curriculumVitaeId?: string;
+  curriculumVitae?: string;
   previousCompanies: string;
   availability: boolean;
   user?: {
     id: string;
     email: string;
-    firstname: string;
-    lastname: string;
-    profilePictureId?: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    profilePicture?: string | null;
   };
   school?: {
     id: string;

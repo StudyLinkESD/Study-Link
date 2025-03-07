@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ChevronRight } from 'lucide-react';
-import { useJob } from '@/context/job.context';
 
-// Import des composants communs
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import Link from 'next/link';
+import React from 'react';
+
 import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+
+import { useJob } from '@/context/job.context';
 
 export type JobCardProps = {
   id: string;
@@ -30,10 +31,9 @@ export default function JobCard(props: JobCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden cursor-pointer" onClick={handleClick}>
+    <Card className="cursor-pointer overflow-hidden" onClick={handleClick}>
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
-          {/* Utilisation du composant ProfileAvatar */}
           <ProfileAvatar
             firstName={companyName}
             lastName={''}
@@ -46,21 +46,19 @@ export default function JobCard(props: JobCardProps) {
             <h3 className="text-md font-medium text-gray-500">{companyName}</h3>
             <h3 className="text-lg font-semibold">{offerTitle}</h3>
 
-            <div className="flex items-center gap-2 mt-1">
-              {/* Utilisation du composant StatusBadge */}
+            <div className="mt-1 flex items-center gap-2">
               <StatusBadge status={status} />
 
               {availability && (
-                <span className="text-xs text-muted-foreground">{availability}</span>
+                <span className="text-muted-foreground text-xs">{availability}</span>
               )}
             </div>
           </div>
         </div>
 
         <div className="mt-3">
-          <h4 className="text-sm font-medium mb-2">Compétences requises</h4>
+          <h4 className="mb-2 text-sm font-medium">Compétences requises</h4>
 
-          {/* Nous n'utilisons pas directement SkillsList car nous voulons limiter l'affichage à 5 skills */}
           <div className="flex flex-wrap gap-1">
             {skills.slice(0, 5).map((skill) => (
               <StatusBadge
@@ -74,17 +72,17 @@ export default function JobCard(props: JobCardProps) {
               <StatusBadge status={`+${skills.length - 5}`} variant="outline" className="text-xs" />
             )}
           </div>
-          <p className="text-gray-500 mt-2">◦ {description}</p>
+          <p className="mt-2 text-gray-500">◦ {description}</p>
         </div>
       </CardContent>
 
       <CardFooter className="p-3">
         <Link
           href={`/jobs/${id}`}
-          className="text-sm text-primary hover:underline flex ml-auto items-center"
+          className="text-primary ml-auto flex items-center text-sm hover:underline"
         >
           Voir l&apos;offre
-          <ChevronRight className="h-4 w-4 ml-1" />
+          <ChevronRight className="ml-1 h-4 w-4" />
         </Link>
       </CardFooter>
     </Card>

@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { SchoolDomainResponseDTO, UpdateSchoolDomainDTO } from '@/dto/school-domain.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateSchoolDomainData } from '@/utils/validation/school-domain.validation';
+
+import { SchoolDomainResponseDTO, UpdateSchoolDomainDTO } from '@/dto/school-domain.dto';
 
 const prisma = new PrismaClient();
 
@@ -77,7 +80,6 @@ export async function DELETE(
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
     const id = (await params).id;
-    // Vérifier si le domaine est utilisé par des écoles
     const schoolsUsingDomain = await prisma.school.count({
       where: {
         domainId: id,

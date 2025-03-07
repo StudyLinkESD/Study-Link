@@ -1,20 +1,41 @@
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
 import { Briefcase, GraduationCap } from 'lucide-react';
+
+import Link from 'next/link';
+import React from 'react';
+
+import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Card, CardContent } from '@/components/ui/card';
 
 export type StudentCardProps = {
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   photoUrl: string;
   status: 'Alternant' | 'Stagiaire';
   skills: { id: string; name: string }[];
   school?: string;
 };
 
-export default function StudentCard({
+const SkillsList = React.memo(({ skills }: { skills: StudentCardProps['skills'] }) => {
+  const displayedSkills = skills.slice(0, 3);
+  const hasMoreSkills = skills.length > 3;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {displayedSkills.map((skill) => (
+        <StatusBadge key={skill.id} status={skill.name} variant="outline" className="text-xs" />
+      ))}
+      {hasMoreSkills && (
+        <StatusBadge status={`+${skills.length - 3}`} variant="outline" className="text-xs" />
+      )}
+    </div>
+  );
+});
+
+SkillsList.displayName = 'SkillsList';
+
+function StudentCardComponent({
   id,
   firstName,
   lastName,
@@ -25,10 +46,9 @@ export default function StudentCard({
 }: StudentCardProps) {
   return (
     <Link href={`/students/${id}`} className="block h-full">
-      <Card className="overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-1 h-full">
+      <Card className="h-full overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
         <CardContent className="p-4">
           <div className="flex flex-col gap-4">
-            {/* En-tête avec avatar et informations principales */}
             <div className="flex items-start gap-4">
               <ProfileAvatar
                 firstName={firstName}
@@ -38,16 +58,16 @@ export default function StudentCard({
                 className="border border-gray-200 dark:border-gray-700"
               />
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold truncate">
+                  <h3 className="truncate text-base font-semibold">
                     {firstName} {lastName}
                   </h3>
                   <StatusBadge status={status} className="text-xs" />
                 </div>
 
                 {school && (
-                  <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-sm">
                     <GraduationCap className="h-4 w-4" />
                     <span className="truncate">{school}</span>
                   </div>
@@ -55,29 +75,12 @@ export default function StudentCard({
               </div>
             </div>
 
-            {/* Compétences */}
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
                 <Briefcase className="h-4 w-4" />
                 <span>Compétences</span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {skills.slice(0, 3).map((skill) => (
-                  <StatusBadge
-                    key={skill.id}
-                    status={skill.name}
-                    variant="outline"
-                    className="text-xs"
-                  />
-                ))}
-                {skills.length > 3 && (
-                  <StatusBadge
-                    status={`+${skills.length - 3}`}
-                    variant="outline"
-                    className="text-xs"
-                  />
-                )}
-              </div>
+              <SkillsList skills={skills} />
             </div>
           </div>
         </CardContent>
@@ -85,3 +88,7 @@ export default function StudentCard({
     </Link>
   );
 }
+
+const StudentCard = React.memo(StudentCardComponent);
+
+export default StudentCard;

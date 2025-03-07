@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateSchoolDomainDTO, SchoolDomainResponseDTO } from '@/dto/school-domain.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateSchoolDomainData } from '@/utils/validation/school-domain.validation';
+
+import { CreateSchoolDomainDTO, SchoolDomainResponseDTO } from '@/dto/school-domain.dto';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +24,9 @@ export async function GET(): Promise<NextResponse<SchoolDomainResponseDTO[] | { 
 export async function POST(
   request: Request,
 ): Promise<
-  NextResponse<SchoolDomainResponseDTO | { error: string; details?: Record<string, string> }>
+  NextResponse<
+    SchoolDomainResponseDTO | { error: string; details?: Record<string, string>; code?: string }
+  >
 > {
   try {
     const body = (await request.json()) as CreateSchoolDomainDTO;
@@ -30,8 +35,9 @@ export async function POST(
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
+          error: validationResult.errors?.domain || 'Données invalides',
           details: validationResult.errors,
+          code: validationResult.errorCode,
         },
         { status: 400 },
       );

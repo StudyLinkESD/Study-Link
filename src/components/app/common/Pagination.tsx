@@ -1,18 +1,19 @@
-import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 
 type PaginationProps = {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  maxPageButtons?: number; // Limite le nombre de boutons de page affichés
-  showFirstLastButtons?: boolean; // Option pour afficher les boutons "Premier" et "Dernier"
+  maxPageButtons?: number;
+  showFirstLastButtons?: boolean;
   labels?: {
     previous?: string;
     next?: string;
     first?: string;
     last?: string;
-  }; // Personnalisation des libellés pour l'internationalisation
+  };
 };
 
 function Pagination({
@@ -28,13 +29,11 @@ function Pagination({
     last: 'Dernier',
   },
 }: PaginationProps) {
-  // Logique pour déterminer quelles pages afficher lorsque maxPageButtons est inférieur à totalPages
   const getPageRange = () => {
     if (totalPages <= maxPageButtons) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
 
-    // Calcul pour afficher les boutons de page autour de la page courante
     const halfMax = Math.floor(maxPageButtons / 2);
     let start = Math.max(currentPage - halfMax, 1);
     const end = Math.min(start + maxPageButtons - 1, totalPages);
@@ -49,7 +48,7 @@ function Pagination({
   const pageButtons = getPageRange();
 
   return (
-    <nav className="flex justify-center mt-6" aria-label="Pagination">
+    <nav className="mt-6 flex justify-center" aria-label="Pagination">
       <div className="flex items-center space-x-2">
         {showFirstLastButtons && (
           <Button
@@ -70,7 +69,7 @@ function Pagination({
           disabled={currentPage === 1}
           aria-label={labels.previous}
         >
-          <ChevronLeft className="h-4 w-4 mr-1" />
+          <ChevronLeft className="mr-1 h-4 w-4" />
           {labels.previous}
         </Button>
 
@@ -81,7 +80,7 @@ function Pagination({
               variant={page === currentPage ? 'default' : 'outline'}
               size="sm"
               onClick={() => onPageChange(page)}
-              className="w-8 h-8 p-0"
+              className="h-8 w-8 p-0"
               aria-label={`Page ${page}`}
               aria-current={page === currentPage ? 'page' : undefined}
             >
@@ -98,7 +97,7 @@ function Pagination({
           aria-label={labels.next}
         >
           {labels.next}
-          <ChevronRight className="h-4 w-4 ml-1" />
+          <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
 
         {showFirstLastButtons && (

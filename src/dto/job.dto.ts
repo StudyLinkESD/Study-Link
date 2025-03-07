@@ -2,7 +2,7 @@ export interface JobResponseDTO {
   id: string;
   companyId: string;
   name: string;
-  featuredImageId?: string;
+  featuredImage?: string;
   description: string;
   skills?: string;
   createdAt: Date;
@@ -12,14 +12,14 @@ export interface JobResponseDTO {
 export interface CreateJobDTO {
   companyId: string;
   name: string;
-  featuredImageId?: string;
+  featuredImage?: string;
   description: string;
   skills?: string;
 }
 
 export interface UpdateJobDTO {
   name?: string;
-  featuredImageId?: string;
+  featuredImage?: string;
   description?: string;
   skills?: string;
 }

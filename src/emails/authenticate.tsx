@@ -11,14 +11,15 @@ import {
   Section,
   Text,
 } from '@react-email/components';
+
 import * as React from 'react';
 
 interface EmailTemplateProps {
   url: string;
-  firstname?: string;
+  firstName?: string;
 }
 
-export default function SignupEmail({ url, firstname = 'étudiant' }: EmailTemplateProps) {
+export default function AuthenticateEmail({ url }: EmailTemplateProps) {
   return (
     <Html>
       <Head />
@@ -30,7 +31,7 @@ export default function SignupEmail({ url, firstname = 'étudiant' }: EmailTempl
           </Section>
 
           <Section style={contentSection}>
-            <Heading style={greeting}>Bonjour {firstname} 👋</Heading>
+            <Heading style={greeting}>Bonjour 👋</Heading>
             <Text style={paragraph}>
               Cliquez sur le bouton ci-dessous pour vous connecter à StudyLink. Ce lien est valable
               pendant 24 heures.

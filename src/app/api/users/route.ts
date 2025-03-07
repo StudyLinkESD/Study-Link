@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateUserDTO, UserResponseDTO } from '@/dto/user.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateUserCreation, ValidationError } from '@/utils/validation/user.validation';
+
+import { CreateUserDTO, UserResponseDTO } from '@/dto/user.dto';
 
 const prisma = new PrismaClient();
 
@@ -42,10 +45,10 @@ export async function POST(
 
     const user = await prisma.user.create({
       data: {
-        email: body.email.toLowerCase(),
-        firstname: body.firstname,
-        lastname: body.lastname,
-        profilePictureId: body.profilePictureId,
+        email: body.email.toLowerCase() ?? '',
+        firstName: body.firstName,
+        lastName: body.lastName,
+        profilePicture: body.profilePicture,
       },
     });
 
@@ -61,6 +64,7 @@ export async function POST(
         data: {
           userId: user.id,
           schoolId: body.schoolId,
+          studentEmail: body.studentEmail,
           status: 'PENDING',
           skills: '',
           description: '',

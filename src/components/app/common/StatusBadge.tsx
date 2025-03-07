@@ -1,56 +1,42 @@
-// StatusBadge.tsx
-// À placer dans @/components/app/common/StatusBadge.tsx
+import { VariantProps } from 'class-variance-authority';
 
-import { FC } from 'react';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
 
-type StatusBadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+import { Badge, badgeVariants } from '@/components/ui/badge';
 
-type StatusBadgeProps = {
+import { cn } from '@/lib/utils';
+
+type BadgeProps = React.ComponentProps<'span'> &
+  VariantProps<typeof badgeVariants> & { asChild?: boolean };
+
+interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
   status: string;
-  variant?: StatusBadgeVariant;
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline' | 'success';
   className?: string;
+}
+
+const variantClasses = {
+  success:
+    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100/80 dark:hover:bg-green-900/80',
 };
 
-/**
- * Composant pour afficher un badge de statut avec des variantes différentes selon le contenu
- */
-const StatusBadge: FC<StatusBadgeProps> = ({ status, variant: forcedVariant, className = '' }) => {
-  // Détermine automatiquement la variante du badge en fonction du statut
-  // si aucune variante n'est explicitement fournie
-  let variant: StatusBadgeVariant = forcedVariant || 'default';
-
-  if (!forcedVariant) {
-    switch (status) {
-      case 'Alternant':
-        variant = 'default';
-        break;
-      case 'Stagiaire':
-        variant = 'secondary';
-        break;
-      case 'En attente':
-        variant = 'outline';
-        break;
-      case 'Accepté':
-        variant = 'default';
-        break;
-      case 'Refusé':
-        variant = 'destructive';
-        break;
-      case 'Terminé':
-        variant = 'secondary';
-        break;
-      // Pour les badges de compétences, on utilise outline par défaut
-      default:
-        variant = 'outline';
-    }
-  }
-
+function StatusBadgeComponent({
+  status,
+  variant = 'default',
+  className,
+  ...props
+}: StatusBadgeProps) {
   return (
-    <Badge variant={variant} className={className}>
+    <Badge
+      variant={variant === 'success' ? 'secondary' : variant}
+      className={cn(variant === 'success' ? variantClasses.success : '', className)}
+      {...props}
+    >
       {status}
     </Badge>
   );
-};
+}
+
+const StatusBadge = React.memo(StatusBadgeComponent);
 
 export default StatusBadge;

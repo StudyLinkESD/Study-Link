@@ -1,23 +1,20 @@
 'use client';
 
-import { useRef, useMemo, useReducer } from 'react';
-import StudentCard, { StudentCardProps } from './StudentCard';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import SearchBar from '@/components/app/common/SearchBar';
-import FilterSelector from '@/components/app/common/FilterSelector';
+
+import React, { useMemo, useReducer, useRef } from 'react';
+
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 
-// Constantes et types
+import { STUDENT_STATUS } from '@/constants/status';
+
+import StudentCard, { StudentCardProps } from './StudentCard';
+import StudentFilters, { FilterAction, FilterState } from './StudentFilters';
+
 const STUDENTS_PER_PAGE = 9;
-const STATUS_OPTIONS = {
-  ALL: 'all',
-  ALTERNANT: 'Alternant',
-  STAGIAIRE: 'Stagiaire',
-};
 
 type Student = Omit<StudentCardProps, 'skills'> & {
   skills: { id: string; name: string }[];
@@ -29,24 +26,8 @@ type StudentListProps = {
   isLoading?: boolean;
 };
 
-// Définition de l'état et du reducer
-type FilterState = {
-  statusFilter: string;
-  searchTerm: string;
-  selectedSkills: string[];
-  currentPage: number;
-};
-
-type FilterAction =
-  | { type: 'SET_STATUS_FILTER'; payload: string }
-  | { type: 'SET_SEARCH_TERM'; payload: string }
-  | { type: 'ADD_SKILL'; payload: string }
-  | { type: 'REMOVE_SKILL'; payload: string }
-  | { type: 'SET_PAGE'; payload: number }
-  | { type: 'RESET_FILTERS' };
-
 const initialFilterState: FilterState = {
-  statusFilter: STATUS_OPTIONS.ALL,
+  statusFilter: STUDENT_STATUS.ALL,
   searchTerm: '',
   selectedSkills: [],
   currentPage: 1,
@@ -82,87 +63,7 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-// Composant pour les filtres extraits
-function StudentFilters({
-  state,
-  dispatch,
-  allSkills,
-}: {
-  state: FilterState;
-  dispatch: React.Dispatch<FilterAction>;
-  allSkills: string[];
-  tabsRef: React.RefObject<HTMLDivElement>;
-  studentsCount: number;
-}) {
-  const { selectedSkills } = state;
-
-  // Fonctions de gestion des skills
-  const handleSelectSkill = (skill: string) => {
-    dispatch({ type: 'ADD_SKILL', payload: skill });
-  };
-
-  const handleRemoveSkill = (skill: string) => {
-    dispatch({ type: 'REMOVE_SKILL', payload: skill });
-  };
-
-  const resetFilters = () => {
-    // Récupérer le statut actuel avant la réinitialisation
-    const currentStatus = state.statusFilter;
-
-    // Réinitialiser tous les filtres
-    dispatch({ type: 'RESET_FILTERS' });
-
-    // Rétablir le statut d'onglet précédent
-    dispatch({ type: 'SET_STATUS_FILTER', payload: currentStatus });
-  };
-
-  // Convertir les skills en options pour le FilterSelector
-  const skillOptions = allSkills.map((skill) => ({
-    value: skill,
-    label: skill,
-  }));
-
-  return (
-    <>
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-        <TabsList>
-          <TabsTrigger value={STATUS_OPTIONS.ALL}>Tous</TabsTrigger>
-          <TabsTrigger value={STATUS_OPTIONS.ALTERNANT}>Alternants</TabsTrigger>
-          <TabsTrigger value={STATUS_OPTIONS.STAGIAIRE}>Stagiaires</TabsTrigger>
-        </TabsList>
-
-        {/* Utilisation du composant SearchBar */}
-        <SearchBar
-          onSearch={(term) => dispatch({ type: 'SET_SEARCH_TERM', payload: term })}
-          placeholder="Rechercher..."
-          initialValue={state.searchTerm}
-          className="w-full sm:max-w-xs"
-        />
-      </div>
-
-      <div className="flex flex-col gap-5 mb-4">
-        <Label className="block" htmlFor="skills-filter">
-          Filtrer par compétences
-        </Label>
-
-        {/* Utilisation du composant FilterSelector */}
-        <div className="flex">
-          <FilterSelector
-            options={skillOptions}
-            selectedValues={selectedSkills}
-            onSelect={handleSelectSkill}
-            onRemove={handleRemoveSkill}
-            onReset={resetFilters}
-            showResetButton={true}
-          />
-        </div>
-      </div>
-    </>
-  );
-}
-
-// Composant principal de liste d'étudiants
-export default function StudentList({
+function StudentListComponent({
   students,
   title = 'Liste des étudiants',
   isLoading = false,
@@ -177,11 +78,10 @@ export default function StudentList({
     [students],
   );
 
-  // Logique de filtrage
   const filteredStudents = useMemo(() => {
     let result = [...students];
 
-    if (statusFilter !== STATUS_OPTIONS.ALL) {
+    if (statusFilter !== STUDENT_STATUS.ALL) {
       result = result.filter((student) => student.status === statusFilter);
     }
 
@@ -189,8 +89,8 @@ export default function StudentList({
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (student) =>
-          student.firstName.toLowerCase().includes(searchLower) ||
-          student.lastName.toLowerCase().includes(searchLower) ||
+          (student.firstName?.toLowerCase() ?? '').includes(searchLower) ||
+          (student.lastName?.toLowerCase() ?? '').includes(searchLower) ||
           (student.school && student.school.toLowerCase().includes(searchLower)),
       );
     }
@@ -206,7 +106,6 @@ export default function StudentList({
     return result;
   }, [statusFilter, searchTerm, selectedSkills, students]);
 
-  // Calcul de la pagination
   const totalPages = Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE);
   const currentStudents = useMemo(() => {
     const indexOfLastStudent = currentPage * STUDENTS_PER_PAGE;
@@ -214,12 +113,26 @@ export default function StudentList({
     return filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
   }, [filteredStudents, currentPage]);
 
-  // État de chargement
+  const renderStudent = React.useCallback(
+    (student: Student) => (
+      <StudentCard
+        id={student.id}
+        firstName={student.firstName}
+        lastName={student.lastName}
+        photoUrl={student.photoUrl}
+        status={student.status}
+        skills={student.skills}
+        school={student.school}
+      />
+    ),
+    [],
+  );
+
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[400px]">
+      <div className="container mx-auto flex min-h-[400px] items-center justify-center px-4 py-8">
         <div className="flex flex-col items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <Loader2 className="text-primary mb-4 h-12 w-12 animate-spin" />
           <p>Chargement des étudiants...</p>
         </div>
       </div>
@@ -227,7 +140,7 @@ export default function StudentList({
   }
 
   return (
-    <div className="container mx-auto px-4 py-4 space-y-6">
+    <div className="container mx-auto space-y-6 px-4 py-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground" aria-live="polite">
@@ -241,68 +154,43 @@ export default function StudentList({
         <CardContent>
           <Tabs
             ref={tabsRef}
-            defaultValue={STATUS_OPTIONS.ALL}
+            defaultValue={STUDENT_STATUS.ALL}
             value={statusFilter}
             className="w-full"
             onValueChange={(value) => dispatch({ type: 'SET_STATUS_FILTER', payload: value })}
           >
-            <StudentFilters
-              state={state}
-              dispatch={dispatch}
-              allSkills={allSkills}
-              tabsRef={tabsRef as React.RefObject<HTMLDivElement>}
-              studentsCount={filteredStudents.length}
-            />
+            <StudentFilters state={state} dispatch={dispatch} allSkills={allSkills} />
 
-            {/* Contenu des onglets unifié en un seul élément */}
-            <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
+            <TabsContent value={statusFilter} className="mt-6">
               <ItemGrid
                 items={currentStudents}
-                renderItem={(student) => <StudentCard {...student} />}
+                renderItem={renderStudent}
                 keyExtractor={(student) => student.id}
+                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
                 emptyState={{
                   title: 'Aucun étudiant trouvé',
-                  description: 'Aucun étudiant ne correspond à vos critères de recherche.',
+                  description:
+                    'Aucun étudiant ne correspond à vos critères de recherche. Essayez de modifier vos filtres.',
                 }}
-                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               />
-            </TabsContent>
-            <TabsContent value={STATUS_OPTIONS.ALTERNANT} className="mt-0">
-              <ItemGrid
-                items={currentStudents}
-                renderItem={(student) => <StudentCard {...student} />}
-                keyExtractor={(student) => student.id}
-                emptyState={{
-                  title: 'Aucun étudiant trouvé',
-                  description: 'Aucun étudiant ne correspond à vos critères de recherche.',
-                }}
-                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-              />
-            </TabsContent>
-            <TabsContent value={STATUS_OPTIONS.STAGIAIRE} className="mt-0">
-              <ItemGrid
-                items={currentStudents}
-                renderItem={(student) => <StudentCard {...student} />}
-                keyExtractor={(student) => student.id}
-                emptyState={{
-                  title: 'Aucun étudiant trouvé',
-                  description: 'Aucun étudiant ne correspond à vos critères de recherche.',
-                }}
-                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-              />
+
+              {filteredStudents.length > 0 && (
+                <div className="mt-6 flex justify-center">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => dispatch({ type: 'SET_PAGE', payload: page })}
+                  />
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-
-      {/* Composant de pagination */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => dispatch({ type: 'SET_PAGE', payload: page })}
-        />
-      )}
     </div>
   );
 }
+
+const StudentList = React.memo(StudentListComponent);
+
+export default StudentList;

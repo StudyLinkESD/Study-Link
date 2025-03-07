@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateCompanyOwnerDTO, CompanyOwnerResponseDTO } from '@/dto/company-owner.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateCompanyOwnerData } from '@/utils/validation/company-owner.validation';
 import { ValidationError } from '@/utils/validation/company-owner.validation';
+
+import { CompanyOwnerResponseDTO, CreateCompanyOwnerDTO } from '@/dto/company-owner.dto';
 
 const prisma = new PrismaClient();
 
@@ -23,9 +26,9 @@ export async function GET(): Promise<NextResponse<CompanyOwnerResponseDTO[] | { 
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Erreur lors de la récupération des propriétaires d\'entreprise:', error);
+    console.error("Erreur lors de la récupération des propriétaires d'entreprise:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des propriétaires d\'entreprise' },
+      { error: "Erreur lors de la récupération des propriétaires d'entreprise" },
       { status: 500 },
     );
   }
@@ -64,9 +67,9 @@ export async function POST(
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Erreur lors de la création du propriétaire d\'entreprise:', error);
+    console.error("Erreur lors de la création du propriétaire d'entreprise:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la création du propriétaire d\'entreprise' },
+      { error: "Erreur lors de la création du propriétaire d'entreprise" },
       { status: 500 },
     );
   }

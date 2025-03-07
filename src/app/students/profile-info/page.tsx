@@ -1,18 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Briefcase, Save, School, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { User, School, Briefcase, Save } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import FileUploadInput from '@/components/app/common/FileUploadInput';
+import SectionCard from '@/components/app/common/SectionCard';
+import FormField from '@/components/app/profileForm/FormField';
+import NavigationButtons from '@/components/app/profileForm/NavigationButton';
+import ProfileCompletion from '@/components/app/profileForm/ProfileCompletion';
+import ProfilePreview from '@/components/app/profileForm/ProfilePreview';
+import SkillsSelector from '@/components/app/profileForm/SkillsSelector';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -21,46 +29,50 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SectionCard from '@/components/app/common/SectionCard';
-import FormField from '@/components/app/profileForm/FormField';
-import ProfilePreview from '@/components/app/profileForm/ProfilePreview';
-import ProfileCompletion from '@/components/app/profileForm/ProfileCompletion';
-import FileUploadInput from '@/components/app/common/FileUploadInput';
-import SkillsSelector from '@/components/app/profileForm/SkillsSelector';
-import NavigationButtons from '@/components/app/profileForm/NavigationButton';
+import { Textarea } from '@/components/ui/textarea';
+
 import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
-  firstName: z.string()
+  firstName: z
+    .string()
     .min(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
     .max(50, { message: 'Le prénom ne doit pas dépasser 50 caractères' })
-    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le prénom ne doit contenir que des lettres, espaces et tirets' }),
-  lastName: z.string()
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, {
+      message: 'Le prénom ne doit contenir que des lettres, espaces et tirets',
+    }),
+  lastName: z
+    .string()
     .min(2, { message: 'Le nom doit contenir au moins 2 caractères' })
     .max(50, { message: 'Le nom ne doit pas dépasser 50 caractères' })
-    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le nom ne doit contenir que des lettres, espaces et tirets' }),
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, {
+      message: 'Le nom ne doit contenir que des lettres, espaces et tirets',
+    }),
   status: z.enum(['Alternant', 'Stagiaire'], {
     required_error: 'Veuillez sélectionner votre statut',
   }),
-  school: z.string()
-    .min(1, { message: 'Veuillez sélectionner votre école' }),
-  availability: z.string()
-    .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, { 
-      message: 'Format attendu : MM/YYYY (ex: 09/2024)' 
+  school: z.string().min(1, { message: 'Veuillez sélectionner votre école' }),
+  availability: z
+    .string()
+    .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, {
+      message: 'Format attendu : MM/YYYY (ex: 09/2024)',
     })
     .optional()
     .or(z.literal('')),
-  alternanceRhythm: z.string()
+  alternanceRhythm: z
+    .string()
     .min(5, { message: "Veuillez décrire votre rythme d'alternance" })
-    .max(100, { message: "La description du rythme est trop longue" })
+    .max(100, { message: 'La description du rythme est trop longue' })
     .optional()
     .or(z.literal('')),
-  description: z.string()
+  description: z
+    .string()
     .min(100, { message: 'La description doit contenir au moins 100 caractères' })
     .max(500, { message: 'La description ne doit pas dépasser 500 caractères' })
     .optional()
     .or(z.literal('')),
-  skills: z.array(z.string())
+  skills: z
+    .array(z.string())
     .min(3, { message: 'Veuillez sélectionner au moins 3 compétences' })
     .max(10, { message: 'Vous ne pouvez pas sélectionner plus de 10 compétences' }),
 });
@@ -77,7 +89,7 @@ interface CreateStudentData {
   schoolId: string;
   status: 'Alternant' | 'Stagiaire';
   skills: string;
-  apprenticeshipRythm: string | null;
+  apprenticeshipRhythm: string | null;
   description: string;
   curriculumVitaeId: string | null;
   previousCompanies: string;
@@ -123,7 +135,7 @@ export default function StudentProfileForm() {
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -189,13 +201,11 @@ export default function StudentProfileForm() {
   };
 
   useEffect(() => {
-    // Rediriger si non connecté
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
     }
 
-    // Charger les écoles depuis l'API
     const fetchSchools = async () => {
       try {
         const response = await fetch('/api/schools');
@@ -215,7 +225,6 @@ export default function StudentProfileForm() {
 
     fetchSchools();
 
-    // Charger les données du profil si l'utilisateur est connecté
     if (status === 'authenticated' && session?.user?.id) {
       const loadStudentProfile = async () => {
         try {
@@ -224,32 +233,27 @@ export default function StudentProfileForm() {
           if (studentData) {
             setStudentId(studentData.id);
 
-            // Précharger les valeurs du formulaire avec les données de l'utilisateur et de l'étudiant
             reset({
               firstName: session.user.name?.split(' ')[0] || '',
               lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
               status: studentData.status as 'Alternant' | 'Stagiaire',
               school: studentData.schoolId,
               availability: studentData.availability ? 'Disponible' : '',
-              alternanceRhythm: studentData.apprenticeshipRythm || '',
+              alternanceRhythm: studentData.apprenticeshipRhythm || '',
               description: studentData.description,
               skills: studentData.skills.split(',').map((s: string) => s.trim()),
             });
 
-            // Charger la photo de profil si disponible
             if (session.user.image) {
               setPhotoUrl(session.user.image);
-            } else if (studentData.user?.profilePictureId) {
-              setPhotoUrl(`/api/files/${studentData.user.profilePictureId}`);
+            } else if (studentData.user?.profilePicture) {
+              setPhotoUrl(`/api/files/${studentData.user.profilePicture}`);
             }
 
-            // Charger le CV si disponible
             if (studentData.curriculumVitaeId) {
-              // Nous ne chargeons pas vraiment le fichier ici, juste l'URL
               console.log('CV déjà chargé:', studentData.curriculumVitaeId);
             }
           } else {
-            // Si l'étudiant n'existe pas encore, on initialise avec les infos de la session
             if (session.user.name) {
               const names = session.user.name.split(' ');
               reset({
@@ -288,13 +292,9 @@ export default function StudentProfileForm() {
     }
   };
 
-  const handleCvUpload = (file: File | null, url?: string) => {
+  const handleCvUpload = (file: File | null) => {
     if (file) {
       setUploadedCv(file);
-      // Vous pourriez également stocker l'URL du CV si nécessaire
-      if (url) {
-        // Stocker l'URL du CV dans votre état de formulaire si besoin
-      }
     }
   };
 
@@ -305,7 +305,6 @@ export default function StudentProfileForm() {
     }
 
     try {
-      // Mise à jour des informations utilisateur si nécessaire
       if (data.firstName || data.lastName) {
         try {
           await fetch(`/api/users/${session.user.id}`, {
@@ -314,14 +313,12 @@ export default function StudentProfileForm() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              firstname: data.firstName,
-              lastname: data.lastName,
-              // Si vous avez uploadé une photo de profil, vous devriez envoyer son ID ici
+              firstName: data.firstName,
+              lastName: data.lastName,
             }),
           });
         } catch (error) {
           console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
-          // Continuer malgré l'erreur
         }
       }
 
@@ -330,25 +327,22 @@ export default function StudentProfileForm() {
         schoolId: data.school,
         status: data.status,
         skills: data.skills.join(', '),
-        apprenticeshipRythm: data.alternanceRhythm || null,
+        apprenticeshipRhythm: data.alternanceRhythm || null,
         description: data.description || '',
-        curriculumVitaeId: uploadedCv ? uploadedCv.name : null, // Idéalement, l'ID du fichier après upload
-        previousCompanies: '', // Vous pourriez ajouter ce champ au formulaire
+        curriculumVitaeId: uploadedCv ? uploadedCv.name : null,
+        previousCompanies: '',
         availability: !!data.availability,
       };
 
       if (studentId) {
-        // Mise à jour d'un profil existant
         await updateStudent(studentId, studentData);
         toast.success('Profil mis à jour avec succès');
       } else {
-        // Création d'un nouveau profil
         const newStudent = await createStudent(studentData);
         setStudentId(newStudent.id);
         toast.success('Profil créé avec succès');
       }
 
-      // Rediriger vers la page du profil étudiant
       router.push(`/students/${studentId || 'profile'}`);
     } catch (error) {
       console.error('Erreur lors de la soumission du profil:', error);
@@ -361,64 +355,64 @@ export default function StudentProfileForm() {
   const getProfileCompletionFields = () => {
     return [
       {
-        name: "Nom et prénom",
+        name: 'Nom et prénom',
         completed: !!(formValues.firstName && formValues.lastName),
-        required: true
+        required: true,
       },
       {
-        name: "Photo de profil",
+        name: 'Photo de profil',
         completed: !!photoUrl,
-        required: false
+        required: false,
       },
       {
-        name: "Statut",
+        name: 'Statut',
         completed: !!formValues.status,
-        required: true
+        required: true,
       },
       {
-        name: "École",
+        name: 'École',
         completed: !!formValues.school,
-        required: true
+        required: true,
       },
       {
         name: "Rythme d'alternance",
         completed: !!formValues.alternanceRhythm,
-        required: formValues.status === 'Alternant'
+        required: formValues.status === 'Alternant',
       },
       {
-        name: "Description",
+        name: 'Description',
         completed: !!(formValues.description && formValues.description.length >= 100),
-        required: false
+        required: false,
       },
       {
-        name: "Compétences",
+        name: 'Compétences',
         completed: !!(formValues.skills && formValues.skills.length >= 3),
-        required: true
+        required: true,
       },
       {
-        name: "CV",
+        name: 'CV',
         completed: !!uploadedCv,
-        required: false
+        required: false,
       },
       {
-        name: "Disponibilité",
+        name: 'Disponibilité',
         completed: !!formValues.availability,
-        required: false
-      }
+        required: false,
+      },
     ];
   };
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="container mx-auto flex min-h-[400px] max-w-4xl items-center justify-center px-4 py-8">
+        <div className="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Compléter votre profil</h1>
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <h1 className="mb-6 text-3xl font-bold">Compléter votre profil</h1>
       <p className="text-muted-foreground mb-8">
         Ces informations seront visibles par les entreprises et vous permettront de recevoir des
         offres correspondant à votre profil.
@@ -427,7 +421,7 @@ export default function StudentProfileForm() {
       <ProfileCompletion fields={getProfileCompletionFields()} />
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           <div className="md:col-span-1">
             <div className="sticky top-6 space-y-6">
               <ProfilePreview
@@ -461,7 +455,7 @@ export default function StudentProfileForm() {
                 <TabsTrigger value="skills">Compétences</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="personal" className="space-y-6 mt-6">
+              <TabsContent value="personal" className="mt-6 space-y-6">
                 <SectionCard title="Informations de base" icon={User}>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
@@ -473,13 +467,13 @@ export default function StudentProfileForm() {
                       isValid={!!dirtyFields.firstName && !errors.firstName}
                       helpText="Utilisez votre prénom légal tel qu'il apparaît sur vos documents officiels"
                     >
-                      <Input 
-                        id="firstName" 
-                        placeholder="Votre prénom" 
+                      <Input
+                        id="firstName"
+                        placeholder="Votre prénom"
                         {...register('firstName')}
                         className={cn(
-                          errors.firstName && "border-destructive",
-                          !errors.firstName && touchedFields.firstName && "border-green-500"
+                          errors.firstName && 'border-destructive',
+                          !errors.firstName && touchedFields.firstName && 'border-green-500',
                         )}
                       />
                     </FormField>
@@ -493,13 +487,13 @@ export default function StudentProfileForm() {
                       isValid={!!dirtyFields.lastName && !errors.lastName}
                       helpText="Utilisez votre nom de famille légal"
                     >
-                      <Input 
-                        id="lastName" 
-                        placeholder="Votre nom" 
+                      <Input
+                        id="lastName"
+                        placeholder="Votre nom"
                         {...register('lastName')}
                         className={cn(
-                          errors.lastName && "border-destructive",
-                          !errors.lastName && touchedFields.lastName && "border-green-500"
+                          errors.lastName && 'border-destructive',
+                          !errors.lastName && touchedFields.lastName && 'border-green-500',
                         )}
                       />
                     </FormField>
@@ -565,9 +559,9 @@ export default function StudentProfileForm() {
                       id="description"
                       placeholder="Décrivez votre parcours, vos projets et vos aspirations professionnelles..."
                       className={cn(
-                        "min-h-[120px]",
-                        errors.description && "border-destructive",
-                        !errors.description && touchedFields.description && "border-green-500"
+                        'min-h-[120px]',
+                        errors.description && 'border-destructive',
+                        !errors.description && touchedFields.description && 'border-green-500',
                       )}
                       {...register('description')}
                     />
@@ -576,7 +570,7 @@ export default function StudentProfileForm() {
                 <NavigationButtons showNextButton onNext={() => setSelectedTab('education')} />
               </TabsContent>
 
-              <TabsContent value="education" className="space-y-6 mt-6">
+              <TabsContent value="education" className="mt-6 space-y-6">
                 <SectionCard title="Formation et disponibilité" icon={School}>
                   <div className="space-y-4">
                     <FormField
@@ -629,8 +623,8 @@ export default function StudentProfileForm() {
                         placeholder="09/2024"
                         {...register('availability')}
                         className={cn(
-                          errors.availability && "border-destructive",
-                          !errors.availability && touchedFields.availability && "border-green-500"
+                          errors.availability && 'border-destructive',
+                          !errors.availability && touchedFields.availability && 'border-green-500',
                         )}
                       />
                     </FormField>
@@ -653,7 +647,7 @@ export default function StudentProfileForm() {
                 />
               </TabsContent>
 
-              <TabsContent value="skills" className="space-y-6 mt-6">
+              <TabsContent value="skills" className="mt-6 space-y-6">
                 <SectionCard title="Compétences et expertises" icon={Briefcase}>
                   <FormField
                     label="Sélectionnez vos compétences"

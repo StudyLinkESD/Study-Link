@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateStudentDTO, StudentResponseDTO } from '@/dto/student.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateStudentData } from '@/utils/validation/student.validation';
+
+import { CreateStudentDTO, StudentResponseDTO } from '@/dto/student.dto';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +24,6 @@ export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error
       include: {
         user: true,
         school: true,
-        curriculumVitae: true,
       },
     });
 
@@ -32,9 +34,9 @@ export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error
       primaryRecommendationId: student.primaryRecommendationId || undefined,
       status: student.status,
       skills: student.skills,
-      apprenticeshipRythm: student.apprenticeshipRythm || undefined,
+      apprenticeshipRhythm: student.apprenticeshipRhythm || undefined,
       description: student.description,
-      curriculumVitaeId: student.curriculumVitaeId || undefined,
+      curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
     }));
@@ -71,7 +73,6 @@ export async function POST(
       include: {
         user: true,
         school: true,
-        curriculumVitae: true,
       },
     });
 
@@ -82,9 +83,9 @@ export async function POST(
       primaryRecommendationId: student.primaryRecommendationId || undefined,
       status: student.status,
       skills: student.skills,
-      apprenticeshipRythm: student.apprenticeshipRythm || undefined,
+      apprenticeshipRhythm: student.apprenticeshipRhythm || undefined,
       description: student.description,
-      curriculumVitaeId: student.curriculumVitaeId || undefined,
+      curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
       availability: student.availability,
     };
