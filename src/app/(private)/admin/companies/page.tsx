@@ -14,8 +14,8 @@ interface Company {
   sector?: string;
   companyOwners: {
     user: {
-      firstname: string;
-      lastname: string;
+      firstName: string;
+      lastName: string;
     };
   }[];
 }
@@ -119,7 +119,7 @@ const CompaniesList = () => {
                     {company.companyOwners &&
                     company.companyOwners.length > 0 &&
                     company.companyOwners[0]?.user
-                      ? `${company.companyOwners[0].user.firstname} ${company.companyOwners[0].user.lastname}`
+                      ? `${company.companyOwners[0].user.firstName} ${company.companyOwners[0].user.lastName}`
                       : 'Non assigné'}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
