@@ -91,7 +91,6 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
     setCurrentPage(1);
   }, [schools, activeFilter, searchTerm]);
 
->>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
   const handleEditSuccess = () => {
     setEditingSchool(null);
     onEditEnd();
@@ -133,11 +132,6 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
       </div>
     );
   }
-
-  const displayedSchools = filteredSchools.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
-  );
 
   const displayedSchools = filteredSchools.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
