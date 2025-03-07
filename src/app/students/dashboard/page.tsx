@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { useStudentApplications } from '@/hooks/students/dashboard/useStudentApplications';
+import { useStudentJobRequests } from '@/hooks/students/dashboard/useStudentJobRequests';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/app/common/StatusBadge';
@@ -22,76 +22,76 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
-import { APPLICATION_STATUS } from '@/constants/status';
+import { JOB_REQUEST_STATUS } from '@/constants/status';
 import axios from 'axios';
 
-const ApplicationStatusBadge = React.memo(({ status }: { status: string }) => {
+const JobRequestStatusBadge = React.memo(({ status }: { status: string }) => {
   switch (status) {
-    case APPLICATION_STATUS.PENDING:
+    case JOB_REQUEST_STATUS.PENDING:
       return <StatusBadge status="En attente" variant="default" />;
-    case APPLICATION_STATUS.ACCEPTED:
+    case JOB_REQUEST_STATUS.ACCEPTED:
       return <StatusBadge status="Acceptée" variant="success" />;
-    case APPLICATION_STATUS.REJECTED:
+    case JOB_REQUEST_STATUS.REJECTED:
       return <StatusBadge status="Refusée" className="bg-red-200 text-red-800" />;
     default:
       return <StatusBadge status="Inconnu" variant="outline" />;
   }
 });
 
-ApplicationStatusBadge.displayName = 'ApplicationStatusBadge';
+JobRequestStatusBadge.displayName = 'JobRequestStatusBadge';
 
 function StudentDashboardPageComponent() {
   const { data: session } = useSession();
-  const { applications, setApplications, isLoading } = useStudentApplications(session);
-  const [statusFilter, setStatusFilter] = useState<string>(APPLICATION_STATUS.ALL);
+  const { jobRequests, setJobRequests, isLoading } = useStudentJobRequests(session);
+  const [statusFilter, setStatusFilter] = useState<string>(JOB_REQUEST_STATUS.ALL);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-  const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
+  const [jobRequestToDelete, setJobRequestToDelete] = useState<string | null>(null);
 
-  const filteredApplications = useMemo(() => {
-    return applications.filter((app) => {
-      const matchesStatus = statusFilter === APPLICATION_STATUS.ALL || app.status === statusFilter;
+  const filteredJobRequests = useMemo(() => {
+    return jobRequests.filter((req) => {
+      const matchesStatus = statusFilter === JOB_REQUEST_STATUS.ALL || req.status === statusFilter;
       const matchesSearch =
         searchTerm === '' ||
-        app.job.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.job.company.name.toLowerCase().includes(searchTerm.toLowerCase());
+        req.job.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.job.company.name.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesStatus && matchesSearch;
     });
-  }, [applications, statusFilter, searchTerm]);
+  }, [jobRequests, statusFilter, searchTerm]);
 
   const statusCounts = useMemo(() => {
-    return applications.reduce(
-      (acc, app) => {
-        acc[app.status] = (acc[app.status] || 0) + 1;
+    return jobRequests.reduce(
+      (acc, req) => {
+        acc[req.status] = (acc[req.status] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
     );
-  }, [applications]);
+  }, [jobRequests]);
 
   const handleDeleteClick = useCallback((id: string) => {
-    setApplicationToDelete(id);
+    setJobRequestToDelete(id);
     setDeleteDialogOpen(true);
   }, []);
 
   const confirmDelete = useCallback(async () => {
-    if (!applicationToDelete) return;
+    if (!jobRequestToDelete) return;
 
     try {
-      const response = await axios.delete(`/api/job-requests/${applicationToDelete}`);
+      const response = await axios.delete(`/api/job-requests/${jobRequestToDelete}`);
 
-      if (response.status >= 400) throw new Error('Failed to delete application');
+      if (response.status >= 400) throw new Error('Failed to delete job request');
 
-      setApplications(applications.filter((app) => app.id !== applicationToDelete));
+      setJobRequests(jobRequests.filter((req) => req.id !== jobRequestToDelete));
       toast.success('Candidature supprimée avec succès');
     } catch (error) {
-      console.error('Error deleting application:', error);
+      console.error('Error deleting job request:', error);
       toast.error('Erreur lors de la suppression de la candidature');
     } finally {
       setDeleteDialogOpen(false);
-      setApplicationToDelete(null);
+      setJobRequestToDelete(null);
     }
-  }, [applicationToDelete, applications, setApplications]);
+  }, [jobRequestToDelete, jobRequests, setJobRequests]);
 
   if (isLoading) {
     return (
@@ -155,35 +155,35 @@ function StudentDashboardPageComponent() {
         </CardHeader>
         <CardContent>
           <Tabs
-            defaultValue={APPLICATION_STATUS.ALL}
+            defaultValue={JOB_REQUEST_STATUS.ALL}
             value={statusFilter}
             onValueChange={setStatusFilter}
             className="w-full"
           >
             <TabsList className="mb-6">
-              <TabsTrigger value={APPLICATION_STATUS.ALL}>Toutes</TabsTrigger>
-              <TabsTrigger value={APPLICATION_STATUS.PENDING}>En attente</TabsTrigger>
-              <TabsTrigger value={APPLICATION_STATUS.ACCEPTED}>Acceptées</TabsTrigger>
-              <TabsTrigger value={APPLICATION_STATUS.REJECTED}>Refusées</TabsTrigger>
+              <TabsTrigger value={JOB_REQUEST_STATUS.ALL}>Toutes</TabsTrigger>
+              <TabsTrigger value={JOB_REQUEST_STATUS.PENDING}>En attente</TabsTrigger>
+              <TabsTrigger value={JOB_REQUEST_STATUS.ACCEPTED}>Acceptées</TabsTrigger>
+              <TabsTrigger value={JOB_REQUEST_STATUS.REJECTED}>Refusées</TabsTrigger>
             </TabsList>
 
             <div className="space-y-4">
-              {filteredApplications.length > 0 ? (
-                filteredApplications.map((application) => (
-                  <Card key={application.id} className="overflow-hidden">
+              {filteredJobRequests.length > 0 ? (
+                filteredJobRequests.map((jobRequest) => (
+                  <Card key={jobRequest.id} className="overflow-hidden">
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                          <h3 className="font-semibold text-lg">{application.job.name}</h3>
+                          <h3 className="font-semibold text-lg">{jobRequest.job.name}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {application.job.company.name}
+                            {jobRequest.job.company.name}
                           </p>
                         </div>
                         <div className="flex items-center gap-4">
-                          <ApplicationStatusBadge status={application.status} />
+                          <JobRequestStatusBadge status={jobRequest.status} />
                           <Button variant="outline" size="sm" asChild>
                             <a
-                              href={`/jobs/${application.jobId}`}
+                              href={`/jobs/${jobRequest.jobId}`}
                               className="flex items-center gap-2"
                             >
                               Voir l&apos;offre
@@ -196,7 +196,7 @@ function StudentDashboardPageComponent() {
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteClick(application.id);
+                              handleDeleteClick(jobRequest.id);
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -205,15 +205,15 @@ function StudentDashboardPageComponent() {
                       </div>
                       <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-muted-foreground">
                         <span>
-                          Postuléé le{' '}
-                          {format(new Date(application.createdAt), 'dd MMMM yyyy', {
+                          Demande envoyée le{' '}
+                          {format(new Date(jobRequest.createdAt), 'dd MMMM yyyy', {
                             locale: fr,
                           })}
                         </span>
-                        {application.updatedAt !== application.createdAt && (
+                        {jobRequest.updatedAt !== jobRequest.createdAt && (
                           <span>
                             Mise à jour le{' '}
-                            {format(new Date(application.updatedAt), 'dd MMMM yyyy', {
+                            {format(new Date(jobRequest.updatedAt), 'dd MMMM yyyy', {
                               locale: fr,
                             })}
                           </span>
