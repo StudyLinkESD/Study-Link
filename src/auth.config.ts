@@ -26,7 +26,7 @@ export default {
         try {
           const user = await prisma.user.findUnique({
             where: { email: identifier },
-            select: { firstname: true },
+            select: { firstName: true },
           });
 
           const baseUrl =
@@ -39,7 +39,7 @@ export default {
           const emailHtml = await render(
             AuthenticateEmail({
               url: modifiedUrl,
-              firstName: user?.firstname || undefined,
+              firstName: user?.firstName || undefined,
             }),
           );
 

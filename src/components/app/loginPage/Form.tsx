@@ -1,14 +1,7 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,7 +13,6 @@ import { signIn } from 'next-auth/react';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { FcGoogle } from 'react-icons/fc';
 
 const authSchema = z.object({
   email: z.string().email('Email invalide'),
