@@ -27,7 +27,6 @@ type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   };
 }>;
 
-// Fonction de transformation
 const transformToJobApplicationFull = (app: JobRequestWithRelations): JobApplicationFull => ({
   id: app.id,
   studentId: app.studentId,
@@ -186,6 +185,7 @@ export default function JobApplicationsList({
     return result;
   }, [statusFilter, searchTerm, applications]);
 
+  const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
     const indexOfFirstItem = indexOfLastItem - APPLICATIONS_PER_PAGE;
