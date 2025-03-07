@@ -78,21 +78,19 @@ export default function StudentProfilePage() {
           <p className="text-muted-foreground mb-6">
             Vous n&apos;avez pas encore créé votre profil étudiant.
           </p>
-          <Button onClick={() => router.push('/students/profile-info')}>
-            Créer mon profil
-          </Button>
+          <Button onClick={() => router.push('/students/profile-info')}>Créer mon profil</Button>
         </div>
       </div>
     );
   }
 
-  const firstName = student.user?.firstname || session?.user?.name?.split(' ')[0] || '';
-  const lastName = student.user?.lastname || session?.user?.name?.split(' ')[1] || '';
+  const firstName = student.user?.firstName || session?.user?.name?.split(' ')[0] || '';
+  const lastName = student.user?.lastName || session?.user?.name?.split(' ')[1] || '';
   const photoUrl = student.user?.profilePicture || session?.user?.image || undefined;
 
   const experiences = student.previousCompanies
     .split(',')
-    .filter(company => company.trim())
+    .filter((company) => company.trim())
     .map((company, index) => ({
       id: `exp-${index}`,
       position: 'Stage/Alternance',
@@ -161,7 +159,7 @@ export default function StudentProfilePage() {
             <TabsContent value="about" className="space-y-6">
               <SectionCard title="Description" icon={BookOpen}>
                 <p className="text-muted-foreground">
-                  {student.description || 'Aucune description n\'a été ajoutée.'}
+                  {student.description || "Aucune description n'a été ajoutée."}
                 </p>
               </SectionCard>
 
@@ -191,4 +189,4 @@ export default function StudentProfilePage() {
       </div>
     </main>
   );
-} 
+}

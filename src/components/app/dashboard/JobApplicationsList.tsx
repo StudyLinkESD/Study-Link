@@ -139,8 +139,8 @@ export default function JobApplicationsList({
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (app) =>
-          app.student.user.firstname.toLowerCase().includes(searchLower) ||
-          app.student.user.lastname.toLowerCase().includes(searchLower) ||
+          (app.student.user.firstName?.toLowerCase() ?? '').includes(searchLower) ||
+          (app.student.user.lastName?.toLowerCase() ?? '').includes(searchLower) ||
           app.job.name.toLowerCase().includes(searchLower) ||
           app.job.company.name.toLowerCase().includes(searchLower),
       );

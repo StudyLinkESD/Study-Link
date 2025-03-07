@@ -92,7 +92,7 @@ export default function JobApplicationView({
   }
 
   const { student, job, status, createdAt, updatedAt } = selectedApplication;
-  const { firstname, lastname } = student.user;
+  const { firstName, lastName } = student.user;
 
   const formattedCreatedDate = format(new Date(createdAt), 'dd MMMM yyyy à HH:mm', { locale: fr });
   const formattedUpdatedDate = format(new Date(updatedAt), 'dd MMMM yyyy à HH:mm', { locale: fr });
@@ -109,14 +109,14 @@ export default function JobApplicationView({
           <h3 className="font-semibold text-lg">Candidat</h3>
           <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-md">
             <ProfileAvatar
-              firstName={firstname}
-              lastName={lastname}
+              firstName={firstName}
+              lastName={lastName}
               photoUrl=""
               size="md"
               className="border border-gray-200 dark:border-gray-700"
             />
             <div>
-              <h4 className="font-medium">{`${firstname} ${lastname}`}</h4>
+              <h4 className="font-medium">{`${firstName} ${lastName}`}</h4>
               <Button variant="link" className="px-0 h-auto text-sm text-primary" asChild>
                 <a href={`/students/${student.id}`}>Voir profil</a>
               </Button>

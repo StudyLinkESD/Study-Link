@@ -23,7 +23,7 @@ export default function JobApplicationCard({
 }: JobApplicationCardProps) {
   const { setSelectedApplication, selectedApplication } = useJobApplication();
   const { student, job, status, createdAt } = application;
-  const { firstname, lastname } = student.user;
+  const { firstName, lastName } = student.user;
 
   const handleClick = () => {
     setSelectedApplication(application);
@@ -53,14 +53,14 @@ export default function JobApplicationCard({
         <div className="flex justify-between">
           <div className="flex items-center gap-3">
             <ProfileAvatar
-              firstName={firstname}
-              lastName={lastname}
+              firstName={firstName}
+              lastName={lastName}
               photoUrl=""
               size="sm"
               className="border border-gray-200 dark:border-gray-700"
             />
             <div>
-              <h3 className="text-base font-medium">{`${firstname} ${lastname}`}</h3>
+              <h3 className="text-base font-medium">{`${firstName} ${lastName}`}</h3>
               <p className="text-sm text-muted-foreground">{job.name}</p>
             </div>
           </div>

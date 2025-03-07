@@ -56,8 +56,8 @@ export default async function Page({ params }: PageProps) {
 
     const student = {
       id: studentData.id,
-      firstName: studentData.user?.firstname || '',
-      lastName: studentData.user?.lastname || '',
+      firstName: studentData.user?.firstName || '',
+      lastName: studentData.user?.lastName || '',
       photoUrl: studentData.user?.profilePicture
         ? `/api/files/${studentData.user.profilePicture}`
         : '',
@@ -67,9 +67,7 @@ export default async function Page({ params }: PageProps) {
       skills: skillsArray,
       alternanceRhythm: studentData.apprenticeshipRythm || '',
       description: studentData.description,
-      cvUrl: studentData.curriculumVitae
-        ? `/api/files/${studentData.curriculumVitae}`
-        : undefined,
+      cvUrl: studentData.curriculumVitae ? `/api/files/${studentData.curriculumVitae}` : undefined,
       availability: studentData.availability ? 'Disponible' : 'Non disponible',
       recommendations: [],
       experiences: [],

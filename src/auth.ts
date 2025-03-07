@@ -55,19 +55,19 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         if (!existingUser && profile.name) {
           const nameParts = profile.name.split(' ');
-          const firstname = nameParts[0] || '';
-          const lastname = nameParts.slice(1).join(' ') || '';
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
 
           try {
             await prisma.user.create({
               data: {
                 email: profile.email,
-                firstname,
-                lastname,
+                firstName,
+                lastName,
               },
             });
           } catch (error) {
-            console.error('Erreur lors de la création de l\'utilisateur:', error);
+            console.error("Erreur lors de la création de l'utilisateur:", error);
             return false;
           }
         }
@@ -86,7 +86,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               },
             });
           } catch (error) {
-            console.error('Erreur lors de la création de l\'utilisateur:', error);
+            console.error("Erreur lors de la création de l'utilisateur:", error);
             return false;
           }
         }

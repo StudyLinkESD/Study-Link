@@ -42,8 +42,8 @@ export async function POST(request: Request) {
 
       const user = await tx.user.create({
         data: {
-          firstname: body.owner.firstName,
-          lastname: body.owner.lastName,
+          firstName: body.owner.firstName,
+          lastName: body.owner.lastName,
           email: body.owner.email.toLowerCase(),
         },
       });

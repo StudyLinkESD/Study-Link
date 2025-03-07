@@ -40,9 +40,9 @@ export type JobApplicationFull = {
       updatedAt: Date;
       deletedAt: Date | null;
       email: string;
-      firstname: string;
-      lastname: string;
-      profilePictureId: string | null;
+      firstName: string | null;
+      lastName: string | null;
+      profilePicture: string | null;
       emailVerified: Date | null;
     };
   };
@@ -52,7 +52,7 @@ export type JobApplicationFull = {
     companyId: string;
     company: {
       name: string;
-      logoId: string | null;
+      logo: string | null;
     };
   };
 };

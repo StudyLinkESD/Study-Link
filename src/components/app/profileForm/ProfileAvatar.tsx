@@ -3,8 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type ProfileAvatarProps = {
   photoUrl?: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 };
@@ -27,8 +27,8 @@ const textSizeClasses = {
 
 const ProfileAvatarComponent = ({
   photoUrl,
-  firstName,
-  lastName,
+  firstName: firstName,
+  lastName: lastName,
   size = 'md',
   className = '',
 }: ProfileAvatarProps) => {
@@ -38,8 +38,8 @@ const ProfileAvatarComponent = ({
         <AvatarImage src={photoUrl} alt={`${firstName} ${lastName}`} />
       ) : (
         <AvatarFallback className={textSizeClasses[size]}>
-          {firstName.charAt(0)}
-          {lastName.charAt(0)}
+          {firstName?.charAt(0)}
+          {lastName?.charAt(0)}
         </AvatarFallback>
       )}
     </Avatar>

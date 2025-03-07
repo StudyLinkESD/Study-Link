@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { 
-  UpdateUserDTO, 
-  UserByIdResponseDTO, 
-  UserResponseDTO 
-} from '@/dto/user.dto';
+import { UpdateUserDTO, UserByIdResponseDTO, UserResponseDTO } from '@/dto/user.dto';
 import {
-  checkUserExists,
   validateUserUpdate,
   ValidationError,
 } from '@/utils/validation/user.validation';
@@ -29,18 +24,12 @@ export async function GET(
         student: {
           include: {
             school: true,
-            curriculumVitae: true,
             jobRequests: {
               where: { deletedAt: null },
               include: {
                 job: {
                   include: {
-                    company: {
-                      include: {
-                        logo: true,
-                      },
-                    },
-                    featuredImage: true,
+                    company: true,
                   },
                 },
               },
@@ -53,7 +42,6 @@ export async function GET(
             school: {
               include: {
                 domain: true,
-                logo: true,
               },
             },
           },
@@ -62,7 +50,6 @@ export async function GET(
           include: {
             company: {
               include: {
-                logo: true,
                 jobs: {
                   where: { deletedAt: null },
                 },
@@ -71,7 +58,6 @@ export async function GET(
           },
         },
         admin: true,
-        profilePicture: true,
       },
     });
 
@@ -81,9 +67,9 @@ export async function GET(
 
     return NextResponse.json(user as UserByIdResponseDTO);
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération de l\'utilisateur' },
+      { error: "Erreur lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
@@ -112,17 +98,17 @@ export async function PUT(
       where: { id: userId },
       data: {
         ...(body.email && { email: body.email.toLowerCase() }),
-        ...(body.firstname && { firstname: body.firstname }),
-        ...(body.lastname && { lastname: body.lastname }),
+        ...(body.firstName && { firstName: body.firstName }),
+        ...(body.lastName && { lastName: body.lastName }),
         ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
       },
     });
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'utilisateur' },
+      { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { status: 500 },
     );
   }

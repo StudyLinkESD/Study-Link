@@ -31,36 +31,45 @@ import NavigationButtons from '@/components/app/profileForm/NavigationButton';
 import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
-  firstName: z.string()
+  firstName: z
+    .string()
     .min(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
     .max(50, { message: 'Le prénom ne doit pas dépasser 50 caractères' })
-    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le prénom ne doit contenir que des lettres, espaces et tirets' }),
-  lastName: z.string()
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, {
+      message: 'Le prénom ne doit contenir que des lettres, espaces et tirets',
+    }),
+  lastName: z
+    .string()
     .min(2, { message: 'Le nom doit contenir au moins 2 caractères' })
     .max(50, { message: 'Le nom ne doit pas dépasser 50 caractères' })
-    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le nom ne doit contenir que des lettres, espaces et tirets' }),
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, {
+      message: 'Le nom ne doit contenir que des lettres, espaces et tirets',
+    }),
   status: z.enum(['Alternant', 'Stagiaire'], {
     required_error: 'Veuillez sélectionner votre statut',
   }),
-  school: z.string()
-    .min(1, { message: 'Veuillez sélectionner votre école' }),
-  availability: z.string()
+  school: z.string().min(1, { message: 'Veuillez sélectionner votre école' }),
+  availability: z
+    .string()
     .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, {
       message: 'Format attendu : MM/YYYY (ex: 09/2024)',
     })
     .optional()
     .or(z.literal('')),
-  alternanceRhythm: z.string()
-    .min(5, { message: 'Veuillez décrire votre rythme d\'alternance' })
+  alternanceRhythm: z
+    .string()
+    .min(5, { message: "Veuillez décrire votre rythme d'alternance" })
     .max(100, { message: 'La description du rythme est trop longue' })
     .optional()
     .or(z.literal('')),
-  description: z.string()
+  description: z
+    .string()
     .min(100, { message: 'La description doit contenir au moins 100 caractères' })
     .max(500, { message: 'La description ne doit pas dépasser 500 caractères' })
     .optional()
     .or(z.literal('')),
-  skills: z.array(z.string())
+  skills: z
+    .array(z.string())
     .min(3, { message: 'Veuillez sélectionner au moins 3 compétences' })
     .max(10, { message: 'Vous ne pouvez pas sélectionner plus de 10 compétences' }),
 });
@@ -149,7 +158,7 @@ export default function StudentProfileForm() {
 
       return await response.json();
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'étudiant:', error);
+      console.error("Erreur lors de la récupération de l'étudiant:", error);
       return null;
     }
   };
@@ -239,8 +248,8 @@ export default function StudentProfileForm() {
             // Charger la photo de profil si disponible
             if (session.user.image) {
               setPhotoUrl(session.user.image);
-            } else if (studentData.user?.profilePictureId) {
-              setPhotoUrl(`/api/files/${studentData.user.profilePictureId}`);
+            } else if (studentData.user?.profilePicture) {
+              setPhotoUrl(`/api/files/${studentData.user.profilePicture}`);
             }
 
             // Charger le CV si disponible
@@ -314,13 +323,13 @@ export default function StudentProfileForm() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              firstname: data.firstName,
-              lastname: data.lastName,
+              firstName: data.firstName,
+              lastName: data.lastName,
               // Si vous avez uploadé une photo de profil, vous devriez envoyer son ID ici
             }),
           });
         } catch (error) {
-          console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+          console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
           // Continuer malgré l'erreur
         }
       }
@@ -353,7 +362,7 @@ export default function StudentProfileForm() {
     } catch (error) {
       console.error('Erreur lors de la soumission du profil:', error);
       toast.error(
-        error instanceof Error ? error.message : 'Erreur lors de l\'enregistrement du profil',
+        error instanceof Error ? error.message : "Erreur lors de l'enregistrement du profil",
       );
     }
   };
@@ -381,7 +390,7 @@ export default function StudentProfileForm() {
         required: true,
       },
       {
-        name: 'Rythme d\'alternance',
+        name: "Rythme d'alternance",
         completed: !!formValues.alternanceRhythm,
         required: formValues.status === 'Alternant',
       },

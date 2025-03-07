@@ -75,15 +75,15 @@ export async function validateUser(
     }
   }
 
-  if (!isUpdate || data.firstname !== undefined) {
-    if (!data.firstname || data.firstname.length < 2) {
-      errors.push({ field: 'firstname', message: 'Prénom requis (minimum 2 caractères)' });
+  if (!isUpdate || data.firstName !== undefined) {
+    if (!data.firstName || data.firstName.length < 2) {
+      errors.push({ field: 'firstName', message: 'Prénom requis (minimum 2 caractères)' });
     }
   }
 
-  if (!isUpdate || data.lastname !== undefined) {
-    if (!data.lastname || data.lastname.length < 2) {
-      errors.push({ field: 'lastname', message: 'Nom requis (minimum 2 caractères)' });
+  if (!isUpdate || data.lastName !== undefined) {
+    if (!data.lastName || data.lastName.length < 2) {
+      errors.push({ field: 'lastName', message: 'Nom requis (minimum 2 caractères)' });
     }
   }
 

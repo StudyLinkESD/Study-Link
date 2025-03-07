@@ -24,11 +24,9 @@ export default async function StudentsPage() {
 
       return {
         id: student.id,
-        firstName: student.user?.firstname || '',
-        lastName: student.user?.lastname || '',
-        photoUrl: student.user?.profilePicture
-          ? `/api/files/${student.user.profilePicture}`
-          : '',
+        firstName: student.user?.firstName || '',
+        lastName: student.user?.lastName || '',
+        photoUrl: student.user?.profilePicture ? `/api/files/${student.user.profilePicture}` : '',
         status,
         school: student.school?.name || '',
         skills: skillsArray,

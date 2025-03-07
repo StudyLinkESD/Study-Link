@@ -5,8 +5,8 @@ import InfoItem from '@/components/app/common/InfoItems';
 import { School, Calendar, Clock } from 'lucide-react';
 
 type ProfilePreviewProps = {
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   photoUrl?: string;
   status?: 'Alternant' | 'Stagiaire';
   school?: string;

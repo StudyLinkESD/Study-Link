@@ -89,8 +89,8 @@ function StudentListComponent({
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (student) =>
-          student.firstName.toLowerCase().includes(searchLower) ||
-          student.lastName.toLowerCase().includes(searchLower) ||
+          (student.firstName?.toLowerCase() ?? '').includes(searchLower) ||
+          (student.lastName?.toLowerCase() ?? '').includes(searchLower) ||
           (student.school && student.school.toLowerCase().includes(searchLower)),
       );
     }

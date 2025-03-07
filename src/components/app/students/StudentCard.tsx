@@ -7,8 +7,8 @@ import { Briefcase, GraduationCap } from 'lucide-react';
 
 export type StudentCardProps = {
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   photoUrl: string;
   status: 'Alternant' | 'Stagiaire';
   skills: { id: string; name: string }[];

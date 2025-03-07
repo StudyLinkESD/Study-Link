@@ -15,7 +15,7 @@ import * as React from 'react';
 
 interface EmailTemplateProps {
   url: string;
-  firstname?: string;
+  firstName?: string;
 }
 
 export default function AuthenticateEmail({ url }: EmailTemplateProps) {
