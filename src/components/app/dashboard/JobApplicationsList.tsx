@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { JobApplicationFull } from '@/types/application_status.type';
+import axios from 'axios';
 
 const STATUS_OPTIONS = {
   ALL: 'all',
@@ -166,11 +167,9 @@ export default function JobApplicationsList({
     if (!applicationToDelete) return;
 
     try {
-      const response = await fetch(`/api/job-requests/${applicationToDelete}`, {
-        method: 'DELETE',
-      });
+      const response = await axios.delete(`/api/job-requests/${applicationToDelete}`);
 
-      if (!response.ok) throw new Error('Failed to delete application');
+      if (response.status >= 400) throw new Error('Failed to delete application');
 
       // Update local state
       setApplications(applications.filter((app) => app.id !== applicationToDelete));

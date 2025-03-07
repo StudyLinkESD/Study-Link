@@ -1,9 +1,12 @@
 import { NextAuthConfig } from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
 import Resend from 'next-auth/providers/resend';
 import Google from 'next-auth/providers/google';
 import AuthenticateEmail from './emails/authenticate';
 import { render } from '@react-email/render';
+import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
+import axios from 'axios';
 
 export default {
   providers: [
@@ -43,28 +46,32 @@ export default {
           );
 
           if (!emailHtml) {
-            console.error('Erreur lors de la génération du HTML de l\'email');
+            console.error("Erreur lors de la génération du HTML de l'email");
           }
 
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/resend`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${provider.apiKey}`,
-            },
-            body: JSON.stringify({
-              from: provider.from,
-              to: identifier,
-              subject: 'Bienvenue sur StudyLink - Votre lien de connexion',
-              html: emailHtml,
-              url: modifiedUrl,
-            }),
-          });
+          try {
+            const response = await axios.post(
+              `${process.env.NEXT_PUBLIC_API_URL}/resend`,
+              {
+                from: provider.from,
+                to: identifier,
+                subject: 'Bienvenue sur StudyLink - Votre lien de connexion',
+                html: emailHtml,
+                url: modifiedUrl,
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${provider.apiKey}`,
+                },
+              },
+            );
 
-          const data = await response.json();
-
-          if (!response.ok) {
-            console.error(data.error || 'Erreur lors de l\'envoi de l\'email');
+            if (response.status >= 400) {
+              console.error(response.data.error || "Erreur lors de l'envoi de l'email");
+            }
+          } catch (error) {
+            console.error("Erreur lors de l'envoi de l'email:", error);
           }
         } catch (error) {
           throw error;

@@ -1,7 +1,14 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +19,8 @@ import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { FcGoogle } from 'react-icons/fc';
 
 const authSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -35,18 +44,18 @@ const AuthForm = () => {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/auth/authenticate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        '/api/auth/authenticate',
+        { email: data.email },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-        body: JSON.stringify({ email: data.email }),
-      });
+      );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        toast.error(result.error || 'Une erreur est survenue');
+      if (response.status >= 400) {
+        toast.error(response.data.error || 'Une erreur est survenue');
         return;
       }
 

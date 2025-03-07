@@ -1,6 +1,7 @@
 // src/services/student.service.ts
 import { StudentResponseDTO, CreateStudentDTO, UpdateStudentDTO } from '@/dto/student.dto';
 import { prisma } from '@/lib/prisma';
+import axios from 'axios';
 
 // Fonction utilitaire pour obtenir l'URL de base
 function getBaseUrl() {
@@ -18,30 +19,29 @@ async function serverFetch(url: string, options: RequestInit = {}) {
   const fullUrl = `${baseUrl}${url}`;
   console.log('Fetching from:', fullUrl);
 
-  const response = await fetch(fullUrl, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    next: { revalidate: 60 },
-  });
+  try {
+    const axiosConfig = {
+      method: options.method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers as Record<string, string>),
+      },
+      data: options.body ? JSON.parse(options.body as string) : undefined,
+    };
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`API Error (${url}):`, {
-      status: response.status,
-      statusText: response.statusText,
-      body: errorText,
-    });
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    const response = await axios(fullUrl, axiosConfig);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error(`API Error (${url}):`, {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        body: error.response?.data,
+      });
+      throw new Error(`API Error: ${error.response?.status} ${error.response?.statusText}`);
+    }
+    throw error;
   }
-
-  const data = await response.json();
-  if (!data) {
-    throw new Error('No data received from API');
-  }
-  return data;
 }
 
 export async function getStudents(): Promise<StudentResponseDTO[]> {

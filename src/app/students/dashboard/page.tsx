@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 import { APPLICATION_STATUS } from '@/constants/status';
+import axios from 'axios';
 
 // Composant pour afficher le badge de statut, extrait pour plus de clarté
 const ApplicationStatusBadge = React.memo(({ status }: { status: string }) => {
@@ -80,11 +81,9 @@ function StudentDashboardPageComponent() {
     if (!applicationToDelete) return;
 
     try {
-      const response = await fetch(`/api/job-requests/${applicationToDelete}`, {
-        method: 'DELETE',
-      });
+      const response = await axios.delete(`/api/job-requests/${applicationToDelete}`);
 
-      if (!response.ok) throw new Error('Failed to delete application');
+      if (response.status >= 400) throw new Error('Failed to delete application');
 
       setApplications(applications.filter((app) => app.id !== applicationToDelete));
       toast.success('Candidature supprimée avec succès');
