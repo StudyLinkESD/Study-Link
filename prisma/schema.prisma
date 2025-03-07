@@ -18,8 +18,8 @@ model User {
   id                String              @id @default(cuid())
   email             String              @unique
   name              String?
-  firstname         String?
-  lastname          String?
+  firstName         String?
+  lastName          String?
   profileCompleted  Boolean             @default(false)
   profilePicture    String?
   emailVerified     DateTime?
