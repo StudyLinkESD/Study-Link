@@ -51,9 +51,31 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           where: {
             email: profile.email,
           },
+          include: {
+            Account: true,
+          },
         });
 
-        if (!existingUser && profile.name) {
+        if (existingUser) {
+          if (!existingUser.Account.some((acc) => acc.provider === 'google')) {
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              },
+            });
+          }
+          return true;
+        }
+
+        if (profile.name) {
           const nameParts = profile.name.split(' ');
           const firstName = nameParts[0] || '';
           const lastName = nameParts.slice(1).join(' ') || '';
@@ -64,8 +86,21 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 email: profile.email,
                 firstName,
                 lastName,
+                Account: {
+                  create: {
+                    type: account.type,
+                    provider: account.provider,
+                    providerAccountId: account.providerAccountId,
+                    access_token: account.access_token,
+                    expires_at: account.expires_at,
+                    token_type: account.token_type,
+                    scope: account.scope,
+                    id_token: account.id_token,
+                  },
+                },
               },
             });
+            return true;
           } catch (error) {
             console.error("Erreur lors de la création de l'utilisateur:", error);
             return false;
