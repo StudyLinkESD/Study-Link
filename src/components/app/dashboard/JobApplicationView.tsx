@@ -19,6 +19,7 @@ import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
 import { JobApplicationsListProps } from './JobApplicationsList';
+import axios from 'axios';
 
 type StatusMappingType = {
   [key in ApplicationStatus]: string;
@@ -34,15 +35,17 @@ export default function JobApplicationView({
     if (!selectedApplication) return;
 
     try {
-      const response = await fetch(`/api/job-requests/${selectedApplication.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await axios.put(
+        `/api/job-requests/${selectedApplication.id}`,
+        { status: newStatus },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      );
 
-      if (!response.ok) throw new Error('Failed to update application status');
+      if (response.status >= 400) throw new Error('Failed to update application status');
 
       const updatedApplications = applications.map((app) =>
         app.id === selectedApplication.id ? { ...app, status: newStatus } : app,
