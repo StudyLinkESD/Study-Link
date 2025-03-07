@@ -1,10 +1,13 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { UpdateCompanyOwnerDTO, CompanyOwnerResponseDTO } from '@/dto/company-owner.dto';
+
+import { NextResponse } from 'next/server';
+
 import {
-  validateCompanyOwnerData,
   checkCompanyOwnerExists,
+  validateCompanyOwnerData,
 } from '@/utils/validation/company-owner.validation';
+
+import { CompanyOwnerResponseDTO, UpdateCompanyOwnerDTO } from '@/dto/company-owner.dto';
 
 const prisma = new PrismaClient();
 
@@ -17,7 +20,7 @@ export async function GET(
     const companyOwnerCheck = await checkCompanyOwnerExists(id);
 
     if (!companyOwnerCheck.exists) {
-      return NextResponse.json({ error: 'Propriétaire d\'entreprise non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: "Propriétaire d'entreprise non trouvé" }, { status: 404 });
     }
 
     const companyOwner = await prisma.companyOwner.findUnique({
@@ -29,7 +32,7 @@ export async function GET(
     });
 
     if (!companyOwner) {
-      return NextResponse.json({ error: 'Propriétaire d\'entreprise non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: "Propriétaire d'entreprise non trouvé" }, { status: 404 });
     }
 
     const response: CompanyOwnerResponseDTO = {
@@ -40,9 +43,9 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Erreur lors de la récupération du propriétaire d\'entreprise:', error);
+    console.error("Erreur lors de la récupération du propriétaire d'entreprise:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération du propriétaire d\'entreprise' },
+      { error: "Erreur lors de la récupération du propriétaire d'entreprise" },
       { status: 500 },
     );
   }
@@ -58,7 +61,7 @@ export async function PUT(
 
     const companyOwnerCheck = await checkCompanyOwnerExists(id);
     if (!companyOwnerCheck.exists) {
-      return NextResponse.json({ error: 'Propriétaire d\'entreprise non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: "Propriétaire d'entreprise non trouvé" }, { status: 404 });
     }
 
     const validationResult = await validateCompanyOwnerData(body, true, id);
@@ -89,9 +92,9 @@ export async function PUT(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du propriétaire d\'entreprise:', error);
+    console.error("Erreur lors de la mise à jour du propriétaire d'entreprise:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour du propriétaire d\'entreprise' },
+      { error: "Erreur lors de la mise à jour du propriétaire d'entreprise" },
       { status: 500 },
     );
   }
@@ -106,18 +109,18 @@ export async function DELETE(
     const companyOwnerCheck = await checkCompanyOwnerExists(id);
 
     if (!companyOwnerCheck.exists) {
-      return NextResponse.json({ error: 'Propriétaire d\'entreprise non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: "Propriétaire d'entreprise non trouvé" }, { status: 404 });
     }
 
     await prisma.companyOwner.delete({
       where: { id },
     });
 
-    return NextResponse.json({ message: 'Propriétaire d\'entreprise supprimé avec succès' });
+    return NextResponse.json({ message: "Propriétaire d'entreprise supprimé avec succès" });
   } catch (error) {
-    console.error('Erreur lors de la suppression du propriétaire d\'entreprise:', error);
+    console.error("Erreur lors de la suppression du propriétaire d'entreprise:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression du propriétaire d\'entreprise' },
+      { error: "Erreur lors de la suppression du propriétaire d'entreprise" },
       { status: 500 },
     );
   }

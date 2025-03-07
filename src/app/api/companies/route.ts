@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateCompanyDTO, CompanyResponseDTO } from '@/dto/company.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateCompanyData } from '@/utils/validation/company.validation';
+
+import { CompanyResponseDTO, CreateCompanyDTO } from '@/dto/company.dto';
 
 const prisma = new PrismaClient();
 

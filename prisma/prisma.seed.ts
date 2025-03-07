@@ -130,7 +130,7 @@ async function main() {
         studentEmail: 'student@ecole-test.com',
         status: 'ACTIVE',
         skills: 'JavaScript, React, Node.js, TypeScript, Next.js, TailwindCSS, PostgreSQL',
-        apprenticeshipRythm: '3 semaines entreprise / 1 semaine école',
+        apprenticeshipRhythm: '3 semaines entreprise / 1 semaine école',
         description:
           "Étudiant motivé en recherche d'alternance dans le développement web. Passionné par les nouvelles technologies et le développement full stack.",
         previousCompanies:

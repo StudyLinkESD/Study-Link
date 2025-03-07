@@ -1,5 +1,6 @@
-import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 
 type PaginationProps = {
   currentPage: number;
@@ -47,7 +48,7 @@ function Pagination({
   const pageButtons = getPageRange();
 
   return (
-    <nav className="flex justify-center mt-6" aria-label="Pagination">
+    <nav className="mt-6 flex justify-center" aria-label="Pagination">
       <div className="flex items-center space-x-2">
         {showFirstLastButtons && (
           <Button
@@ -68,7 +69,7 @@ function Pagination({
           disabled={currentPage === 1}
           aria-label={labels.previous}
         >
-          <ChevronLeft className="h-4 w-4 mr-1" />
+          <ChevronLeft className="mr-1 h-4 w-4" />
           {labels.previous}
         </Button>
 
@@ -79,7 +80,7 @@ function Pagination({
               variant={page === currentPage ? 'default' : 'outline'}
               size="sm"
               onClick={() => onPageChange(page)}
-              className="w-8 h-8 p-0"
+              className="h-8 w-8 p-0"
               aria-label={`Page ${page}`}
               aria-current={page === currentPage ? 'page' : undefined}
             >
@@ -96,7 +97,7 @@ function Pagination({
           aria-label={labels.next}
         >
           {labels.next}
-          <ChevronRight className="h-4 w-4 ml-1" />
+          <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
 
         {showFirstLastButtons && (

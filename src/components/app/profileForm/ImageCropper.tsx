@@ -1,8 +1,12 @@
-import React, { useState, useRef } from 'react';
 import AvatarEditor from 'react-avatar-editor';
+
+import Image from 'next/image';
+import React, { useRef, useState } from 'react';
+
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Avatar } from '@/components/ui/avatar';
+
 import { cn } from '@/lib/utils';
 
 type ImageCropperProps = {
@@ -77,21 +81,21 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 p-6 bg-background border rounded-lg max-w-2xl mx-auto">
-      <div className="text-center space-y-2">
+    <div className="bg-background mx-auto flex max-w-2xl flex-col items-center gap-6 rounded-lg border p-6">
+      <div className="space-y-2 text-center">
         <h3 className="text-lg font-semibold">Ajuster votre photo</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Positionnez votre visage au centre et utilisez le zoom pour un meilleur cadrage
         </p>
       </div>
 
       <div className="relative">
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <div className="w-full h-full border-2 border-dashed border-primary/20 rounded-full" />
-          <div className="absolute inset-1/4 border-2 border-dashed border-primary/20 rounded-full" />
+        <div className="pointer-events-none absolute inset-0 z-10">
+          <div className="border-primary/20 h-full w-full rounded-full border-2 border-dashed" />
+          <div className="border-primary/20 absolute inset-1/4 rounded-full border-2 border-dashed" />
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div className="overflow-hidden rounded-lg border">
           <AvatarEditor
             ref={editorRef}
             image={image}
@@ -109,20 +113,27 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         </div>
       </div>
 
-      <div className="flex gap-8 items-end">
+      <div className="flex items-end gap-8">
         {Object.entries(previewUrls).map(([size, url]) => (
           <div key={size} className="text-center">
-            <p className="text-xs text-muted-foreground mb-2">
+            <p className="text-muted-foreground mb-2 text-xs">
               {size === 'sm' ? 'Miniature' : size === 'md' ? 'Navigation' : 'Profil'}
             </p>
             <Avatar
               className={cn(
-                size === 'sm' && 'w-10 h-10',
-                size === 'md' && 'w-16 h-16',
-                size === 'lg' && 'w-24 h-24',
+                size === 'sm' && 'h-10 w-10',
+                size === 'md' && 'h-16 w-16',
+                size === 'lg' && 'h-24 w-24',
               )}
             >
-              <img src={url} alt={`Aperçu ${size}`} className="w-full h-full object-cover" />
+              <Image
+                src={url}
+                alt={`Aperçu ${size}`}
+                className="h-full w-full object-cover"
+                width={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
+                height={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
+                priority
+              />
             </Avatar>
           </div>
         ))}
@@ -132,7 +143,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         <div className="space-y-2">
           <div className="flex justify-between">
             <label className="text-sm font-medium">Zoom</label>
-            <span className="text-sm text-muted-foreground">{Math.round(scale * 100)}%</span>
+            <span className="text-muted-foreground text-sm">{Math.round(scale * 100)}%</span>
           </div>
           <Slider
             min={1}
@@ -149,7 +160,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         <div className="space-y-2">
           <div className="flex justify-between">
             <label className="text-sm font-medium">Rotation</label>
-            <span className="text-sm text-muted-foreground">{rotate}°</span>
+            <span className="text-muted-foreground text-sm">{rotate}°</span>
           </div>
           <Slider
             min={0}

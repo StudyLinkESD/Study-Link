@@ -25,11 +25,11 @@ const RecommendationsList: FC<RecommendationsListProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {recommendations.map((rec) => (
-        <div key={rec.id} className="p-4 bg-muted/40 rounded-lg">
-          <p className="italic mb-4">{rec.content}</p>
+        <div key={rec.id} className="bg-muted/40 rounded-lg p-4">
+          <p className="mb-4 italic">{rec.content}</p>
           <div className="text-sm font-medium">{rec.authorName}</div>
           {rec.authorTitle && (
-            <div className="text-xs text-muted-foreground">{rec.authorTitle}</div>
+            <div className="text-muted-foreground text-xs">{rec.authorTitle}</div>
           )}
         </div>
       ))}

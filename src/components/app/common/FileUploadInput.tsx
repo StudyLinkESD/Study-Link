@@ -1,8 +1,10 @@
-import { useState, ChangeEvent } from 'react';
-import { Input } from '@/components/ui/input';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import { handleUploadFile } from '@/services/uploadFile';
+import { ChangeEvent, useState } from 'react';
+
 import ImageCropper from '@/components/app/profileForm/ImageCropper';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Input } from '@/components/ui/input';
+
+import { handleUploadFile } from '@/services/uploadFile';
 
 type FileUploadInputProps = {
   id: string;
@@ -108,7 +110,7 @@ export default function FileUploadInput({
                 size="sm"
               />
               {fileUrl && (
-                <span className="text-xs text-muted-foreground">Photo uploadée avec succès</span>
+                <span className="text-muted-foreground text-xs">Photo uploadée avec succès</span>
               )}
             </div>
           )}
@@ -122,14 +124,14 @@ export default function FileUploadInput({
           />
 
           {uploadProgress && (
-            <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-              <div className="bg-primary h-1.5 rounded-full animate-pulse w-full"></div>
+            <div className="bg-muted mt-1 h-1.5 w-full rounded-full">
+              <div className="bg-primary h-1.5 w-full animate-pulse rounded-full"></div>
             </div>
           )}
 
-          {errorMessage && <p className="text-xs text-destructive mt-1">{errorMessage}</p>}
+          {errorMessage && <p className="text-destructive mt-1 text-xs">{errorMessage}</p>}
 
-          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+          {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
         </>
       )}
     </div>

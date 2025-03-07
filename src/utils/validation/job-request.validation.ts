@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+
 import { CreateJobRequestDTO, UpdateJobRequestDTO } from '@/dto/job-request.dto';
 
 const prisma = new PrismaClient();
@@ -36,7 +37,7 @@ export async function validateJobRequestData(data: CreateJobRequestDTO): Promise
       errors.push({ jobId: "Le job n'existe pas" });
     }
   }
-  
+
   if (!data.status) {
     errors.push({ status: 'Le status est requis' });
   } else {

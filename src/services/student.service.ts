@@ -1,6 +1,8 @@
-import { StudentResponseDTO, CreateStudentDTO, UpdateStudentDTO } from '@/dto/student.dto';
-import { prisma } from '@/lib/prisma';
 import axios, { AxiosRequestConfig } from 'axios';
+
+import { prisma } from '@/lib/prisma';
+
+import { CreateStudentDTO, StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
 
 function getBaseUrl() {
   if (process.env.NODE_ENV === 'development') {

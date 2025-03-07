@@ -1,8 +1,10 @@
 import { Suspense } from 'react';
+
 import StudentList from '@/components/app/students/StudentList';
-import { getStudents } from '@/services/student.service';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+
+import { getStudents } from '@/services/student.service';
 
 export default async function StudentsPage() {
   try {

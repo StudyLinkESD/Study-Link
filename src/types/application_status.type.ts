@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+
 import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
 
 export type StatusMappingType = {

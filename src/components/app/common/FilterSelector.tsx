@@ -1,5 +1,7 @@
-import { useState } from 'react';
 import { X } from 'lucide-react';
+
+import { useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,7 +49,7 @@ function FilterSelector({
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap gap-2 min-h-[38px] max-h-[76px] overflow-y-auto p-1">
+        <div className="flex max-h-[76px] min-h-[38px] flex-wrap gap-2 overflow-y-auto p-1">
           {selectedValues.length === 0 ? (
             <div className="text-muted-foreground text-sm italic">Aucun filtre sélectionné</div>
           ) : (
@@ -55,12 +57,12 @@ function FilterSelector({
               <Badge
                 key={value}
                 variant="secondary"
-                className="px-2 py-1 h-[30px] flex items-center"
+                className="flex h-[30px] items-center px-2 py-1"
               >
                 {value}
                 <button
                   onClick={() => onRemove(value)}
-                  className="ml-2 hover:text-destructive"
+                  className="hover:text-destructive ml-2"
                   aria-label={`Supprimer le filtre ${value}`}
                 >
                   <X className="h-3 w-3" />
@@ -78,7 +80,7 @@ function FilterSelector({
           </SelectTrigger>
           <SelectContent>
             {availableOptions.length === 0 ? (
-              <div className="p-2 text-center text-sm text-muted-foreground">
+              <div className="text-muted-foreground p-2 text-center text-sm">
                 Tous les filtres sont sélectionnés
               </div>
             ) : (

@@ -1,16 +1,21 @@
 'use client';
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import StatusBadge from '@/components/app/common/StatusBadge';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Trash2 } from 'lucide-react';
+
+import React from 'react';
+
+import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
 import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
-import { StatusMappingType, JobApplicationFull } from '@/types/application_status.type';
+
+import { JobApplicationFull, StatusMappingType } from '@/types/application_status.type';
+
+import { useJobApplication } from '@/context/job-application.context';
 
 type JobApplicationCardProps = {
   application: JobApplicationFull;
@@ -43,8 +48,8 @@ export default function JobApplicationCard({
 
   return (
     <Card
-      className={`overflow-hidden cursor-pointer transition-all ${
-        selectedApplication?.id === application.id ? 'ring-2 ring-primary' : 'hover:border-gray-300'
+      className={`cursor-pointer overflow-hidden transition-all ${
+        selectedApplication?.id === application.id ? 'ring-primary ring-2' : 'hover:border-gray-300'
       }`}
       onClick={handleClick}
     >
@@ -60,13 +65,13 @@ export default function JobApplicationCard({
             />
             <div>
               <h3 className="text-base font-medium">{`${firstName} ${lastName}`}</h3>
-              <p className="text-sm text-muted-foreground">{job.name}</p>
+              <p className="text-muted-foreground text-sm">{job.name}</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive h-8 w-8"
             onClick={(e) => {
               e.stopPropagation();
               onDeleteClick();
@@ -83,11 +88,11 @@ export default function JobApplicationCard({
               status === 'ACCEPTED' ? 'success' : status === 'REJECTED' ? 'destructive' : 'default'
             }
           />
-          <span className="text-xs text-muted-foreground">{formattedDate}</span>
+          <span className="text-muted-foreground text-xs">{formattedDate}</span>
         </div>
 
         <div className="mt-2">
-          <p className="text-xs text-muted-foreground">{job.company.name}</p>
+          <p className="text-muted-foreground text-xs">{job.company.name}</p>
         </div>
       </CardContent>
     </Card>

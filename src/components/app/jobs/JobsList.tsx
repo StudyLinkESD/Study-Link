@@ -1,15 +1,17 @@
 'use client';
 
-import { useRef, useMemo, useReducer } from 'react';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import SearchBar from '@/components/app/common/SearchBar';
+
+import { useMemo, useReducer, useRef } from 'react';
+
 import FilterSelector from '@/components/app/common/FilterSelector';
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
+import SearchBar from '@/components/app/common/SearchBar';
 import JobCard, { JobCardProps } from '@/components/app/jobs/JobCard';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const JOBS_PER_PAGE = 9;
 const STATUS_OPTIONS = {
@@ -114,7 +116,7 @@ function JobFilters({
 
   return (
     <>
-      <div className="flex flex-col justify-between gap-4 mb-6">
+      <div className="mb-6 flex flex-col justify-between gap-4">
         <SearchBar
           onSearch={(term) => dispatch({ type: 'SET_SEARCH_TERM', payload: term })}
           placeholder="Rechercher..."
@@ -128,7 +130,7 @@ function JobFilters({
         </TabsList>
       </div>
 
-      <div className="flex flex-col gap-5 mb-4">
+      <div className="mb-4 flex flex-col gap-5">
         <Label className="block" htmlFor="skills-filter">
           Filtrer par compétences
         </Label>
@@ -198,9 +200,9 @@ export default function JobsList({
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[400px]">
+      <div className="container mx-auto flex min-h-[400px] items-center justify-center px-4 py-8">
         <div className="flex flex-col items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <Loader2 className="text-primary mb-4 h-12 w-12 animate-spin" />
           <p>Chargement des offres...</p>
         </div>
       </div>
@@ -208,7 +210,7 @@ export default function JobsList({
   }
 
   return (
-    <div className="container max-w-3/6 mx-auto px-4 py-4 space-y-6">
+    <div className="max-w-3/6 container mx-auto space-y-6 px-4 py-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground" aria-live="polite">

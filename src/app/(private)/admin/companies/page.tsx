@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Pagination } from '@/components/ui/pagination';
 import { Search } from 'lucide-react';
+
+import { useEffect, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Pagination } from '@/components/ui/pagination';
 
 interface Company {
   id: string;
@@ -12,8 +14,8 @@ interface Company {
   sector?: string;
   companyOwners: {
     user: {
-      firstname: string;
-      lastname: string;
+      firstName: string;
+      lastName: string;
     };
   }[];
 }
@@ -64,11 +66,11 @@ const CompaniesList = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Liste des Entreprises</h1>
+      <h1 className="mb-6 text-2xl font-bold">Liste des Entreprises</h1>
 
-      <div className="flex gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+      <div className="mb-6 flex gap-4">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           <Input
             placeholder="Rechercher une entreprise..."
             value={searchTerm}
@@ -78,26 +80,25 @@ const CompaniesList = () => {
         </div>
       </div>
 
-      {/* Table des entreprises */}
-      <div className="border rounded-lg">
+      <div className="rounded-lg border">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Nom
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Propriétaire
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Secteur
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {isLoading ? (
               <tr>
                 <td colSpan={4} className="px-6 py-4 text-center">
@@ -113,18 +114,18 @@ const CompaniesList = () => {
             ) : (
               paginatedCompanies.map((company) => (
                 <tr key={company.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{company.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">{company.name}</td>
+                  <td className="whitespace-nowrap px-6 py-4">
                     {company.companyOwners &&
                     company.companyOwners.length > 0 &&
                     company.companyOwners[0]?.user
-                      ? `${company.companyOwners[0].user.firstname} ${company.companyOwners[0].user.lastname}`
+                      ? `${company.companyOwners[0].user.firstName} ${company.companyOwners[0].user.lastName}`
                       : 'Non assigné'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">
                     {company.sector || 'Non spécifié'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">
                     <Button variant="ghost" size="sm">
                       Modifier
                     </Button>
@@ -136,7 +137,6 @@ const CompaniesList = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       {filteredCompanies.length > 0 && (
         <div className="mt-6 flex justify-center">
           <Pagination

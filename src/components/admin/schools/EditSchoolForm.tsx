@@ -1,10 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { handleUploadFile } from '@/services/uploadFile';
 import type { School as PrismaSchool } from '@prisma/client';
+
+import Image from 'next/image';
+import { useState } from 'react';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +13,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+import { handleUploadFile } from '@/services/uploadFile';
 
 type School = PrismaSchool & { isActive: boolean };
 
@@ -114,7 +117,6 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
         }),
       });
 
-      // Vérifier d'abord si la réponse a du contenu
       const text = await response.text();
       let data;
       try {
@@ -166,14 +168,14 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Modifier l&apos;école</h2>
         <Button variant="outline" onClick={onCancel}>
           Annuler
         </Button>
       </div>
 
-      <Card className="max-w-2xl mx-auto mt-16">
+      <Card className="mx-auto mt-16 max-w-2xl">
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -191,7 +193,7 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
                 required
                 disabled={isSubmitting}
               />
-              {formErrors.name && <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>}
+              {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="logo">Logo</Label>
@@ -204,20 +206,20 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
                 className={formErrors.logo ? 'border-red-500' : ''}
                 disabled={isSubmitting}
               />
-              {formErrors.logo && <p className="text-sm text-red-500 mt-1">{formErrors.logo}</p>}
+              {formErrors.logo && <p className="mt-1 text-sm text-red-500">{formErrors.logo}</p>}
               {logoUrl && (
                 <div className="mt-2">
                   <Image
                     src={logoUrl}
                     alt="Aperçu du logo"
-                    className="w-20 h-20 object-contain"
+                    className="h-20 w-20 object-contain"
                     width={80}
                     height={80}
                   />
                 </div>
               )}
             </div>
-            <div className="flex justify-between items-center pt-4">
+            <div className="flex items-center justify-between pt-4">
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Chargement...' : "Modifier l'école"}
               </Button>

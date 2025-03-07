@@ -1,5 +1,7 @@
-import { CreateStudentDTO } from '@/dto/student.dto';
 import { PrismaClient } from '@prisma/client';
+
+import { CreateStudentDTO } from '@/dto/student.dto';
+
 import { ValidationError, ValidationResult } from './user.validation';
 
 const prisma = new PrismaClient();

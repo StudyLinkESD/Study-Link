@@ -1,5 +1,7 @@
-import { ReactNode } from 'react';
 import { LucideIcon } from 'lucide-react';
+
+import { ReactNode } from 'react';
+
 import SectionCard from '@/components/app/common/SectionCard';
 
 type FormSectionProps = {

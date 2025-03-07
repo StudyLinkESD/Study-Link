@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma';
 import { User } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 export type UserType = 'admin' | 'school_owner' | 'company_owner' | 'student';
 

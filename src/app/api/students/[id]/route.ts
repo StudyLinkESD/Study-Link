@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateStudentData } from '@/utils/validation/student.validation';
+
+import { StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
 
 const prisma = new PrismaClient();
 
@@ -32,7 +35,7 @@ export async function GET(
       primaryRecommendationId: student.primaryRecommendationId || undefined,
       status: student.status,
       skills: student.skills,
-      apprenticeshipRythm: student.apprenticeshipRythm || undefined,
+      apprenticeshipRhythm: student.apprenticeshipRhythm || undefined,
       description: student.description,
       curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
@@ -92,7 +95,7 @@ export async function PUT(
       primaryRecommendationId: student.primaryRecommendationId || undefined,
       status: student.status,
       skills: student.skills,
-      apprenticeshipRythm: student.apprenticeshipRythm || undefined,
+      apprenticeshipRhythm: student.apprenticeshipRhythm || undefined,
       description: student.description,
       curriculumVitae: student.curriculumVitae || undefined,
       previousCompanies: student.previousCompanies,
