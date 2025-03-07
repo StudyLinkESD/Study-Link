@@ -289,7 +289,7 @@ export default function StudentProfileForm() {
     }
   };
 
-  const handleCvUpload = (file: File | null, url?: string) => {
+  const handleCvUpload = (file: File | null) => {
     if (file) {
       setUploadedCv(file);
     }

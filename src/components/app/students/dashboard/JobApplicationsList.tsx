@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/app/common/SearchBar';
 import ItemGrid from '@/components/app/common/ItemGrid';
-import Pagination from '@/components/app/common/Pagination';
 import JobApplicationCard from '@/components/app/students/dashboard/JobApplicationCard';
 import { Prisma } from '@prisma/client';
 import { JobApplicationFull } from '@/types/application_status.type';
@@ -179,8 +178,7 @@ export default function JobApplicationsList({
 
     return result;
   }, [statusFilter, searchTerm, applications]);
-
-  const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
+  
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
     const indexOfFirstItem = indexOfLastItem - APPLICATIONS_PER_PAGE;
