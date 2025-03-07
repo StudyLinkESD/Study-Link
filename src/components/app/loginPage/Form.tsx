@@ -1,17 +1,19 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { signIn } from 'next-auth/react';
 import { Separator } from '@/components/ui/separator';
-import { useRouter } from 'next/navigation';
 
 const authSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -72,9 +74,9 @@ const AuthForm = () => {
 
   return (
     <>
-      <h2 className="text-2xl font-medium ml-1 mb-2">Authentification</h2>
+      <h2 className="mb-2 ml-1 text-2xl font-medium">Authentification</h2>
 
-      <Card className="w-full px-4 py-8 space-y-6">
+      <Card className="w-full space-y-6 px-4 py-8">
         <CardContent className="px-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleAuth)} className="space-y-4">
@@ -99,7 +101,7 @@ const AuthForm = () => {
           <div className="relative mb-6 mt-6">
             <Separator className="absolute top-1/2 w-full" />
             <div className="relative flex justify-center">
-              <span className="bg-card px-2 text-xs text-muted-foreground">OU</span>
+              <span className="bg-card text-muted-foreground px-2 text-xs">OU</span>
             </div>
           </div>
 
@@ -107,7 +109,7 @@ const AuthForm = () => {
             <Button
               type="button"
               variant="outline"
-              className="w-full flex items-center justify-center gap-2"
+              className="flex w-full items-center justify-center gap-2"
               onClick={handleGoogleAuth}
               disabled={isGoogleLoading}
             >
@@ -146,7 +148,7 @@ const AuthForm = () => {
             </Button>
           </div>
 
-          <div className="mt-6 text-center text-xs text-muted-foreground">
+          <div className="text-muted-foreground mt-6 text-center text-xs">
             En continuant, vous acceptez nos{' '}
             <a href="/terms-of-service" className="text-primary hover:underline">
               Conditions d&apos;utilisation

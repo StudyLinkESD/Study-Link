@@ -1,6 +1,7 @@
-import { Resend } from 'resend';
-import { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { Resend } from 'resend';
+
+import { NextRequest } from 'next/server';
 
 const resend = new Resend(process.env.AUTH_RESEND_KEY);
 const prisma = new PrismaClient();
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
     const { from, to, subject, html, url } = body;
 
     if (!to) {
-      return Response.json({ error: 'L\'email du destinataire est requis.' }, { status: 400 });
+      return Response.json({ error: "L'email du destinataire est requis." }, { status: 400 });
     }
 
     const normalizedEmail = to.toLowerCase();

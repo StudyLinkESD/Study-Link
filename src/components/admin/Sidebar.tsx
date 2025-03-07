@@ -1,8 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { ArrowLeft, Building2, GraduationCap, LayoutDashboard, Users } from 'lucide-react';
+
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
 import { cn } from '@/lib/utils';
 
 export function Sidebar() {
@@ -36,14 +38,14 @@ export function Sidebar() {
       <div className="border-b">
         <Link
           href="/"
-          className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition-colors"
+          className="flex items-center px-6 py-3 text-gray-700 transition-colors hover:bg-gray-100"
         >
-          <ArrowLeft className="w-5 h-5 mr-3" />
+          <ArrowLeft className="mr-3 h-5 w-5" />
           Retour au site
         </Link>
       </div>
       <div className="p-4">
-        <h2 className="text-2xl font-bold mb-6">Admin</h2>
+        <h2 className="mb-6 text-2xl font-bold">Admin</h2>
         <nav className="space-y-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -54,11 +56,11 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition-colors',
+                  'flex items-center px-6 py-3 text-gray-700 transition-colors hover:bg-gray-100',
                   isActive && 'bg-blue-50 text-blue-700',
                 )}
               >
-                <Icon className="w-5 h-5 mr-3" />
+                <Icon className="mr-3 h-5 w-5" />
                 {item.label}
               </Link>
             );

@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useReducer, useMemo, useRef } from 'react';
+import { Prisma } from '@prisma/client';
+
+import React, { useMemo, useReducer, useRef } from 'react';
+
+import ItemGrid from '@/components/app/common/ItemGrid';
+import SearchBar from '@/components/app/common/SearchBar';
+import JobApplicationCard from '@/components/app/students/dashboard/JobApplicationCard';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import SearchBar from '@/components/app/common/SearchBar';
-import ItemGrid from '@/components/app/common/ItemGrid';
-import JobApplicationCard from '@/components/app/students/dashboard/JobApplicationCard';
-import { Prisma } from '@prisma/client';
+
 import { JobApplicationFull } from '@/types/application_status.type';
 
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
@@ -117,15 +120,15 @@ function ApplicationFilters({
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row">
         <SearchBar
           onSearch={(term) => dispatch({ type: 'SET_SEARCH_TERM', payload: term })}
           placeholder="Rechercher une candidature..."
           initialValue={state.searchTerm}
           className="w-full md:max-w-xs"
         />
-        <div className="flex gap-2 items-center">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-sm">
             {applicationCount} candidature{applicationCount !== 1 ? 's' : ''}
           </span>
           {state.searchTerm && (
@@ -178,7 +181,7 @@ export default function JobApplicationsList({
 
     return result;
   }, [statusFilter, searchTerm, applications]);
-  
+
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
     const indexOfFirstItem = indexOfLastItem - APPLICATIONS_PER_PAGE;

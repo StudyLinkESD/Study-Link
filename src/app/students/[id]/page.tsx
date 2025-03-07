@@ -1,26 +1,29 @@
-import { notFound } from 'next/navigation';
 import {
+  Award,
   BookOpen,
   Briefcase,
-  Heart,
-  Award,
-  Download,
-  School,
   Calendar,
   Clock,
+  Download,
+  Heart,
   Mail,
+  School,
 } from 'lucide-react';
+
+import { notFound } from 'next/navigation';
+
+import BackButton from '@/components/app/common/BackButton';
+import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
+import InfoItem from '@/components/app/common/InfoItems';
+import RecommendationsList from '@/components/app/common/RecommendationsList';
+import SectionCard from '@/components/app/common/SectionCard';
+import SkillsList from '@/components/app/common/SkillsList';
+import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import BackButton from '@/components/app/common/BackButton';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
-import InfoItem from '@/components/app/common/InfoItems';
-import SectionCard from '@/components/app/common/SectionCard';
-import SkillsList from '@/components/app/common/SkillsList';
-import ExperienceTimeline from '@/components/app/common/ExperienceTimeline';
-import RecommendationsList from '@/components/app/common/RecommendationsList';
+
 import { getStudentById } from '@/services/student.service';
 
 interface PageProps {
@@ -74,10 +77,10 @@ export default async function Page({ params }: PageProps) {
     };
 
     return (
-      <main className="container mx-auto py-4 px-4 max-w-4xl">
+      <main className="container mx-auto max-w-4xl px-4 py-4">
         <BackButton href="/students" label="Retour à la liste des étudiants" className="mb-6" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card className="md:col-span-1">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center">
@@ -89,13 +92,13 @@ export default async function Page({ params }: PageProps) {
                   className="mb-4"
                 />
 
-                <h1 className="text-xl font-bold text-center">
+                <h1 className="text-center text-xl font-bold">
                   {student.firstName} {student.lastName}
                 </h1>
 
                 <StatusBadge status={student.status} className="mt-2" />
 
-                <div className="w-full mt-6 space-y-4">
+                <div className="mt-6 w-full space-y-4">
                   {student.school && <InfoItem icon={School}>{student.school}</InfoItem>}
 
                   {student.alternanceRhythm && (
@@ -122,14 +125,14 @@ export default async function Page({ params }: PageProps) {
                     rel="noopener noreferrer"
                     className="block w-full"
                   >
-                    <Button className="w-full mt-6">
+                    <Button className="mt-6 w-full">
                       <Download className="mr-2 h-4 w-4" />
                       Télécharger le CV
                     </Button>
                   </a>
                 )}
 
-                <Button className="w-full mt-4">Contacter</Button>
+                <Button className="mt-4 w-full">Contacter</Button>
               </div>
             </CardContent>
           </Card>

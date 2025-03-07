@@ -1,5 +1,6 @@
-import { CreateSchoolDomainDTO, UpdateSchoolDomainDTO } from '@/dto/school-domain.dto';
 import { PrismaClient } from '@prisma/client';
+
+import { CreateSchoolDomainDTO, UpdateSchoolDomainDTO } from '@/dto/school-domain.dto';
 
 const prisma = new PrismaClient();
 

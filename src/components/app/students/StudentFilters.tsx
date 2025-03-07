@@ -1,8 +1,10 @@
 import React from 'react';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import SearchBar from '@/components/app/common/SearchBar';
+
 import FilterSelector from '@/components/app/common/FilterSelector';
+import SearchBar from '@/components/app/common/SearchBar';
+import { Label } from '@/components/ui/label';
+import { TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { STUDENT_STATUS } from '@/constants/status';
 
 export type FilterState = {
@@ -60,7 +62,7 @@ function StudentFiltersComponent({ state, dispatch, allSkills }: StudentFiltersP
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row">
         <TabsList>
           <TabsTrigger value={STUDENT_STATUS.ALL}>Tous</TabsTrigger>
           <TabsTrigger value={STUDENT_STATUS.ALTERNANT}>Alternants</TabsTrigger>
@@ -75,7 +77,7 @@ function StudentFiltersComponent({ state, dispatch, allSkills }: StudentFiltersP
         />
       </div>
 
-      <div className="flex flex-col gap-5 mb-4">
+      <div className="mb-4 flex flex-col gap-5">
         <Label className="block" htmlFor="skills-filter">
           Filtrer par compétences
         </Label>

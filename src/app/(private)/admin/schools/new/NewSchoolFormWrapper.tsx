@@ -1,7 +1,8 @@
 'use client';
 
-import { NewSchoolForm } from '@/components/admin/schools/NewSchoolForm';
 import { useRouter } from 'next/navigation';
+
+import { NewSchoolForm } from '@/components/admin/schools/NewSchoolForm';
 
 export function NewSchoolFormWrapper() {
   const router = useRouter();

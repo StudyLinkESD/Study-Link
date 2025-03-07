@@ -1,5 +1,7 @@
-import { FC, ReactNode, isValidElement } from 'react';
 import { LucideIcon } from 'lucide-react';
+
+import { FC, isValidElement, ReactNode } from 'react';
+
 import { cn } from '@/lib/utils';
 
 type InfoItemProps = {
@@ -51,7 +53,7 @@ const InfoItem: FC<InfoItemProps> = ({
       <Icon className={iconClasses} />
 
       <div className={cn('flex flex-col', contentClassName)}>
-        {label && <span className="text-xs font-medium text-muted-foreground mb-0.5">{label}</span>}
+        {label && <span className="text-muted-foreground mb-0.5 text-xs font-medium">{label}</span>}
 
         {isComplexChildren ? children : <span>{children}</span>}
       </div>

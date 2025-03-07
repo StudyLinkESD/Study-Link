@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+
+import { NextResponse } from 'next/server';
+
 import { EnrichedJobRequestResponseDTO } from '@/dto/job-request.dto';
 
 const prisma = new PrismaClient();
@@ -23,7 +25,7 @@ export async function GET(
     }
 
     if (!user.student) {
-      return NextResponse.json({ error: 'L\'utilisateur n\'est pas un étudiant' }, { status: 400 });
+      return NextResponse.json({ error: "L'utilisateur n'est pas un étudiant" }, { status: 400 });
     }
 
     const jobRequests = await prisma.jobRequest.findMany({

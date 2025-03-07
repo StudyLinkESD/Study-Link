@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { CreateCompanyDTO, UpdateCompanyDTO } from '@/dto/company.dto';
 import { Company } from '@prisma/client';
+
+import { CreateCompanyDTO, UpdateCompanyDTO } from '@/dto/company.dto';
 
 const prisma = new PrismaClient();
 
@@ -36,7 +37,7 @@ export async function validateCompanyData(
         errors.push('Le logo doit être une URL HTTPS valide');
       }
     } catch {
-      errors.push('L\'URL du logo n\'est pas valide');
+      errors.push("L'URL du logo n'est pas valide");
     }
   }
 

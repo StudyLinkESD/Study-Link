@@ -1,8 +1,10 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { createContextHook } from './createContextHook';
+
 import { JobCardProps } from '@/components/app/jobs/JobCard';
+
+import { createContextHook } from './createContextHook';
 
 const { Provider, useContextHook } = createContextHook<JobCardProps>('Job');
 

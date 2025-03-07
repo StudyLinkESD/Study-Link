@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateStudentDTO, StudentResponseDTO } from '@/dto/student.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateStudentData } from '@/utils/validation/student.validation';
+
+import { CreateStudentDTO, StudentResponseDTO } from '@/dto/student.dto';
 
 const prisma = new PrismaClient();
 
@@ -89,9 +92,9 @@ export async function POST(
 
     return NextResponse.json(formattedStudent, { status: 201 });
   } catch (error) {
-    console.error('Erreur lors de la création de l\'étudiant:', error);
+    console.error("Erreur lors de la création de l'étudiant:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la création de l\'étudiant' },
+      { error: "Erreur lors de la création de l'étudiant" },
       { status: 500 },
     );
   }

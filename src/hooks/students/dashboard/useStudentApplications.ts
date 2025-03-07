@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Session } from 'next-auth';
-import { JobApplicationFull } from '@/types/application_status.type';
 import axios from 'axios';
+import { Session } from 'next-auth';
+
+import { useEffect, useState } from 'react';
+
+import { JobApplicationFull } from '@/types/application_status.type';
 
 export function useStudentApplications(session: Session | null) {
   const [applications, setApplications] = useState<JobApplicationFull[]>([]);

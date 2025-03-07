@@ -1,8 +1,11 @@
 'use client';
 
 import { AuthorizedSchoolDomain } from '@prisma/client';
+
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { EditSchoolForm } from './EditSchoolForm';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -12,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
+
+import { EditSchoolForm } from './EditSchoolForm';
 
 type SchoolWithDomain = {
   id: string;
@@ -91,13 +94,13 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
   }
 
   if (isLoading) {
-    return <div className="text-center py-4">Chargement...</div>;
+    return <div className="py-4 text-center">Chargement...</div>;
   }
 
   if (error) {
     return (
-      <div className="text-center py-4">
-        <div className="text-red-600 mb-2">{error}</div>
+      <div className="py-4 text-center">
+        <div className="mb-2 text-red-600">{error}</div>
         <Button onClick={() => fetchSchools(activeFilter)} variant="outline">
           Réessayer
         </Button>
@@ -107,7 +110,7 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <Select value={activeFilter} onValueChange={setActiveFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrer par statut" />
@@ -124,23 +127,23 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
         {schools.map((school) => (
           <Card key={school.id} className="overflow-hidden py-0">
             <div className="flex items-stretch">
-              <div className="w-20 bg-gray-50 p-3 flex items-center justify-center border-r">
+              <div className="flex w-20 items-center justify-center border-r bg-gray-50 p-3">
                 {school.logo ? (
                   <Image
                     src={school.logo}
                     alt={school.name}
-                    className="max-w-full max-h-full object-contain"
+                    className="max-h-full max-w-full object-contain"
                     width={80}
                     height={80}
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-400">
                     {school.name.charAt(0)}
                   </div>
                 )}
               </div>
 
-              <div className="flex-grow px-6 py-2 flex items-center justify-between">
+              <div className="flex flex-grow items-center justify-between px-6 py-2">
                 <div className="flex items-center gap-4">
                   <div>
                     <h3 className="font-semibold text-gray-900">{school.name}</h3>

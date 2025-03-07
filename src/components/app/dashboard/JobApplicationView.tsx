@@ -1,23 +1,28 @@
 'use client';
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
-import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+
+import React from 'react';
+
+import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
+
+import { useJobApplication } from '@/context/job-application.context';
+
 import { JobApplicationsListProps } from './JobApplicationsList';
 
 type StatusMappingType = {
@@ -69,12 +74,12 @@ export default function JobApplicationView({
 
   if (!selectedApplication) {
     return (
-      <Card className="h-[500px] flex items-center justify-center">
+      <Card className="flex h-[500px] items-center justify-center">
         <CardContent className="text-center">
-          <h3 className="text-xl font-medium text-muted-foreground mb-2">
+          <h3 className="text-muted-foreground mb-2 text-xl font-medium">
             Sélectionnez une candidature
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Cliquez sur une candidature pour voir les détails
           </p>
         </CardContent>
@@ -96,8 +101,8 @@ export default function JobApplicationView({
 
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <h3 className="font-semibold text-lg">Candidat</h3>
-          <div className="flex items-center gap-3 bg-muted/50 p-3 rounded-md">
+          <h3 className="text-lg font-semibold">Candidat</h3>
+          <div className="bg-muted/50 flex items-center gap-3 rounded-md p-3">
             <ProfileAvatar
               firstName={firstName}
               lastName={lastName}
@@ -107,7 +112,7 @@ export default function JobApplicationView({
             />
             <div>
               <h4 className="font-medium">{`${firstName} ${lastName}`}</h4>
-              <Button variant="link" className="px-0 h-auto text-sm text-primary" asChild>
+              <Button variant="link" className="text-primary h-auto px-0 text-sm" asChild>
                 <a href={`/students/${student.id}`}>Voir profil</a>
               </Button>
             </div>
@@ -115,19 +120,19 @@ export default function JobApplicationView({
         </div>
 
         <div className="space-y-4">
-          <h3 className="font-semibold text-lg">Offre</h3>
-          <div className="bg-muted/50 p-3 rounded-md">
+          <h3 className="text-lg font-semibold">Offre</h3>
+          <div className="bg-muted/50 rounded-md p-3">
             <h4 className="font-medium">{job.name}</h4>
-            <p className="text-sm text-muted-foreground">{job.company.name}</p>
-            <Button variant="link" className="px-0 h-auto text-sm text-primary" asChild>
+            <p className="text-muted-foreground text-sm">{job.company.name}</p>
+            <Button variant="link" className="text-primary h-auto px-0 text-sm" asChild>
               <a href={`/jobs/${job.id}`}>Voir l&apos;offre</a>
             </Button>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold text-lg">Statut</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Statut</h3>
             <StatusBadge
               status={getStatusLabel(status)}
               variant={

@@ -6,9 +6,9 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col">
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Link href="/" className="text-2xl font-bold">
             StudyLink
           </Link>
@@ -28,8 +28,8 @@ export default function PublicLayout({
 
       <footer className="border-t py-6">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="text-muted-foreground text-sm">
               © {new Date().getFullYear()} StudyLink. Tous droits réservés.
             </div>
             <div className="flex gap-6 text-sm">

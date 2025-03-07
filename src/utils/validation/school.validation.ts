@@ -1,5 +1,6 @@
-import { CreateSchoolDTO, UpdateSchoolDTO } from '@/dto/school.dto';
 import { PrismaClient } from '@prisma/client';
+
+import { CreateSchoolDTO, UpdateSchoolDTO } from '@/dto/school.dto';
 
 const prisma = new PrismaClient();
 
@@ -24,7 +25,7 @@ export async function validateSchoolData(
       where: { id: data.domainId },
     });
     if (!domain) {
-      errors.domainId = 'Le domaine spécifié n\'existe pas';
+      errors.domainId = "Le domaine spécifié n'existe pas";
     }
   }
 
@@ -35,7 +36,7 @@ export async function validateSchoolData(
         errors.logo = 'Le logo doit être une URL HTTPS valide';
       }
     } catch {
-      errors.logo = 'L\'URL du logo n\'est pas valide';
+      errors.logo = "L'URL du logo n'est pas valide";
     }
   }
 

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+
 import { CreateJobDTO, UpdateJobDTO } from '@/dto/job.dto';
 
 const prisma = new PrismaClient();
@@ -33,7 +34,7 @@ export async function validateJobData(
   const errors: ValidationError[] = [];
 
   if (!isUpdate && 'companyId' in data && !data.companyId) {
-    errors.push({ companyId: 'L\'ID de la compagnie est requis' });
+    errors.push({ companyId: "L'ID de la compagnie est requis" });
   }
 
   if (!isUpdate && !data.name) {
@@ -49,7 +50,7 @@ export async function validateJobData(
       where: { id: data.companyId },
     });
     if (!company) {
-      errors.push({ companyId: 'La compagnie spécifiée n\'existe pas' });
+      errors.push({ companyId: "La compagnie spécifiée n'existe pas" });
     }
   }
 

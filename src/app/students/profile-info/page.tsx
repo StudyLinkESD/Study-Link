@@ -1,18 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Briefcase, Save, School, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { User, School, Briefcase, Save } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import FileUploadInput from '@/components/app/common/FileUploadInput';
+import SectionCard from '@/components/app/common/SectionCard';
+import FormField from '@/components/app/profileForm/FormField';
+import NavigationButtons from '@/components/app/profileForm/NavigationButton';
+import ProfileCompletion from '@/components/app/profileForm/ProfileCompletion';
+import ProfilePreview from '@/components/app/profileForm/ProfilePreview';
+import SkillsSelector from '@/components/app/profileForm/SkillsSelector';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -21,13 +29,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SectionCard from '@/components/app/common/SectionCard';
-import FormField from '@/components/app/profileForm/FormField';
-import ProfilePreview from '@/components/app/profileForm/ProfilePreview';
-import ProfileCompletion from '@/components/app/profileForm/ProfileCompletion';
-import FileUploadInput from '@/components/app/common/FileUploadInput';
-import SkillsSelector from '@/components/app/profileForm/SkillsSelector';
-import NavigationButtons from '@/components/app/profileForm/NavigationButton';
+import { Textarea } from '@/components/ui/textarea';
+
 import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
@@ -401,15 +404,15 @@ export default function StudentProfileForm() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="container mx-auto flex min-h-[400px] max-w-4xl items-center justify-center px-4 py-8">
+        <div className="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Compléter votre profil</h1>
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <h1 className="mb-6 text-3xl font-bold">Compléter votre profil</h1>
       <p className="text-muted-foreground mb-8">
         Ces informations seront visibles par les entreprises et vous permettront de recevoir des
         offres correspondant à votre profil.
@@ -418,7 +421,7 @@ export default function StudentProfileForm() {
       <ProfileCompletion fields={getProfileCompletionFields()} />
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           <div className="md:col-span-1">
             <div className="sticky top-6 space-y-6">
               <ProfilePreview
@@ -452,7 +455,7 @@ export default function StudentProfileForm() {
                 <TabsTrigger value="skills">Compétences</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="personal" className="space-y-6 mt-6">
+              <TabsContent value="personal" className="mt-6 space-y-6">
                 <SectionCard title="Informations de base" icon={User}>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
@@ -567,7 +570,7 @@ export default function StudentProfileForm() {
                 <NavigationButtons showNextButton onNext={() => setSelectedTab('education')} />
               </TabsContent>
 
-              <TabsContent value="education" className="space-y-6 mt-6">
+              <TabsContent value="education" className="mt-6 space-y-6">
                 <SectionCard title="Formation et disponibilité" icon={School}>
                   <div className="space-y-4">
                     <FormField
@@ -644,7 +647,7 @@ export default function StudentProfileForm() {
                 />
               </TabsContent>
 
-              <TabsContent value="skills" className="space-y-6 mt-6">
+              <TabsContent value="skills" className="mt-6 space-y-6">
                 <SectionCard title="Compétences et expertises" icon={Briefcase}>
                   <FormField
                     label="Sélectionnez vos compétences"

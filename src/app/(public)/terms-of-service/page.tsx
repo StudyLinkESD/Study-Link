@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
@@ -9,9 +10,9 @@ export const metadata = {
 
 export default function TermsOfServicePage() {
   return (
-    <div className="container max-w-4xl mx-auto py-12 px-4">
+    <div className="container mx-auto max-w-4xl px-4 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Conditions d&apos;utilisation</h1>
+        <h1 className="mb-2 text-3xl font-bold">Conditions d&apos;utilisation</h1>
         <p className="text-muted-foreground">
           Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
         </p>
@@ -19,7 +20,7 @@ export default function TermsOfServicePage() {
 
       <div className="space-y-8">
         <section>
-          <h2 className="text-2xl font-semibold mb-4">1. Acceptation des conditions</h2>
+          <h2 className="mb-4 text-2xl font-semibold">1. Acceptation des conditions</h2>
           <p className="mb-4">
             En accédant ou en utilisant la plateforme StudyLink, vous acceptez d&apos;être lié par
             ces conditions d&apos;utilisation. Si vous n&apos;acceptez pas ces conditions, veuillez
@@ -34,7 +35,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">2. Description du service</h2>
+          <h2 className="mb-4 text-2xl font-semibold">2. Description du service</h2>
           <p>
             StudyLink est une plateforme qui met en relation des étudiants à la recherche de stages
             ou d&apos;alternances avec des entreprises proposant des opportunités professionnelles.
@@ -46,7 +47,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">3. Inscription et comptes utilisateurs</h2>
+          <h2 className="mb-4 text-2xl font-semibold">3. Inscription et comptes utilisateurs</h2>
           <p className="mb-4">
             Pour utiliser certaines fonctionnalités de StudyLink, vous devez créer un compte. Lors
             de l&apos;inscription, vous acceptez de fournir des informations exactes, complètes et à
@@ -61,7 +62,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">4. Contenu utilisateur</h2>
+          <h2 className="mb-4 text-2xl font-semibold">4. Contenu utilisateur</h2>
           <p className="mb-4">
             En soumettant du contenu sur StudyLink (profils, descriptions, images, etc.), vous nous
             accordez une licence mondiale, non exclusive, gratuite, transférable et pouvant faire
@@ -70,7 +71,7 @@ export default function TermsOfServicePage() {
             plateforme.
           </p>
           <p className="mb-4">Vous déclarez et garantissez que :</p>
-          <ul className="list-disc pl-6 space-y-2">
+          <ul className="list-disc space-y-2 pl-6">
             <li>
               Vous possédez ou avez obtenu tous les droits nécessaires pour le contenu que vous
               publiez
@@ -88,9 +89,9 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">5. Comportement des utilisateurs</h2>
+          <h2 className="mb-4 text-2xl font-semibold">5. Comportement des utilisateurs</h2>
           <p className="mb-4">En utilisant StudyLink, vous acceptez de ne pas :</p>
-          <ul className="list-disc pl-6 space-y-2">
+          <ul className="list-disc space-y-2 pl-6">
             <li>Utiliser notre service à des fins illégales ou non autorisées</li>
             <li>Violer les lois locales, nationales ou internationales applicables</li>
             <li>
@@ -106,7 +107,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">6. Propriété intellectuelle</h2>
+          <h2 className="mb-4 text-2xl font-semibold">6. Propriété intellectuelle</h2>
           <p className="mb-4">
             Le service StudyLink et son contenu original, fonctionnalités et fonctionnalités sont et
             resteront la propriété exclusive de StudyLink et de ses concédants de licence. Le
@@ -120,7 +121,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">7. Vie privée</h2>
+          <h2 className="mb-4 text-2xl font-semibold">7. Vie privée</h2>
           <p>
             Votre utilisation de notre service est également régie par notre politique de
             confidentialité, que vous pouvez consulter{' '}
@@ -133,7 +134,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">8. Limitation de responsabilité</h2>
+          <h2 className="mb-4 text-2xl font-semibold">8. Limitation de responsabilité</h2>
           <p className="mb-4">
             StudyLink est fourni &quot;tel quel&quot; et &quot;tel que disponible&quot; sans
             garanties d&apos;aucune sorte, expresses ou implicites. Nous ne garantissons pas que
@@ -146,7 +147,7 @@ export default function TermsOfServicePage() {
             clientèle, d&apos;utilisation, de données ou d&apos;autres pertes intangibles résultant
             de :
           </p>
-          <ul className="list-disc pl-6 space-y-2">
+          <ul className="list-disc space-y-2 pl-6">
             <li>Votre utilisation ou incapacité à utiliser notre service</li>
             <li>Tout contenu obtenu à partir du service</li>
             <li>Accès non autorisé ou altération de vos transmissions ou données</li>
@@ -156,7 +157,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">9. Indemnisation</h2>
+          <h2 className="mb-4 text-2xl font-semibold">9. Indemnisation</h2>
           <p>
             Vous acceptez d&apos;indemniser, de défendre et de dégager de toute responsabilité
             StudyLink et ses filiales, affiliés, dirigeants, agents, co-marques ou autres
@@ -168,7 +169,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">10. Résiliation</h2>
+          <h2 className="mb-4 text-2xl font-semibold">10. Résiliation</h2>
           <p className="mb-4">
             Nous pouvons résilier ou suspendre votre compte et votre accès à StudyLink
             immédiatement, sans préavis ni responsabilité, pour quelque raison que ce soit, y
@@ -183,7 +184,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">11. Droit applicable</h2>
+          <h2 className="mb-4 text-2xl font-semibold">11. Droit applicable</h2>
           <p>
             Ces conditions sont régies et interprétées conformément aux lois françaises, sans égard
             aux principes de conflits de lois. Notre manquement à faire respecter un droit ou une
@@ -194,7 +195,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">12. Contact</h2>
+          <h2 className="mb-4 text-2xl font-semibold">12. Contact</h2>
           <p>
             Si vous avez des questions concernant ces conditions d&apos;utilisation, veuillez nous
             contacter à legal@studylink.com.

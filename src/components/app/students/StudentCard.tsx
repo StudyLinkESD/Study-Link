@@ -1,9 +1,11 @@
-import React from 'react';
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
 import { Briefcase, GraduationCap } from 'lucide-react';
+
+import Link from 'next/link';
+import React from 'react';
+
+import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Card, CardContent } from '@/components/ui/card';
 
 export type StudentCardProps = {
   id: string;
@@ -44,7 +46,7 @@ function StudentCardComponent({
 }: StudentCardProps) {
   return (
     <Link href={`/students/${id}`} className="block h-full">
-      <Card className="overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-1 h-full">
+      <Card className="h-full overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
         <CardContent className="p-4">
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-4">
@@ -56,16 +58,16 @@ function StudentCardComponent({
                 className="border border-gray-200 dark:border-gray-700"
               />
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold truncate">
+                  <h3 className="truncate text-base font-semibold">
                     {firstName} {lastName}
                   </h3>
                   <StatusBadge status={status} className="text-xs" />
                 </div>
 
                 {school && (
-                  <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-sm">
                     <GraduationCap className="h-4 w-4" />
                     <span className="truncate">{school}</span>
                   </div>
@@ -74,7 +76,7 @@ function StudentCardComponent({
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
                 <Briefcase className="h-4 w-4" />
                 <span>Compétences</span>
               </div>

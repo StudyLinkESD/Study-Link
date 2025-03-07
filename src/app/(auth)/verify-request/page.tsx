@@ -1,14 +1,16 @@
 import { Mail } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import Link from 'next/link';
+
+import { Button } from '@/components/ui/button';
 
 export default function VerifyRequestPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center space-y-6 max-w-md px-4">
+      <div className="max-w-md space-y-6 px-4 text-center">
         <div className="flex justify-center">
-          <div className="bg-primary/10 p-3 rounded-full">
-            <Mail className="w-8 h-8 text-primary" />
+          <div className="bg-primary/10 rounded-full p-3">
+            <Mail className="text-primary h-8 w-8" />
           </div>
         </div>
 
@@ -21,7 +23,7 @@ export default function VerifyRequestPage() {
         </div>
 
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Si vous ne trouvez pas l&apos;email, vérifiez votre dossier spam.
           </p>
 
