@@ -4,7 +4,7 @@ export interface CreateStudentDTO {
   studentEmail: string;
   status: string;
   skills: string;
-  apprenticeshipRythm?: string;
+  apprenticeshipRhythm?: string;
   description: string;
   curriculumVitae?: string;
   previousCompanies: string;
@@ -14,7 +14,7 @@ export interface CreateStudentDTO {
 export interface UpdateStudentDTO {
   status?: string;
   skills?: string;
-  apprenticeshipRythm?: string;
+  apprenticeshipRhythm?: string;
   description?: string;
   curriculumVitae?: string;
   previousCompanies?: string;
@@ -28,7 +28,7 @@ export interface StudentResponseDTO {
   primaryRecommendationId?: string;
   status: string;
   skills: string;
-  apprenticeshipRythm?: string;
+  apprenticeshipRhythm?: string;
   description: string;
   curriculumVitae?: string;
   previousCompanies: string;

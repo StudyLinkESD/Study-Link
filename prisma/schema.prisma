@@ -39,7 +39,7 @@ model Student {
   primaryRecommendationId String?          @unique
   status                  String
   skills                  String
-  apprenticeshipRythm     String?
+  apprenticeshipRhythm    String?
   description             String
   curriculumVitae         String?
   previousCompanies       String
@@ -102,9 +102,9 @@ model School {
   domainId  String
   name      String
   logo      String?
-  isActive  Boolean               @default(true)
-  createdAt DateTime              @default(now())
-  updatedAt DateTime              @updatedAt
+  isActive  Boolean                @default(true)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
   deletedAt DateTime?
 
   students     Student[]
@@ -125,16 +125,16 @@ model AuthorizedSchoolDomain {
 }
 
 model Job {
-  id              String      @id @default(cuid())
-  company         Company     @relation(fields: [companyId], references: [id])
-  companyId       String
-  name            String
-  featuredImage   String?
-  description     String
-  skills          String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  deletedAt       DateTime?
+  id            String    @id @default(cuid())
+  company       Company   @relation(fields: [companyId], references: [id])
+  companyId     String
+  name          String
+  featuredImage String?
+  description   String
+  skills        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
   jobRequests JobRequest[]
 }

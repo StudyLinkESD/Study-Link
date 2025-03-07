@@ -1,5 +1,6 @@
-import React from 'react';
 import { Search } from 'lucide-react';
+
+import React from 'react';
 
 type EmptyStateProps = {
   icon?: React.ReactNode;
@@ -17,16 +18,16 @@ type ItemGridProps<T> = {
 };
 
 function EmptyState({
-  icon = <Search className="h-10 w-10 text-muted-foreground" />,
+  icon = <Search className="text-muted-foreground h-10 w-10" />,
   title = 'Aucun élément trouvé',
   description = 'Aucun élément ne correspond à vos critères de recherche.',
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center" role="status">
-      <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-4">
+      <div className="bg-muted mb-4 flex h-20 w-20 items-center justify-center rounded-full">
         {icon}
       </div>
-      <h3 className="text-lg font-medium mb-2">{title}</h3>
+      <h3 className="mb-2 text-lg font-medium">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
     </div>
   );

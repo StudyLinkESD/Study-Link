@@ -1,5 +1,6 @@
-import { CreateUserDTO, UpdateUserDTO } from '@/dto/user.dto';
 import { PrismaClient, User } from '@prisma/client';
+
+import { CreateUserDTO, UpdateUserDTO } from '@/dto/user.dto';
 
 const prisma = new PrismaClient();
 

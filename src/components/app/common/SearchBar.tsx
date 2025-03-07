@@ -1,6 +1,8 @@
 import { Search, X } from 'lucide-react';
+
+import { useEffect, useState } from 'react';
+
 import { Input } from '@/components/ui/input';
-import { useState, useEffect } from 'react';
 
 type SearchBarProps = {
   onSearch: (term: string) => void;
@@ -39,7 +41,7 @@ function SearchBar({
   return (
     <div className={`relative ${className}`}>
       <Search
-        className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+        className="text-muted-foreground absolute left-2.5 top-2.5 h-4 w-4"
         aria-hidden="true"
       />
       <Input
@@ -54,7 +56,7 @@ function SearchBar({
         <button
           type="button"
           onClick={handleClear}
-          className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground absolute right-2.5 top-2.5"
           aria-label="Effacer la recherche"
         >
           <X className="h-4 w-4" />

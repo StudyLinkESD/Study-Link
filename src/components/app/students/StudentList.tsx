@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useRef, useMemo, useReducer } from 'react';
-import StudentCard, { StudentCardProps } from './StudentCard';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
+
+import React, { useMemo, useReducer, useRef } from 'react';
+
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
-import StudentFilters, { FilterState, FilterAction } from './StudentFilters';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+
 import { STUDENT_STATUS } from '@/constants/status';
+
+import StudentCard, { StudentCardProps } from './StudentCard';
+import StudentFilters, { FilterAction, FilterState } from './StudentFilters';
 
 const STUDENTS_PER_PAGE = 9;
 
@@ -126,9 +130,9 @@ function StudentListComponent({
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[400px]">
+      <div className="container mx-auto flex min-h-[400px] items-center justify-center px-4 py-8">
         <div className="flex flex-col items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <Loader2 className="text-primary mb-4 h-12 w-12 animate-spin" />
           <p>Chargement des étudiants...</p>
         </div>
       </div>
@@ -136,7 +140,7 @@ function StudentListComponent({
   }
 
   return (
-    <div className="container mx-auto px-4 py-4 space-y-6">
+    <div className="container mx-auto space-y-6 px-4 py-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground" aria-live="polite">

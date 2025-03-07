@@ -1,4 +1,5 @@
 import { FC } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 
 type Skill = {

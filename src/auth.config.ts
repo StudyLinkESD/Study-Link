@@ -1,10 +1,12 @@
-import { NextAuthConfig } from 'next-auth';
-import Resend from 'next-auth/providers/resend';
-import Google from 'next-auth/providers/google';
-import AuthenticateEmail from './emails/authenticate';
 import { render } from '@react-email/render';
-import { prisma } from '@/lib/prisma';
 import axios from 'axios';
+import { NextAuthConfig } from 'next-auth';
+import Google from 'next-auth/providers/google';
+import Resend from 'next-auth/providers/resend';
+
+import { prisma } from '@/lib/prisma';
+
+import AuthenticateEmail from './emails/authenticate';
 
 export default {
   providers: [

@@ -1,7 +1,10 @@
-import React from 'react';
-import { Badge, badgeVariants } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { VariantProps } from 'class-variance-authority';
+
+import React from 'react';
+
+import { Badge, badgeVariants } from '@/components/ui/badge';
+
+import { cn } from '@/lib/utils';
 
 type BadgeProps = React.ComponentProps<'span'> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean };

@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { CreateJobRequestDTO, JobRequestResponseDTO } from '@/dto/job-request.dto';
+
+import { NextResponse } from 'next/server';
+
 import { validateJobRequestData } from '@/utils/validation/job-request.validation';
+
+import { CreateJobRequestDTO, JobRequestResponseDTO } from '@/dto/job-request.dto';
 
 const prisma = new PrismaClient();
 

@@ -1,4 +1,5 @@
 import { CompanyOwner, PrismaClient } from '@prisma/client';
+
 import { CreateCompanyOwnerDTO, UpdateCompanyOwnerDTO } from '@/dto/company-owner.dto';
 
 const prisma = new PrismaClient();
@@ -42,7 +43,7 @@ export const validateCompanyOwnerData = async (
     if (!data.userId) {
       errors.push({
         field: 'userId',
-        message: 'L\'ID de l\'utilisateur est requis',
+        message: "L'ID de l'utilisateur est requis",
       });
     } else {
       const user = await prisma.user.findUnique({
@@ -52,7 +53,7 @@ export const validateCompanyOwnerData = async (
       if (!user) {
         errors.push({
           field: 'userId',
-          message: 'L\'utilisateur spécifié n\'existe pas',
+          message: "L'utilisateur spécifié n'existe pas",
         });
       }
 
@@ -67,7 +68,7 @@ export const validateCompanyOwnerData = async (
         if (existingCompanyOwner) {
           errors.push({
             field: 'userId',
-            message: 'Cet utilisateur est déjà propriétaire d\'une entreprise',
+            message: "Cet utilisateur est déjà propriétaire d'une entreprise",
           });
         }
       } else {
@@ -78,7 +79,7 @@ export const validateCompanyOwnerData = async (
         if (existingCompanyOwner) {
           errors.push({
             field: 'userId',
-            message: 'Cet utilisateur est déjà propriétaire d\'une entreprise',
+            message: "Cet utilisateur est déjà propriétaire d'une entreprise",
           });
         }
       }
@@ -89,7 +90,7 @@ export const validateCompanyOwnerData = async (
     if (!data.companyId) {
       errors.push({
         field: 'companyId',
-        message: 'L\'ID de l\'entreprise est requis',
+        message: "L'ID de l'entreprise est requis",
       });
     } else {
       const company = await prisma.company.findUnique({
@@ -99,7 +100,7 @@ export const validateCompanyOwnerData = async (
       if (!company) {
         errors.push({
           field: 'companyId',
-          message: 'L\'entreprise spécifiée n\'existe pas',
+          message: "L'entreprise spécifiée n'existe pas",
         });
       }
     }

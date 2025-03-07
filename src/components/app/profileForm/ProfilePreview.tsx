@@ -1,8 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import { Calendar, Clock, School } from 'lucide-react';
+
 import InfoItem from '@/components/app/common/InfoItems';
-import { School, Calendar, Clock } from 'lucide-react';
+import StatusBadge from '@/components/app/common/StatusBadge';
+import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ProfilePreviewProps = {
   firstName: string | null;
@@ -29,7 +30,7 @@ export default function ProfilePreview({
         <CardTitle className="text-lg">Prévisualisation</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col items-center mb-4">
+        <div className="mb-4 flex flex-col items-center">
           <ProfileAvatar
             photoUrl={photoUrl}
             firstName={firstName || 'Votre'}
@@ -37,7 +38,7 @@ export default function ProfilePreview({
             size="md"
             className="mb-2"
           />
-          <h3 className="font-semibold text-center">
+          <h3 className="text-center font-semibold">
             {firstName || 'Prénom'} {lastName || 'Nom'}
           </h3>
           {status && <StatusBadge status={status} className="mt-1" />}

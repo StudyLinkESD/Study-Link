@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input";
+import { Input } from '@/components/ui/input';
 
 interface ICommonInputProps {
   placeholder: string;
@@ -7,14 +7,7 @@ interface ICommonInputProps {
 }
 
 const CommonInput = ({ placeholder, name, type }: ICommonInputProps) => {
-  return (
-    <Input
-      className="h-[50px] mb-0"
-      placeholder={placeholder}
-      name={name}
-      type={type}
-    />
-  );
+  return <Input className="mb-0 h-[50px]" placeholder={placeholder} name={name} type={type} />;
 };
 
 export default CommonInput;

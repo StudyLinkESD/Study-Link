@@ -1,12 +1,14 @@
 'use client';
 
+import Image from 'next/image';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+
 import { handleUploadFile } from '@/services/uploadFile';
-import Image from 'next/image';
 
 type SchoolCreate = {
   name: string;
@@ -187,19 +189,19 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Ajouter une école</h2>
         <Button variant="outline" onClick={onCancel}>
           Annuler
         </Button>
       </div>
 
-      <div className="max-w-2xl mx-auto mt-16">
+      <div className="mx-auto mt-16 max-w-2xl">
         <div className="mb-8">
-          <div className="flex justify-between mb-2">
+          <div className="mb-2 flex justify-between">
             <div className="flex items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${
                   step >= 1 ? 'bg-primary text-white' : 'bg-gray-200'
                 }`}
               >
@@ -209,7 +211,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
             </div>
             <div className="flex items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${
                   step >= 2 ? 'bg-primary text-white' : 'bg-gray-200'
                 }`}
               >
@@ -219,7 +221,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
             </div>
             <div className="flex items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${
                   step >= 3 ? 'bg-primary text-white' : 'bg-gray-200'
                 }`}
               >
@@ -229,7 +231,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
             </div>
           </div>
           <div className="relative pt-1">
-            <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+            <div className="flex h-2 overflow-hidden rounded bg-gray-200 text-xs">
               <div
                 className="bg-primary transition-all duration-300 ease-in-out"
                 style={{ width: `${(step / 3) * 100}%` }}
@@ -258,7 +260,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
                     disabled={isSubmitting}
                   />
                   {formErrors.domain && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.domain}</p>
+                    <p className="mt-1 text-sm text-red-500">{formErrors.domain}</p>
                   )}
                 </div>
                 <div className="flex justify-end">
@@ -287,7 +289,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
                     disabled={isSubmitting}
                   />
                   {formErrors.ownerFirstName && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.ownerFirstName}</p>
+                    <p className="mt-1 text-sm text-red-500">{formErrors.ownerFirstName}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -302,7 +304,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
                     disabled={isSubmitting}
                   />
                   {formErrors.ownerLastName && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.ownerLastName}</p>
+                    <p className="mt-1 text-sm text-red-500">{formErrors.ownerLastName}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -317,7 +319,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
                     disabled={isSubmitting}
                   />
                   {formErrors.ownerEmail && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.ownerEmail}</p>
+                    <p className="mt-1 text-sm text-red-500">{formErrors.ownerEmail}</p>
                   )}
                 </div>
                 <div className="flex justify-between pt-6">
@@ -358,7 +360,7 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
                     disabled={isSubmitting}
                   />
                   {formErrors.name && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
+                    <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -372,14 +374,14 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
                     disabled={isSubmitting}
                   />
                   {formErrors.logo && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.logo}</p>
+                    <p className="mt-1 text-sm text-red-500">{formErrors.logo}</p>
                   )}
                   {logoUrl && (
                     <div className="mt-2">
                       <Image
                         src={logoUrl}
                         alt="Aperçu du logo"
-                        className="w-20 h-20 object-contain"
+                        className="h-20 w-20 object-contain"
                         width={80}
                         height={80}
                       />

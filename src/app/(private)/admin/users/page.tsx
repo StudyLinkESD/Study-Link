@@ -1,7 +1,17 @@
 'use client';
 
+import { Admin, CompanyOwner, School, SchoolOwner, Student, User } from '@prisma/client';
+import { Pencil, Search } from 'lucide-react';
+
+import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { userService, UserType } from '@/services/user.service';
+import { Suspense } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Select,
   SelectContent,
@@ -9,15 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Search, Pencil } from 'lucide-react';
-import { Pagination } from '@/components/ui/pagination';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Admin, CompanyOwner, School, SchoolOwner, Student, User } from '@prisma/client';
-import { Suspense } from 'react';
+
+import { userService, UserType } from '@/services/user.service';
 
 type AppUser = User & {
   admin: Admin | null;
@@ -149,9 +152,9 @@ const UsersList = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Utilisateurs</h1>
+      <h1 className="mb-6 text-2xl font-bold">Gestion des Utilisateurs</h1>
 
-      <div className="flex justify-between items-center gap-4 mb-6">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <Select value={userType} onValueChange={handleTypeChange}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Type d'utilisateur" />
@@ -181,8 +184,8 @@ const UsersList = () => {
           </Select>
         )}
 
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           <Input
             type="text"
             placeholder="Rechercher un utilisateur..."
@@ -193,29 +196,28 @@ const UsersList = () => {
         </div>
       </div>
 
-      {/* Table des utilisateurs */}
-      <div className="border rounded-lg">
+      <div className="rounded-lg border">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+              <th className="w-16 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Photo
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Nom
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {isLoading ? (
               <tr>
                 <td colSpan={5} className="px-6 py-4 text-center">
@@ -231,8 +233,8 @@ const UsersList = () => {
             ) : (
               users.map((user) => (
                 <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
                       {user.profilePicture ? (
                         <Image
                           src={user.profilePicture}
@@ -242,20 +244,20 @@ const UsersList = () => {
                           className="rounded-full object-cover"
                         />
                       ) : (
-                        <span className="text-gray-500 text-lg font-semibold">
+                        <span className="text-lg font-semibold text-gray-500">
                           {user.firstName?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">
                     {user.firstName} {user.lastName}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">{user.email}</td>
+                  <td className="whitespace-nowrap px-6 py-4">
                     <Badge variant={getUserBadgeVariant(user)}>{getUserType(user)}</Badge>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-6 py-4">
                     <Button variant="ghost" size="sm">
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -267,7 +269,6 @@ const UsersList = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="mt-6 flex justify-center">
         <Pagination
           currentPage={currentPage}

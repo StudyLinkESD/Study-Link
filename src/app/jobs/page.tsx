@@ -1,5 +1,6 @@
 import JobsList from '@/components/app/jobs/JobsList';
 import JobView from '@/components/app/jobs/JobView';
+
 import { JobProvider } from '@/context/job.context';
 
 const exampleJobs = [
@@ -33,7 +34,7 @@ const exampleJobs = [
 export default function JobsPage() {
   return (
     <JobProvider>
-      <main className="flex flex-row items-start justify-start w-full flex-1 px-20">
+      <main className="flex w-full flex-1 flex-row items-start justify-start px-20">
         <JobsList jobs={exampleJobs} title="Découvrez nos offres" />
         <JobView />
       </main>

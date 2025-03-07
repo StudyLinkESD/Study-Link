@@ -53,7 +53,7 @@ export interface UserByIdResponseDTO {
     primaryRecommendationId?: string | null;
     status: string;
     skills: string;
-    apprenticeshipRythm?: string | null;
+    apprenticeshipRhythm?: string | null;
     description: string;
     curriculumVitae?: string | null;
     previousCompanies: string;
