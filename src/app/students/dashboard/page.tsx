@@ -1,5 +1,6 @@
 'use client';
 
+import axios from 'axios';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CheckCircle, Clock, ExternalLink, Loader2, Trash2, XCircle } from 'lucide-react';
@@ -81,11 +82,9 @@ function StudentDashboardPageComponent() {
     if (!applicationToDelete) return;
 
     try {
-      const response = await fetch(`/api/job-requests/${applicationToDelete}`, {
-        method: 'DELETE',
-      });
+      const response = await axios.delete(`/api/job-requests/${applicationToDelete}`);
 
-      if (!response.ok) throw new Error('Failed to delete application');
+      if (response.status >= 400) throw new Error('Failed to delete application');
 
       setApplications(applications.filter((app) => app.id !== applicationToDelete));
       toast.success('Candidature supprimée avec succès');

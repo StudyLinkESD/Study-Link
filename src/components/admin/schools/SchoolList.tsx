@@ -1,13 +1,16 @@
 'use client';
 
 import { AuthorizedSchoolDomain } from '@prisma/client';
+import { Search, Users } from 'lucide-react';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Pagination } from '@/components/ui/pagination';
 import {
   Select,
   SelectContent,
@@ -35,12 +38,17 @@ interface SchoolListProps {
   onEditEnd: () => void;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
   const [schools, setSchools] = useState<SchoolWithDomain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [error, setError] = useState<string | null>(null);
   const [editingSchool, setEditingSchool] = useState<SchoolWithDomain | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filteredSchools, setFilteredSchools] = useState<SchoolWithDomain[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchSchools = async (filter: string) => {
     try {
@@ -49,6 +57,7 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setSchools(data);
+      setFilteredSchools(data);
       setError(null);
     } catch (error) {
       console.error('Erreur lors de la récupération des écoles:', error);
@@ -65,6 +74,25 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
   useEffect(() => {
     fetchSchools(activeFilter);
   }, [activeFilter]);
+
+  useEffect(() => {
+    const filtered = schools.filter((school) => {
+      const matchesFilter =
+        activeFilter === 'all'
+          ? true
+          : activeFilter === 'active'
+            ? school.isActive
+            : !school.isActive;
+      const matchesSearch =
+        searchTerm === ''
+          ? true
+          : school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            school.domain.domain.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+    setFilteredSchools(filtered);
+    setCurrentPage(1);
+  }, [schools, activeFilter, searchTerm]);
 
   const handleEditSuccess = () => {
     setEditingSchool(null);
@@ -108,9 +136,14 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
     );
   }
 
+  const displayedSchools = filteredSchools.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <Select value={activeFilter} onValueChange={setActiveFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrer par statut" />
@@ -121,54 +154,125 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
             <SelectItem value="inactive">Écoles inactives</SelectItem>
           </SelectContent>
         </Select>
+
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Rechercher une école..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
-      <div className="grid gap-4">
-        {schools.map((school) => (
-          <Card key={school.id} className="overflow-hidden py-0">
-            <div className="flex items-stretch">
-              <div className="flex w-20 items-center justify-center border-r bg-gray-50 p-3">
-                {school.logo ? (
-                  <Image
-                    src={school.logo}
-                    alt={school.name}
-                    className="max-h-full max-w-full object-contain"
-                    width={80}
-                    height={80}
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-400">
-                    {school.name.charAt(0)}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-grow items-center justify-between px-6 py-2">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{school.name}</h3>
-                    <p className="text-sm text-gray-500">{school.domain.domain}</p>
-                  </div>
-                  <Badge variant={school.isActive ? 'success' : 'destructive'} className="ml-2">
-                    {school.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setEditingSchool(school)}>
-                    Modifier
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-        {schools.length === 0 && (
-          <Card className="p-6">
-            <p className="text-center text-gray-500">Aucune école trouvée</p>
-          </Card>
-        )}
+      <div className="rounded-lg border">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="w-16 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Logo
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Nom
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Domaine
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Statut
+              </th>
+              <th className="w-[340px] px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {isLoading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center">
+                  Chargement...
+                </td>
+              </tr>
+            ) : displayedSchools.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center">
+                  Aucune école trouvée
+                </td>
+              </tr>
+            ) : (
+              displayedSchools.map((school) => (
+                <tr key={school.id}>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+                      {school.logo ? (
+                        <Image
+                          src={school.logo}
+                          alt={school.name}
+                          width={40}
+                          height={40}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg font-semibold text-gray-500">
+                          {school.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">{school.name}</div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <div className="text-sm text-gray-500">{school.domain.domain}</div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4">
+                    <Badge variant={school.isActive ? 'success' : 'destructive'}>
+                      {school.isActive ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/admin/users?type=student&school=${school.id}`}
+                          className="flex items-center"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Étudiants
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/admin/users?type=school_owner&school=${school.id}`}
+                          className="flex items-center"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Administrateurs
+                        </Link>
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingSchool(school)}>
+                        Modifier
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
+      {filteredSchools.length > 0 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredSchools.length / ITEMS_PER_PAGE)}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
 }

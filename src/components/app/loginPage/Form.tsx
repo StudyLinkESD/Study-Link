@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
 import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -37,18 +38,18 @@ const AuthForm = () => {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/auth/authenticate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        '/api/auth/authenticate',
+        { email: data.email },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-        body: JSON.stringify({ email: data.email }),
-      });
+      );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        toast.error(result.error || 'Une erreur est survenue');
+      if (response.status >= 400) {
+        toast.error(response.data.error || 'Une erreur est survenue');
         return;
       }
 
