@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 type ImageCropperProps = {
   image: File | string;
@@ -123,14 +122,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                 size === 'lg' && 'w-24 h-24',
               )}
             >
-              <Image
-                src={url}
-                alt={`Aperçu ${size}`}
-                className="w-full h-full object-cover"
-                width={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
-                height={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
-                priority
-              />
+              <img src={url} alt={`Aperçu ${size}`} className="w-full h-full object-cover" />
             </Avatar>
           </div>
         ))}

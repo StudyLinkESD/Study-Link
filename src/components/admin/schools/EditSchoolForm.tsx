@@ -106,7 +106,7 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
 
     try {
       const response = await fetch(`/api/schools/${school.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
@@ -114,20 +114,35 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
         }),
       });
 
-      const data = await response.json();
+      // Vérifier d'abord si la réponse a du contenu
+      const text = await response.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        console.error('Erreur de parsing JSON:', e);
+        throw new Error("Une erreur est survenue lors de la modification de l'école.");
+      }
 
       if (!response.ok) {
         if (data.details) {
           setFormErrors(data.details);
           return;
         }
-        throw new Error("Une erreur est survenue lors de la modification de l'école.");
+        throw new Error(
+          data.error || "Une erreur est survenue lors de la modification de l'école.",
+        );
       }
 
       onSuccess();
     } catch (error) {
       console.error('Erreur:', error);
-      setFormErrors({ name: "Une erreur est survenue lors de la modification de l'école" });
+      setFormErrors({
+        name:
+          error instanceof Error
+            ? error.message
+            : "Une erreur est survenue lors de la modification de l'école",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -178,7 +178,7 @@ export default function JobApplicationsList({
 
     return result;
   }, [statusFilter, searchTerm, applications]);
-  
+
   const currentApplications = useMemo(() => {
     const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
     const indexOfFirstItem = indexOfLastItem - APPLICATIONS_PER_PAGE;
