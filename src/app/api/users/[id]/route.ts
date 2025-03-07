@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { User } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { UpdateUserDTO, UserByIdResponseDTO, UserResponseDTO } from '@/dto/user.dto';
+import { validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
+
+const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
@@ -10,7 +13,49 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+      include: {
+        student: {
+          include: {
+            school: true,
+            jobRequests: {
+              where: { deletedAt: null },
+              include: {
+                job: {
+                  include: {
+                    company: true,
+                  },
+                },
+              },
+            },
+            recommendations: true,
+          },
+        },
+        schoolOwner: {
+          include: {
+            school: {
+              include: {
+                domain: true,
+              },
+            },
+          },
+        },
+        companyOwner: {
+          include: {
+            company: {
+              include: {
+                jobs: {
+                  where: { deletedAt: null },
+                },
+              },
+            },
+          },
+        },
+        admin: true,
+      },
     });
 
     if (!user) {
@@ -20,8 +65,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(user);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
-      { error: "Une erreur est survenue lors de la récupération de l'utilisateur" },
+      { error: "Erreur lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
@@ -42,6 +88,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
         ...(body.email && { email: body.email.toLowerCase() }),
         ...(body.firstName && { firstName: body.firstName }),
         ...(body.lastName && { lastName: body.lastName }),
+        ...(body.firstName && { firstName: body.firstName }),
+        ...(body.lastName && { lastName: body.lastName }),
         ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
       },
     });
@@ -49,7 +97,9 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(updatedUser);
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
+      { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { status: 500 },
     );
