@@ -1,7 +1,21 @@
 // src/services/student.service.ts
 import { StudentResponseDTO, CreateStudentDTO, UpdateStudentDTO } from '@/dto/student.dto';
 import { prisma } from '@/lib/prisma';
-import axios from 'axios';
+import { apiService } from './api.service';
+
+// Types pour les réponses API
+interface UserResponse {
+  id: string;
+  email: string;
+  firstname: string | null;
+  lastname: string | null;
+  profilePicture?: string | null;
+}
+
+interface SchoolResponse {
+  id: string;
+  name: string;
+}
 
 // Fonction utilitaire pour obtenir l'URL de base
 function getBaseUrl() {
@@ -74,26 +88,26 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
     }
 
     // En développement, utiliser l'API
-    const students = await serverFetch('/students');
-    console.log('Raw students data:', students);
+    const response = await apiService.get<StudentResponseDTO[]>('/students');
+    console.log('Raw students data:', response.data);
 
-    if (!Array.isArray(students)) {
+    if (!Array.isArray(response.data)) {
       throw new Error('Students data is not an array');
     }
 
     // Récupérer les informations utilisateur pour chaque étudiant
     const studentsWithUserInfo = await Promise.all(
-      students.map(async (student) => {
+      response.data.map(async (student) => {
         try {
           // Récupérer les informations de l'utilisateur
-          const userData = await serverFetch(`/users/${student.userId}`);
+          const userData = await apiService.get<UserResponse>(`/users/${student.userId}`);
           // Récupérer les informations de l'école
-          const schoolData = await serverFetch(`/schools/${student.schoolId}`);
+          const schoolData = await apiService.get<SchoolResponse>(`/schools/${student.schoolId}`);
 
           return {
             ...student,
-            user: userData,
-            school: schoolData,
+            user: userData.data,
+            school: schoolData.data,
           };
         } catch (error) {
           console.error(`Error fetching user/school data for student ${student.id}:`, error);
@@ -112,18 +126,18 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
 export async function getStudentById(id: string): Promise<StudentResponseDTO | null> {
   try {
     console.log('Fetching student with ID:', id);
-    const student = await serverFetch(`/students/${id}`);
+    const response = await apiService.get<StudentResponseDTO>(`/students/${id}`);
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
+      apiService.get<UserResponse>(`/users/${response.data.userId}`),
+      apiService.get<SchoolResponse>(`/schools/${response.data.schoolId}`),
     ]);
 
     return {
-      ...student,
-      user: userData,
-      school: schoolData,
+      ...response.data,
+      user: userData.data,
+      school: schoolData.data,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
@@ -137,18 +151,18 @@ export async function getStudentById(id: string): Promise<StudentResponseDTO | n
 
 export async function getStudentByUserId(userId: string): Promise<StudentResponseDTO | null> {
   try {
-    const student = await serverFetch(`/students/user/${userId}`);
+    const response = await apiService.get<StudentResponseDTO>(`/students/user/${userId}`);
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
+      apiService.get<UserResponse>(`/users/${response.data.userId}`),
+      apiService.get<SchoolResponse>(`/schools/${response.data.schoolId}`),
     ]);
 
     return {
-      ...student,
-      user: userData,
-      school: schoolData,
+      ...response.data,
+      user: userData.data,
+      school: schoolData.data,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
@@ -161,21 +175,18 @@ export async function getStudentByUserId(userId: string): Promise<StudentRespons
 
 export async function createStudent(data: CreateStudentDTO): Promise<StudentResponseDTO> {
   try {
-    const student = await serverFetch('/students', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    const response = await apiService.post<StudentResponseDTO, CreateStudentDTO>('/students', data);
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
+      apiService.get<UserResponse>(`/users/${response.data.userId}`),
+      apiService.get<SchoolResponse>(`/schools/${response.data.schoolId}`),
     ]);
 
     return {
-      ...student,
-      user: userData,
-      school: schoolData,
+      ...response.data,
+      user: userData.data,
+      school: schoolData.data,
     };
   } catch (error) {
     console.error('Failed to create student:', error);
@@ -188,21 +199,21 @@ export async function updateStudent(
   data: UpdateStudentDTO,
 ): Promise<StudentResponseDTO> {
   try {
-    const student = await serverFetch(`/students/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    const response = await apiService.put<StudentResponseDTO, UpdateStudentDTO>(
+      `/students/${id}`,
+      data,
+    );
 
     // Récupérer les informations de l'utilisateur et de l'école
     const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
+      apiService.get<UserResponse>(`/users/${response.data.userId}`),
+      apiService.get<SchoolResponse>(`/schools/${response.data.schoolId}`),
     ]);
 
     return {
-      ...student,
-      user: userData,
-      school: schoolData,
+      ...response.data,
+      user: userData.data,
+      school: schoolData.data,
     };
   } catch (error) {
     if (error instanceof Error) {

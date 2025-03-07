@@ -39,8 +39,8 @@ interface CreateSchoolDTO {
   domainId: string;
   logo?: string | null;
   owner: {
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
     email: string;
   };
 }
@@ -64,7 +64,7 @@ export async function POST(
 
     const existingDomain = await prisma.authorizedSchoolDomain.findUnique({
       where: { id: body.domainId },
-      });
+    });
 
     if (!existingDomain) {
       return NextResponse.json({ error: "Le domaine spécifié n'existe pas" }, { status: 400 });
@@ -74,8 +74,8 @@ export async function POST(
       const user = await tx.user.create({
         data: {
           email: body.owner.email,
-          firstname: body.owner.firstName,
-          lastname: body.owner.lastName,
+          firstName: body.owner.firstName,
+          lastName: body.owner.lastName,
         },
       });
 
@@ -99,7 +99,7 @@ export async function POST(
 
     return NextResponse.json({ id: result.id });
   } catch (error) {
-    console.error('Erreur lors de la création de l\'école:', error);
-    return NextResponse.json({ error: 'Erreur lors de la création de l\'école' }, { status: 500 });
+    console.error("Erreur lors de la création de l'école:", error);
+    return NextResponse.json({ error: "Erreur lors de la création de l'école" }, { status: 500 });
   }
 }

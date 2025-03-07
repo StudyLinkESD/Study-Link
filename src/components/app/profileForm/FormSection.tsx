@@ -1,4 +1,3 @@
-// FormSection.tsx
 import { ReactNode } from 'react';
 import { LucideIcon } from 'lucide-react';
 import SectionCard from '@/components/app/common/SectionCard';

@@ -7,7 +7,6 @@ export default function PublicLayout({
 }>) {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header simplifié pour les pages publiques */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold">
@@ -25,10 +24,8 @@ export default function PublicLayout({
         </div>
       </header>
 
-      {/* Contenu principal */}
       <main className="flex-grow">{children}</main>
 
-      {/* Footer simplifié */}
       <footer className="border-t py-6">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">

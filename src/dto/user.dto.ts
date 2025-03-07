@@ -2,8 +2,8 @@ export type UserType = 'student' | 'company-owner';
 
 export interface BaseCreateUserDTO {
   email: string;
-  firstname?: string | null;
-  lastname?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
   type: UserType;
   profilePicture?: string | null;
 }
@@ -23,16 +23,16 @@ export type CreateUserDTO = CreateStudentUserDTO | CreateCompanyOwnerUserDTO;
 
 export interface UpdateUserDTO {
   email: string;
-  firstname?: string;
-  lastname?: string;
+  firstName?: string;
+  lastName?: string;
   profilePicture?: string | null;
 }
 
 export interface UserResponseDTO {
   id: string;
   email: string;
-  firstname: string | null;
-  lastname: string | null;
+  firstName: string | null;
+  lastName: string | null;
   profilePicture?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -41,9 +41,9 @@ export interface UserResponseDTO {
 export interface UserByIdResponseDTO {
   id: string;
   email: string;
-  firstname: string;
-  lastname: string;
-  profilePictureId?: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profilePicture?: string | null;
   createdAt: Date;
   updatedAt: Date;
   student?: {
@@ -55,22 +55,18 @@ export interface UserByIdResponseDTO {
     skills: string;
     apprenticeshipRythm?: string | null;
     description: string;
-    curriculumVitaeId?: string | null;
+    curriculumVitae?: string | null;
     previousCompanies: string;
     availability: boolean;
     school: {
       id: string;
       name: string;
       domainId: string;
-      logoId?: string | null;
+      logo?: string | null;
       createdAt: Date;
       updatedAt: Date;
       deletedAt?: Date | null;
     };
-    curriculumVitae: {
-      uuid: string;
-      fileUrl: string;
-    } | null;
     jobRequests: Array<{
       id: string;
       studentId: string;
@@ -88,15 +84,9 @@ export interface UserByIdResponseDTO {
         company: {
           id: string;
           name: string;
-          logo: {
-            uuid: string;
-            fileUrl: string;
-          } | null;
+          logo: string | null;
         };
-        featuredImage: {
-          uuid: string;
-          fileUrl: string;
-        } | null;
+        featuredImage: string | null;
       };
     }>;
     recommendations: Array<{
@@ -119,10 +109,7 @@ export interface UserByIdResponseDTO {
         id: string;
         domain: string;
       };
-      logo: {
-        uuid: string;
-        fileUrl: string;
-      } | null;
+      logo: string | null;
     };
   } | null;
   companyOwner?: {
@@ -132,10 +119,7 @@ export interface UserByIdResponseDTO {
     company: {
       id: string;
       name: string;
-      logo: {
-        uuid: string;
-        fileUrl: string;
-      } | null;
+      logo: string | null;
       jobs: Array<{
         id: string;
         name: string;
@@ -149,9 +133,5 @@ export interface UserByIdResponseDTO {
   admin?: {
     id: string;
     userId: string;
-  } | null;
-  profilePicture: {
-    uuid: string;
-    fileUrl: string;
   } | null;
 }

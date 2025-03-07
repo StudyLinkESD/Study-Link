@@ -2,16 +2,16 @@ import { Timestamps } from './timestamps.type';
 
 interface IUser extends Timestamps {
   id: string;
-  firstname: string | null;
-  lastname: string | null;
+  firstName: string | null;
+  lastName: string | null;
   email: string;
   profile_picture: string;
   email_verified: string;
 }
 
 interface IUserDTO {
-  firstname: string | null;
-  lastname: string | null;
+  firstName: string | null;
+  lastName: string | null;
   email: string;
   profile_picture: string;
 }

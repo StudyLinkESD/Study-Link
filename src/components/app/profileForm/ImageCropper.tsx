@@ -1,10 +1,10 @@
-// ImageCropper.tsx
 import React, { useState, useRef } from 'react';
 import AvatarEditor from 'react-avatar-editor';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 type ImageCropperProps = {
   image: File | string;
@@ -30,23 +30,20 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   const [previewUrls, setPreviewUrls] = useState<{ [key: string]: string }>({});
   const editorRef = useRef<AvatarEditor | null>(null);
 
-  // Calcul automatique du borderRadius si l'image doit être circulaire
   const effectiveBorderRadius = isCircular ? width / 2 : borderRadius || 0;
 
-  // Générer les prévisualisations
   const updatePreviews = () => {
     if (editorRef.current) {
       const canvas = editorRef.current.getImageScaledToCanvas();
-      
-      // Créer différentes tailles de prévisualisation
+
       const sizes = {
-        sm: 40, // Taille miniature (comme dans les commentaires)
-        md: 64, // Taille moyenne (comme dans la barre de navigation)
-        lg: 96, // Grande taille (comme dans le profil)
+        sm: 40,
+        md: 64,
+        lg: 96,
       };
 
       const newPreviewUrls: { [key: string]: string } = {};
-      
+
       Object.entries(sizes).forEach(([size, dimension]) => {
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = dimension;
@@ -90,13 +87,11 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       </div>
 
       <div className="relative">
-        {/* Guide de positionnement */}
         <div className="absolute inset-0 z-10 pointer-events-none">
           <div className="w-full h-full border-2 border-dashed border-primary/20 rounded-full" />
           <div className="absolute inset-1/4 border-2 border-dashed border-primary/20 rounded-full" />
         </div>
 
-        {/* Éditeur principal */}
         <div className="border rounded-lg overflow-hidden">
           <AvatarEditor
             ref={editorRef}
@@ -115,23 +110,26 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         </div>
       </div>
 
-      {/* Prévisualisations */}
       <div className="flex gap-8 items-end">
         {Object.entries(previewUrls).map(([size, url]) => (
           <div key={size} className="text-center">
             <p className="text-xs text-muted-foreground mb-2">
               {size === 'sm' ? 'Miniature' : size === 'md' ? 'Navigation' : 'Profil'}
             </p>
-            <Avatar className={cn(
-              size === 'sm' && 'w-10 h-10',
-              size === 'md' && 'w-16 h-16',
-              size === 'lg' && 'w-24 h-24'
-            )}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={url} 
-                alt={`Aperçu ${size}`} 
+            <Avatar
+              className={cn(
+                size === 'sm' && 'w-10 h-10',
+                size === 'md' && 'w-16 h-16',
+                size === 'lg' && 'w-24 h-24',
+              )}
+            >
+              <Image
+                src={url}
+                alt={`Aperçu ${size}`}
                 className="w-full h-full object-cover"
+                width={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
+                height={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
+                priority
               />
             </Avatar>
           </div>

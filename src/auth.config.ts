@@ -1,10 +1,8 @@
 import { NextAuthConfig } from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
 import Resend from 'next-auth/providers/resend';
 import Google from 'next-auth/providers/google';
 import AuthenticateEmail from './emails/authenticate';
 import { render } from '@react-email/render';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import axios from 'axios';
 
@@ -41,7 +39,7 @@ export default {
           const emailHtml = await render(
             AuthenticateEmail({
               url: modifiedUrl,
-              firstname: user?.firstname || undefined,
+              firstName: user?.firstname || undefined,
             }),
           );
 

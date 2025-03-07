@@ -53,7 +53,6 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
       return;
     }
 
-    // Validation stricte du type de fichier
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
     if (!allowedTypes.includes(file.type)) {

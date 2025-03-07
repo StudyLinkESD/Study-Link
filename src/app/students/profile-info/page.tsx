@@ -31,36 +31,45 @@ import NavigationButtons from '@/components/app/profileForm/NavigationButton';
 import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
-  firstName: z.string()
+  firstName: z
+    .string()
     .min(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
     .max(50, { message: 'Le prénom ne doit pas dépasser 50 caractères' })
-    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le prénom ne doit contenir que des lettres, espaces et tirets' }),
-  lastName: z.string()
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, {
+      message: 'Le prénom ne doit contenir que des lettres, espaces et tirets',
+    }),
+  lastName: z
+    .string()
     .min(2, { message: 'Le nom doit contenir au moins 2 caractères' })
     .max(50, { message: 'Le nom ne doit pas dépasser 50 caractères' })
-    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, { message: 'Le nom ne doit contenir que des lettres, espaces et tirets' }),
+    .regex(/^[a-zA-ZÀ-ÿ\s-]+$/, {
+      message: 'Le nom ne doit contenir que des lettres, espaces et tirets',
+    }),
   status: z.enum(['Alternant', 'Stagiaire'], {
     required_error: 'Veuillez sélectionner votre statut',
   }),
-  school: z.string()
-    .min(1, { message: 'Veuillez sélectionner votre école' }),
-  availability: z.string()
+  school: z.string().min(1, { message: 'Veuillez sélectionner votre école' }),
+  availability: z
+    .string()
     .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, {
       message: 'Format attendu : MM/YYYY (ex: 09/2024)',
     })
     .optional()
     .or(z.literal('')),
-  alternanceRhythm: z.string()
-    .min(5, { message: 'Veuillez décrire votre rythme d\'alternance' })
+  alternanceRhythm: z
+    .string()
+    .min(5, { message: "Veuillez décrire votre rythme d'alternance" })
     .max(100, { message: 'La description du rythme est trop longue' })
     .optional()
     .or(z.literal('')),
-  description: z.string()
+  description: z
+    .string()
     .min(100, { message: 'La description doit contenir au moins 100 caractères' })
     .max(500, { message: 'La description ne doit pas dépasser 500 caractères' })
     .optional()
     .or(z.literal('')),
-  skills: z.array(z.string())
+  skills: z
+    .array(z.string())
     .min(3, { message: 'Veuillez sélectionner au moins 3 compétences' })
     .max(10, { message: 'Vous ne pouvez pas sélectionner plus de 10 compétences' }),
 });
@@ -149,7 +158,7 @@ export default function StudentProfileForm() {
 
       return await response.json();
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'étudiant:', error);
+      console.error("Erreur lors de la récupération de l'étudiant:", error);
       return null;
     }
   };
@@ -189,13 +198,11 @@ export default function StudentProfileForm() {
   };
 
   useEffect(() => {
-    // Rediriger si non connecté
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
     }
 
-    // Charger les écoles depuis l'API
     const fetchSchools = async () => {
       try {
         const response = await fetch('/api/schools');
@@ -215,7 +222,6 @@ export default function StudentProfileForm() {
 
     fetchSchools();
 
-    // Charger les données du profil si l'utilisateur est connecté
     if (status === 'authenticated' && session?.user?.id) {
       const loadStudentProfile = async () => {
         try {
@@ -224,7 +230,6 @@ export default function StudentProfileForm() {
           if (studentData) {
             setStudentId(studentData.id);
 
-            // Précharger les valeurs du formulaire avec les données de l'utilisateur et de l'étudiant
             reset({
               firstName: session.user.name?.split(' ')[0] || '',
               lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
@@ -236,20 +241,16 @@ export default function StudentProfileForm() {
               skills: studentData.skills.split(',').map((s: string) => s.trim()),
             });
 
-            // Charger la photo de profil si disponible
             if (session.user.image) {
               setPhotoUrl(session.user.image);
-            } else if (studentData.user?.profilePictureId) {
-              setPhotoUrl(`/api/files/${studentData.user.profilePictureId}`);
+            } else if (studentData.user?.profilePicture) {
+              setPhotoUrl(`/api/files/${studentData.user.profilePicture}`);
             }
 
-            // Charger le CV si disponible
             if (studentData.curriculumVitaeId) {
-              // Nous ne chargeons pas vraiment le fichier ici, juste l'URL
               console.log('CV déjà chargé:', studentData.curriculumVitaeId);
             }
           } else {
-            // Si l'étudiant n'existe pas encore, on initialise avec les infos de la session
             if (session.user.name) {
               const names = session.user.name.split(' ');
               reset({
@@ -288,13 +289,9 @@ export default function StudentProfileForm() {
     }
   };
 
-  const handleCvUpload = (file: File | null, url?: string) => {
+  const handleCvUpload = (file: File | null) => {
     if (file) {
       setUploadedCv(file);
-      // Vous pourriez également stocker l'URL du CV si nécessaire
-      if (url) {
-        // Stocker l'URL du CV dans votre état de formulaire si besoin
-      }
     }
   };
 
@@ -305,7 +302,6 @@ export default function StudentProfileForm() {
     }
 
     try {
-      // Mise à jour des informations utilisateur si nécessaire
       if (data.firstName || data.lastName) {
         try {
           await fetch(`/api/users/${session.user.id}`, {
@@ -314,14 +310,12 @@ export default function StudentProfileForm() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              firstname: data.firstName,
-              lastname: data.lastName,
-              // Si vous avez uploadé une photo de profil, vous devriez envoyer son ID ici
+              firstName: data.firstName,
+              lastName: data.lastName,
             }),
           });
         } catch (error) {
-          console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
-          // Continuer malgré l'erreur
+          console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
         }
       }
 
@@ -332,28 +326,25 @@ export default function StudentProfileForm() {
         skills: data.skills.join(', '),
         apprenticeshipRythm: data.alternanceRhythm || null,
         description: data.description || '',
-        curriculumVitaeId: uploadedCv ? uploadedCv.name : null, // Idéalement, l'ID du fichier après upload
-        previousCompanies: '', // Vous pourriez ajouter ce champ au formulaire
+        curriculumVitaeId: uploadedCv ? uploadedCv.name : null,
+        previousCompanies: '',
         availability: !!data.availability,
       };
 
       if (studentId) {
-        // Mise à jour d'un profil existant
         await updateStudent(studentId, studentData);
         toast.success('Profil mis à jour avec succès');
       } else {
-        // Création d'un nouveau profil
         const newStudent = await createStudent(studentData);
         setStudentId(newStudent.id);
         toast.success('Profil créé avec succès');
       }
 
-      // Rediriger vers la page du profil étudiant
       router.push(`/students/${studentId || 'profile'}`);
     } catch (error) {
       console.error('Erreur lors de la soumission du profil:', error);
       toast.error(
-        error instanceof Error ? error.message : 'Erreur lors de l\'enregistrement du profil',
+        error instanceof Error ? error.message : "Erreur lors de l'enregistrement du profil",
       );
     }
   };
@@ -381,7 +372,7 @@ export default function StudentProfileForm() {
         required: true,
       },
       {
-        name: 'Rythme d\'alternance',
+        name: "Rythme d'alternance",
         completed: !!formValues.alternanceRhythm,
         required: formValues.status === 'Alternant',
       },

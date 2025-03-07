@@ -9,45 +9,11 @@ import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import {
-  ApplicationStatus,
-  getStatusLabel,
-  getStatusVariant,
-} from '@/utils/students/dashboard/status-mapping.utils';
+import { getStatusLabel, getStatusVariant } from '@/utils/students/dashboard/status-mapping.utils';
+import { JobApplicationFull } from '@/types/application_status.type';
 
 type JobApplicationCardProps = {
-  application: {
-    id: string;
-    studentId: string;
-    jobId: string;
-    status: ApplicationStatus | string;
-    createdAt: string;
-    updatedAt: string;
-    student: {
-      id: string;
-      userId: string;
-      user: {
-        id: string; // Added
-        createdAt: Date; // Added
-        updatedAt: Date; // Added
-        deletedAt: Date | null; // Added
-        email: string; // Added
-        firstname: string;
-        lastname: string;
-        profilePictureId: string | null;
-        emailVerified: Date | null; // Added
-      };
-    };
-    job: {
-      id: string;
-      name: string;
-      companyId: string;
-      company: {
-        name: string;
-        logoId: string | null;
-      };
-    };
-  };
+  application: JobApplicationFull;
   onDeleteClick: () => void;
 };
 
@@ -57,7 +23,7 @@ export default function JobApplicationCard({
 }: JobApplicationCardProps) {
   const { setSelectedApplication, selectedApplication } = useJobApplication();
   const { student, job, status, createdAt } = application;
-  const { firstname, lastname } = student.user;
+  const { firstName, lastName } = student.user;
 
   const handleClick = () => {
     setSelectedApplication(application);
@@ -80,14 +46,14 @@ export default function JobApplicationCard({
         <div className="flex justify-between">
           <div className="flex items-center gap-3">
             <ProfileAvatar
-              firstName={firstname}
-              lastName={lastname}
+              firstName={firstName}
+              lastName={lastName}
               photoUrl=""
               size="sm"
               className="border border-gray-200 dark:border-gray-700"
             />
             <div>
-              <h3 className="text-base font-medium">{`${firstname} ${lastname}`}</h3>
+              <h3 className="text-base font-medium">{`${firstName} ${lastName}`}</h3>
               <p className="text-sm text-muted-foreground">{job.name}</p>
             </div>
           </div>

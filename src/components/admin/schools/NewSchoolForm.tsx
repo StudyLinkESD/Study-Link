@@ -40,8 +40,8 @@ interface CreateSchoolPayload {
   school: SchoolCreate;
   domain: string;
   owner: {
-    firstName: string;
-    lastName: string;
+    firstName: string | null;
+    lastName: string | null;
     email: string;
   };
 }

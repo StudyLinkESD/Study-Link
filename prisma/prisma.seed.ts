@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -31,11 +31,7 @@ async function main() {
     const school = await prisma.school.create({
       data: {
         name: 'École Test',
-        domain: {
-          connect: {
-            id: schoolDomain.id,
-          },
-        },
+        domainId: schoolDomain.id,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
@@ -46,7 +42,7 @@ async function main() {
     const company = await prisma.company.create({
       data: {
         name: 'Entreprise Test',
-        // siret: '12345678901234', // TODO: Add siret
+        // siret: '12345678901234', TO DO: Add siret
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
@@ -54,11 +50,11 @@ async function main() {
     });
 
     console.log("👨‍💼Création de l'administrateur...");
-    const adminUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'admin@test.com',
-        firstname: 'Admin',
-        lastname: 'Test',
+        firstName: 'Admin',
+        lastName: 'Test',
         emailVerified: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -70,11 +66,11 @@ async function main() {
     });
 
     console.log("👨‍🏫Création du propriétaire de l'école...");
-    const schoolOwnerUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'school-owner@ecole-test.fr',
-        firstname: 'Directeur',
-        lastname: 'École',
+        firstName: 'Directeur',
+        lastName: 'École',
         emailVerified: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -92,11 +88,11 @@ async function main() {
     });
 
     console.log("👨‍💼Création du propriétaire de l'entreprise...");
-    const companyOwnerUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'company-owner@entreprise-test.fr',
-        firstname: 'Manager',
-        lastname: 'Entreprise',
+        firstName: 'Manager',
+        lastName: 'Entreprise',
         emailVerified: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -117,8 +113,8 @@ async function main() {
     const studentUser = await prisma.user.create({
       data: {
         email: 'student@test.com',
-        firstname: 'Étudiant',
-        lastname: 'Test',
+        firstName: 'Étudiant',
+        lastName: 'Test',
         emailVerified: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -131,7 +127,7 @@ async function main() {
       data: {
         userId: studentUser.id,
         schoolId: school.id,
-        studentEmail: 'student@ecole-test.fr',
+        studentEmail: 'student@ecole-test.com',
         status: 'ACTIVE',
         skills: 'JavaScript, React, Node.js, TypeScript, Next.js, TailwindCSS, PostgreSQL',
         apprenticeshipRythm: '3 semaines entreprise / 1 semaine école',
@@ -146,11 +142,7 @@ async function main() {
     console.log("💼 Création d'une offre d'emploi...");
     const job = await prisma.job.create({
       data: {
-        company: {
-          connect: {
-            id: company.id,
-          },
-        },
+        companyId: company.id,
         name: 'Développeur Full Stack Next.js',
         description:
           "Nous recherchons un développeur full stack passionné pour un contrat d'alternance de 12 mois. Vous travaillerez sur des projets innovants utilisant les dernières technologies web.",
@@ -164,16 +156,8 @@ async function main() {
     console.log("📨 Création d'une demande d'emploi...");
     await prisma.jobRequest.create({
       data: {
-        student: {
-          connect: {
-            id: student.id,
-          },
-        },
-        job: {
-          connect: {
-            id: job.id,
-          },
-        },
+        studentId: student.id,
+        jobId: job.id,
         status: 'PENDING',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -184,16 +168,8 @@ async function main() {
     console.log("👍 Création d'une recommandation...");
     const recommendation = await prisma.recommendation.create({
       data: {
-        student: {
-          connect: {
-            id: student.id,
-          },
-        },
-        company: {
-          connect: {
-            id: company.id,
-          },
-        },
+        studentId: student.id,
+        companyId: company.id,
         recommendation:
           "Excellent stagiaire, très motivé et compétent. A fait preuve d'une grande autonomie et d'une excellente capacité d'apprentissage. Maîtrise parfaitement les technologies front-end et back-end. A su s'intégrer rapidement dans l'équipe et proposer des solutions innovantes.",
       },
@@ -204,7 +180,7 @@ async function main() {
       data: {
         identifier: studentUser.email,
         token: 'verification_token_123',
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expire dans 24h
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
