@@ -1,9 +1,7 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { UpdateUserDTO, UserByIdResponseDTO, UserResponseDTO } from '@/dto/user.dto';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
 import { validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
-
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
@@ -11,49 +9,7 @@ export async function GET(
 ): Promise<NextResponse<UserResponseDTO | { error: string }>> {
   try {
     const user = await prisma.user.findUnique({
-      where: {
-        id: id,
-        deletedAt: null,
-      },
-      include: {
-        student: {
-          include: {
-            school: true,
-            jobRequests: {
-              where: { deletedAt: null },
-              include: {
-                job: {
-                  include: {
-                    company: true,
-                  },
-                },
-              },
-            },
-            recommendations: true,
-          },
-        },
-        schoolOwner: {
-          include: {
-            school: {
-              include: {
-                domain: true,
-              },
-            },
-          },
-        },
-        companyOwner: {
-          include: {
-            company: {
-              include: {
-                jobs: {
-                  where: { deletedAt: null },
-                },
-              },
-            },
-          },
-        },
-        admin: true,
-      },
+      where: { id: context.params.id },
     });
 
     if (!user) {
@@ -76,6 +32,7 @@ export async function GET(
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
       { error: "Erreur lors de la récupération de l'utilisateur" },
+      { error: "Une erreur est survenue lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
