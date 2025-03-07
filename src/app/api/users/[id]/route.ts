@@ -1,19 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { UpdateUserDTO, UserResponseDTO } from '@/dto/user.dto';
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { UpdateUserDTO, UserByIdResponseDTO, UserResponseDTO } from '@/dto/user.dto';
 import { validateUserUpdate, ValidationError } from '@/utils/validation/user.validation';
 
-<<<<<<< HEAD
 const prisma = new PrismaClient();
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    if (!id) {
-      return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
-    }
-
-=======
 export async function GET(
   request: NextRequest,
   context: { params: { id: string } },
@@ -21,7 +12,49 @@ export async function GET(
   try {
 >>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
     const user = await prisma.user.findUnique({
-      where: { id: context.params.id },
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+      include: {
+        student: {
+          include: {
+            school: true,
+            jobRequests: {
+              where: { deletedAt: null },
+              include: {
+                job: {
+                  include: {
+                    company: true,
+                  },
+                },
+              },
+            },
+            recommendations: true,
+          },
+        },
+        schoolOwner: {
+          include: {
+            school: {
+              include: {
+                domain: true,
+              },
+            },
+          },
+        },
+        companyOwner: {
+          include: {
+            company: {
+              include: {
+                jobs: {
+                  where: { deletedAt: null },
+                },
+              },
+            },
+          },
+        },
+        admin: true,
+      },
     });
 
     if (!user) {
@@ -46,9 +79,9 @@ export async function GET(
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
       { error: "Erreur lors de la récupération de l'utilisateur" },
-      { error: "Une erreur est survenue lors de la récupération de l'utilisateur" },
       { status: 500 },
     );
   }
@@ -91,6 +124,8 @@ export async function PUT(
         ...(body.lastName && { lastName: body.lastName }),
         ...(body.firstName && { firstName: body.firstName }),
         ...(body.lastName && { lastName: body.lastName }),
+        ...(body.firstName && { firstName: body.firstName }),
+        ...(body.lastName && { lastName: body.lastName }),
         ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
       },
     });
@@ -109,7 +144,9 @@ export async function PUT(
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
+      { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { error: "Erreur lors de la mise à jour de l'utilisateur" },
       { status: 500 },
