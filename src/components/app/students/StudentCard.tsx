@@ -1,9 +1,11 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import StudentStatusBadge from '@/components/app/common/StudentStatusBadge';
-import { GraduationCap, Briefcase, CheckCircle2, XCircle } from 'lucide-react';
+import { GraduationCap, Briefcase, CheckCircle2, XCircle, Mail, FileText } from 'lucide-react';
 
 export type StudentCardProps = {
   id: string;
@@ -15,11 +17,11 @@ export type StudentCardProps = {
   school?: string;
   apprenticeshipRythm?: string | null;
   availability?: boolean;
+  studentEmail?: string;
+  curriculumVitae?: string | null;
 };
 
-// Composant pour afficher les compétences, extrait pour plus de clarté
 const SkillsList = React.memo(({ skills }: { skills: StudentCardProps['skills'] }) => {
-  // Limiter l'affichage à 3 compétences maximum
   const displayedSkills = skills.slice(0, 3);
   const hasMoreSkills = skills.length > 3;
 
@@ -51,6 +53,8 @@ function StudentCardComponent({
   school,
   apprenticeshipRythm,
   availability,
+  studentEmail,
+  curriculumVitae,
 }: StudentCardProps) {
   return (
     <Link href={`/students/${id}`}>
@@ -62,6 +66,7 @@ function StudentCardComponent({
               firstName={firstName}
               lastName={lastName}
               className="w-20 h-20 flex-shrink-0"
+              size="md"
             />
             <div className="flex-1">
               <div className="flex items-center justify-between mb-4">
@@ -97,6 +102,18 @@ function StudentCardComponent({
                     <span>{apprenticeshipRythm}</span>
                   </div>
                 )}
+                {studentEmail && (
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <Mail className="w-5 h-5" />
+                    <span className="truncate">{studentEmail}</span>
+                  </div>
+                )}
+                {curriculumVitae && (
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <FileText className="w-5 h-5" />
+                    <span>CV disponible</span>
+                  </div>
+                )}
               </div>
 
               {/* Compétences */}
@@ -115,7 +132,6 @@ function StudentCardComponent({
   );
 }
 
-// Mémorisation du composant pour éviter les rendus inutiles
 const StudentCard = React.memo(StudentCardComponent);
 
 export default StudentCard;

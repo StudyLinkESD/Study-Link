@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -28,7 +28,49 @@ import { toast } from 'sonner';
 import { StudentResponseDTO } from '@/dto/student.dto';
 import { getStudentById } from '@/services/student.service';
 
+// Fonction utilitaire pour nettoyer les URL des photos de profil
+const cleanPhotoUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+
+  // Si l'URL commence par "/api/files/", extraire l'URL réelle
+  if (url.startsWith('/api/files/')) {
+    return url.substring('/api/files/'.length);
+  }
+
+  // Si l'URL est déjà une URL Supabase complète, la retourner telle quelle
+  if (url.includes('supabase.co/storage/v1/object/public/')) {
+    return url;
+  }
+
+  // Cas par défaut
+  return url;
+};
+
+// Configuration pour désactiver le pré-rendu statique
+export const dynamic = 'force-dynamic';
+
+// Composant principal enveloppé dans Suspense
 export default function StudentProfilePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <StudentProfileContent />
+    </Suspense>
+  );
+}
+
+// Composant de chargement
+function LoadingSpinner() {
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-4xl">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Chargement...</h1>
+      </div>
+    </div>
+  );
+}
+
+// Contenu principal de la page
+function StudentProfileContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,6 +107,7 @@ export default function StudentProfilePage() {
         console.log('Student data received:', studentData);
         console.log('Student email:', studentData.studentEmail);
         console.log('User data:', studentData.user);
+        console.log('Photo URL:', studentData.user?.profilePicture);
         setStudent(studentData);
       } catch (error) {
         console.error('Error fetching student:', error);
@@ -126,9 +169,25 @@ export default function StudentProfilePage() {
 
   const firstName = student.user?.firstname || '';
   const lastName = student.user?.lastname || '';
-  const photoUrl = student.user?.profilePicture
-    ? `/api/files/${student.user.profilePicture}`
-    : session?.user?.image || undefined;
+
+  // Récupérer l'URL de la photo de profil directement depuis l'objet utilisateur
+  // et la nettoyer pour éviter les problèmes d'URL
+  const photoUrl = cleanPhotoUrl(student.user?.profilePicture);
+
+  // Récupérer l'email étudiant
+  const studentEmail = student.studentEmail || '';
+
+  console.log("Informations de l'utilisateur:", {
+    firstName,
+    lastName,
+    photoUrl,
+    studentEmail,
+    originalPhotoUrl: student.user?.profilePicture,
+    sessionUserImage: session?.user?.image,
+    studentId: student.id,
+    userId: student.userId,
+    userObject: student.user,
+  });
 
   const experiences = student.previousCompanies
     .split(',')
@@ -185,8 +244,49 @@ export default function StudentProfilePage() {
                 )}
 
                 <InfoItem icon={Mail}>
-                  <span className="break-all">{session?.user?.email}</span>
+                  <span className="break-all">{studentEmail || session?.user?.email}</span>
                 </InfoItem>
+
+                {student.curriculumVitae && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium mb-2">Curriculum Vitae</h3>
+                    <div className="flex flex-col space-y-2">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => window.open(student.curriculumVitae || '', '_blank')}
+                      >
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Voir mon CV
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        className="w-full"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = student.curriculumVitae || '';
+                          link.setAttribute('download', `CV_${firstName}_${lastName}.pdf`);
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                      >
+                        <Briefcase className="mr-2 h-4 w-4" />
+                        Télécharger
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {!student.curriculumVitae && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium mb-2">Curriculum Vitae</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Aucun CV n&apos;a été ajouté. Modifiez votre profil pour en ajouter un.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

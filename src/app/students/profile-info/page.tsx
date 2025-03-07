@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -86,12 +86,35 @@ interface ErrorDetail {
   message: string;
 }
 
+// Configuration pour désactiver le pré-rendu statique
+export const dynamic = 'force-dynamic';
+
+// Composant principal enveloppé dans Suspense
 export default function StudentProfileForm() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <StudentProfileContent />
+    </Suspense>
+  );
+}
+
+// Composant de chargement
+function LoadingSpinner() {
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-4xl flex justify-center items-center min-h-[400px]">
+      <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>
+  );
+}
+
+// Contenu principal de la page
+function StudentProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [photoUrl, setPhotoUrl] = useState('');
   const [uploadedCv, setUploadedCv] = useState<File | null>(null);
+  const [cvUrl, setCvUrl] = useState<string>('');
   const [selectedTab, setSelectedTab] = useState('personal');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -216,7 +239,6 @@ export default function StudentProfileForm() {
     try {
       console.log('Mise à jour du profil étudiant pour id:', id);
 
-      // Créer un objet UpdateStudentDTO à partir des données
       const updateData = {
         status: data.status,
         skills: data.skills,
@@ -263,13 +285,10 @@ export default function StudentProfileForm() {
   }, []);
 
   const loadStudentProfile = useCallback(async () => {
-    // Vérifier si l'ID de l'étudiant est disponible dans l'URL
     const studentIdFromUrl = searchParams.get('studentId');
 
-    // Vérifier si l'ID de l'étudiant est disponible dans la session
     const studentIdFromSession = session?.user?.studentId;
 
-    // Utiliser l'ID de l'étudiant de l'URL ou de la session
     const id = studentIdFromUrl || studentIdFromSession;
 
     if (id) {
@@ -296,8 +315,8 @@ export default function StudentProfileForm() {
           });
 
           setPhotoUrl(studentData.user?.profilePicture || '');
+          setCvUrl(studentData.curriculumVitae || '');
 
-          // Remplir le formulaire avec les données existantes
           form.reset({
             firstName: studentData.user?.firstname || '',
             lastName: studentData.user?.lastname || '',
@@ -340,8 +359,8 @@ export default function StudentProfileForm() {
           });
 
           setPhotoUrl(studentData.user?.profilePicture || '');
+          setCvUrl(studentData.curriculumVitae || '');
 
-          // Remplir le formulaire avec les données existantes
           form.reset({
             firstName: studentData.user?.firstname || '',
             lastName: studentData.user?.lastname || '',
@@ -366,7 +385,6 @@ export default function StudentProfileForm() {
   }, [searchParams, session?.user?.id, session?.user?.studentId, form]);
 
   useEffect(() => {
-    // Rediriger si non connecté
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
@@ -378,9 +396,49 @@ export default function StudentProfileForm() {
 
   const formValues = form.watch();
 
-  const handlePhotoUpload = (file: File | null, url?: string) => {
-    if (file) {
-      const imageUrl = url || URL.createObjectURL(file);
+  const handlePhotoUpload = async (file: File | null, url?: string) => {
+    if (file && url) {
+      try {
+        setPhotoUrl(url);
+        if (session?.user?.id) {
+          const userResponse = await fetch(`/api/users/${session.user.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              profilePicture: url,
+            }),
+          });
+
+          if (!userResponse.ok) {
+            console.error(
+              'Erreur lors de la mise à jour de la photo de profil:',
+              await userResponse.text(),
+            );
+            toast.error('Erreur lors de la mise à jour de la photo de profil');
+            return;
+          }
+
+          const updatedUser = await userResponse.json();
+          console.log('Utilisateur mis à jour:', updatedUser);
+
+          if (session && session.user) {
+            session.user.image = url;
+            console.log('Photo de profil mise à jour dans la session:', url);
+
+            const event = new Event('visibilitychange');
+            document.dispatchEvent(event);
+          }
+
+          toast.success('Photo de profil mise à jour avec succès');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour de la photo de profil:', error);
+        toast.error('Erreur lors de la mise à jour de la photo de profil');
+      }
+    } else if (file) {
+      const imageUrl = URL.createObjectURL(file);
       setPhotoUrl(imageUrl);
     }
   };
@@ -394,23 +452,25 @@ export default function StudentProfileForm() {
           fileSize: file.size,
         });
 
-        // Créer un événement synthétique pour handleUploadFile
         const syntheticEvent = {
           target: {
             files: [file],
           },
+          preventDefault: () => {},
+          stopPropagation: () => {},
         } as unknown as React.ChangeEvent<HTMLInputElement>;
 
-        // Upload du fichier vers Supabase
         const uploadResult = await handleUploadFile(syntheticEvent, 'studylink_images');
 
         if (!uploadResult.url) {
           console.error("L'upload a échoué - aucune URL retournée");
+          console.error('Erreur détaillée:', uploadResult.error);
           throw new Error(uploadResult.error || "Échec de l'upload du CV");
         }
 
         console.log('Upload réussi:', uploadResult);
         setUploadedCv(file);
+        setCvUrl(uploadResult.url);
         return uploadResult.url;
       } catch (error) {
         console.error("Erreur détaillée lors de l'upload du CV:", error);
@@ -426,15 +486,12 @@ export default function StudentProfileForm() {
     setIsSubmitting(true);
 
     try {
-      // Valider l'email scolaire
       const isValidSchoolEmail = await validateSchoolEmail(data.schoolEmail);
       if (!isValidSchoolEmail) {
         toast.error("L'email scolaire n'est pas valide pour l'école sélectionnée");
         setIsSubmitting(false);
         return;
       }
-
-      // Préparer les données pour l'API
       const studentData: CreateStudentData = {
         userId: session?.user?.id || '',
         schoolId: data.school,
@@ -452,7 +509,6 @@ export default function StudentProfileForm() {
 
       console.log("Données envoyées à l'API:", studentData);
 
-      // Vérifier que toutes les données requises sont présentes
       if (
         !studentData.userId ||
         !studentData.schoolId ||
@@ -474,7 +530,6 @@ export default function StudentProfileForm() {
         throw new Error('Toutes les données requises ne sont pas présentes');
       }
 
-      // Gérer l'upload du CV si présent
       if (uploadedCv) {
         try {
           const cvUrl = await handleCvUpload(uploadedCv);
@@ -489,10 +544,7 @@ export default function StudentProfileForm() {
 
       let result;
 
-      // Si nous avons un ID d'étudiant, mettre à jour le profil existant
       if (studentId) {
-        console.log('Mise à jour du profil étudiant avec ID:', studentId);
-        // Mettre à jour d'abord l'utilisateur
         try {
           const userResponse = await fetch(`/api/users/${session?.user?.id}`, {
             method: 'PUT',
@@ -514,22 +566,17 @@ export default function StudentProfileForm() {
           return;
         }
 
-        // Ensuite, mettre à jour le profil étudiant
         result = await updateStudent(studentId, studentData);
         toast.success('Profil mis à jour avec succès');
-      }
-      // Sinon, créer un nouveau profil
-      else {
+      } else {
         console.log("Création d'un nouveau profil étudiant");
         result = await createStudent(studentData);
-        // Stocker l'ID de l'étudiant pour les futures mises à jour
         if (result && result.id) {
           setStudentId(result.id);
         }
         toast.success('Profil créé avec succès');
       }
 
-      // Rediriger vers la page de profil
       router.push(`/students/profile?studentId=${result.id}`);
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire:', error);
@@ -616,7 +663,18 @@ export default function StudentProfileForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8">
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              if (form.formState.isValid) {
+                onSubmit(form.getValues());
+              } else {
+                form.trigger();
+              }
+            }}
+          >
             <Tabs value={selectedTab} onValueChange={setSelectedTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
@@ -682,15 +740,18 @@ export default function StudentProfileForm() {
                     className="mt-4"
                     hint="Format recommandé : JPG ou PNG, 500x500px minimum"
                   >
-                    <FileUploadInput
-                      id="photoUpload"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      preview={photoUrl}
-                      previewType="avatar"
-                      firstName={formValues.firstName}
-                      lastName={formValues.lastName}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <FileUploadInput
+                        id="photoUpload"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        preview={photoUrl}
+                        previewType="avatar"
+                        firstName={formValues.firstName}
+                        lastName={formValues.lastName}
+                        initialFileName={photoUrl ? 'photo_profil.jpg' : ''}
+                      />
+                    </div>
                   </FormField>
 
                   <FormField
@@ -827,11 +888,15 @@ export default function StudentProfileForm() {
                       htmlFor="cvUpload"
                       hint="Format accepté : PDF"
                     >
-                      <FileUploadInput
-                        id="cvUpload"
-                        accept=".pdf"
-                        onChange={(file) => handleCvUpload(file)}
-                      />
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <FileUploadInput
+                          id="cvUpload"
+                          accept=".pdf"
+                          onChange={(file) => handleCvUpload(file)}
+                          preview={cvUrl}
+                          initialFileName={uploadedCv?.name || 'cv.pdf'}
+                        />
+                      </div>
                     </FormField>
                   </div>
                 </SectionCard>
@@ -897,12 +962,20 @@ export default function StudentProfileForm() {
                     Précédent
                   </Button>
                   <Button
-                    type="submit"
+                    type="button"
                     disabled={isSubmitting}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       console.log('Bouton Enregistrer cliqué');
                       console.log('État du formulaire:', formValues);
                       console.log('Erreurs:', form.formState.errors);
+
+                      if (form.formState.isValid) {
+                        onSubmit(form.getValues());
+                      } else {
+                        form.trigger();
+                      }
                     }}
                   >
                     {isSubmitting ? (

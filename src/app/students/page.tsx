@@ -16,13 +16,15 @@ export default async function StudentsPage() {
         id: student.id,
         firstName: student.user?.firstname || 'Anonyme',
         lastName: student.user?.lastname || 'Anonyme',
-        photoUrl: student.user?.profilePicture ? `/api/files/${student.user.profilePicture}` : '',
+        photoUrl: student.user?.profilePicture || '',
         status: student.status,
         school: student.school?.name || '',
         skills: skillsArray,
         description: student.description || '',
         apprenticeshipRythm: student.apprenticeshipRythm || null,
         availability: student.availability ?? false,
+        studentEmail: student.studentEmail || '',
+        curriculumVitae: student.curriculumVitae || null,
       };
     });
 
