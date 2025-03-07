@@ -1,4 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx lint-staged
+echo '🏗️ Vérification du formatage et du linting...'
+
+npx lint-staged || {
+    echo '❌ Erreur de formatage ou de linting détectée'
+    exit 1
+}
+
+echo '✅ Code vérifié avec succès!'

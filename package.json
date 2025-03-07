@@ -10,7 +10,7 @@
     "lint-fix": "eslint \"{src,prisma}/**/*.{ts,tsx}\" --fix && eslint \"{src,prisma}/**/*.{ts,tsx}\" --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky install",
+    "prepare": "husky",
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate"
   },
@@ -81,7 +81,7 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix --max-warnings=0"
     ],
     "*.{json,css,md}": [
       "prettier --write"
