@@ -13,10 +13,10 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { Search } from 'lucide-react';
+import { Search, Users } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import { Input } from '@/components/ui/input';
->>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
+import Link from 'next/link';
 
 type SchoolWithDomain = {
   id: string;
@@ -133,6 +133,11 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
       </div>
     );
   }
+
+  const displayedSchools = filteredSchools.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
   const displayedSchools = filteredSchools.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,

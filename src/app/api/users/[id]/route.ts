@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { UpdateUserDTO } from '@/dto/user.dto';
-import { validateUserUpdate } from '@/utils/validation/user.validation';
+import { User } from '@prisma/client';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
@@ -35,20 +34,6 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
 
-    const body = (await request.json()) as UpdateUserDTO;
-
-    const validationResult = await validateUserUpdate(body, id);
-    if (!validationResult.isValid) {
-      return NextResponse.json(
-        {
-          error: 'Données invalides',
-          details: validationResult.errors,
-        },
-        { status: 400 },
-      );
->>>>>>> e0760dd (:sparkles: added actions on schools list && added a start of company / users lists)
-    }
-
     const body = (await request.json()) as Partial<User>;
 
     const updatedUser = await prisma.user.update({
@@ -56,9 +41,9 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
       where: { id },
       data: {
         ...(body.email && { email: body.email.toLowerCase() }),
-        ...(body.firstName && { firstname: body.firstName }),
-        ...(body.lastName && { lastname: body.lastName }),
-        ...(body.profilePicture !== undefined && { profilePictureId: body.profilePicture }),
+        ...(body.firstName && { firstName: body.firstName }),
+        ...(body.lastName && { lastName: body.lastName }),
+        ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
       },
     });
 
