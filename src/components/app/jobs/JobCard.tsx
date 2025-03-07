@@ -8,7 +8,8 @@ import { useJob } from '@/context/job.context';
 
 // Import des composants communs
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import JobTypeBadge from '@/components/app/common/JobTypeBadge';
+import SkillBadge from '@/components/app/common/SkillBadge';
 
 export type JobCardProps = {
   id: string;
@@ -47,8 +48,8 @@ export default function JobCard(props: JobCardProps) {
             <h3 className="text-lg font-semibold">{offerTitle}</h3>
 
             <div className="flex items-center gap-2 mt-1">
-              {/* Utilisation du composant StatusBadge */}
-              <StatusBadge status={status} />
+              {/* Utilisation du composant JobTypeBadge */}
+              <JobTypeBadge type={status} />
 
               {availability && (
                 <span className="text-xs text-muted-foreground">{availability}</span>
@@ -57,24 +58,19 @@ export default function JobCard(props: JobCardProps) {
           </div>
         </div>
 
-        <div className="mt-3">
-          <h4 className="text-sm font-medium mb-2">Compétences requises</h4>
+        <div className="mt-4">
+          <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
+        </div>
 
-          {/* Nous n'utilisons pas directement SkillsList car nous voulons limiter l'affichage à 5 skills */}
+        <div className="mt-4">
           <div className="flex flex-wrap gap-1">
             {skills.slice(0, 5).map((skill) => (
-              <StatusBadge
-                key={skill.id}
-                status={skill.name}
-                variant="outline"
-                className="text-xs"
-              />
+              <SkillBadge key={skill.id} label={skill.name} className="text-xs" />
             ))}
             {skills.length > 5 && (
-              <StatusBadge status={`+${skills.length - 5}`} variant="outline" className="text-xs" />
+              <SkillBadge label={`+${skills.length - 5}`} className="text-xs" />
             )}
           </div>
-          <p className="text-gray-500 mt-2">◦ {description}</p>
         </div>
       </CardContent>
 

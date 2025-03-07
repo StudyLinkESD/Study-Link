@@ -4,16 +4,12 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import ApplicationStatusBadge from '@/components/app/common/ApplicationStatusBadge';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import {
-  ApplicationStatus,
-  getStatusLabel,
-  getStatusVariant,
-} from '@/utils/students/dashboard/status-mapping.utils';
+import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
 
 type JobApplicationCardProps = {
   application: {
@@ -67,8 +63,6 @@ export default function JobApplicationCard({
     return format(new Date(createdAt), 'dd MMMM yyyy', { locale: fr });
   }, [createdAt]);
 
-  const displayStatus = getStatusLabel(status);
-
   return (
     <Card
       className={`overflow-hidden cursor-pointer transition-all ${
@@ -105,7 +99,7 @@ export default function JobApplicationCard({
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <StatusBadge status={displayStatus} variant={getStatusVariant(status)} />
+          <ApplicationStatusBadge status={status} />
           <span className="text-xs text-muted-foreground">{formattedDate}</span>
         </div>
 

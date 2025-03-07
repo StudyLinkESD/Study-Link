@@ -70,10 +70,10 @@ export const validateStudentData = async (
         field: 'description',
         message: 'La description est requise',
       });
-    } else if (data.description.length < 10) {
+    } else if (data.description.length < 100) {
       errors.push({
         field: 'description',
-        message: 'La description doit contenir au moins 10 caractères',
+        message: 'La description doit contenir au moins 100 caractères',
       });
     }
   }
@@ -82,7 +82,7 @@ export const validateStudentData = async (
     if (!data.previousCompanies) {
       errors.push({
         field: 'previousCompanies',
-        message: 'Les entreprises précédentes sont requises',
+        message: 'Les expériences précédentes sont requises',
       });
     }
   }
@@ -98,17 +98,17 @@ export const validateStudentData = async (
 
   if (data.curriculumVitae) {
     try {
-      const url = new URL(data.curriculumVitae);
+      const url = new URL(data.curriculumVitae.fileUrl);
       if (!url.href.startsWith('https://')) {
         errors.push({
           field: 'curriculumVitae',
-          message: "L'URL du CV doit être une URL HTTPS valide",
+          message: 'Le CV doit être une URL HTTPS valide',
         });
       }
     } catch {
       errors.push({
         field: 'curriculumVitae',
-        message: "L'URL du CV n'est pas valide",
+        message: 'Le CV doit être une URL valide',
       });
     }
   }

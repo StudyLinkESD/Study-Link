@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import StudentStatusBadge from '@/components/app/common/StudentStatusBadge';
 import { GraduationCap, Briefcase, CheckCircle2, XCircle } from 'lucide-react';
 
 export type StudentCardProps = {
@@ -65,9 +65,7 @@ function StudentCardComponent({
             />
             <div className="flex-1">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold">
-                  {firstName} {lastName}
-                </h3>
+                <h3 className="text-base font-medium">{`${firstName} ${lastName}`}</h3>
                 <div className="flex flex-col items-end gap-3">
                   {availability !== undefined && (
                     <div className="flex items-center gap-2 text-sm">
@@ -81,7 +79,7 @@ function StudentCardComponent({
                       </span>
                     </div>
                   )}
-                  <StatusBadge status={status} />
+                  <StudentStatusBadge status={status} />
                 </div>
               </div>
 

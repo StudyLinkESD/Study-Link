@@ -1,6 +1,7 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import StudentStatusBadge from '@/components/app/common/StudentStatusBadge';
 import InfoItem from '@/components/app/common/InfoItems';
 import { School, Calendar, Clock } from 'lucide-react';
 
@@ -40,7 +41,7 @@ export default function ProfilePreview({
           <h3 className="font-semibold text-center">
             {firstName || 'Prénom'} {lastName || 'Nom'}
           </h3>
-          {status && <StatusBadge status={status} className="mt-1" />}
+          {status && <StudentStatusBadge status={status} className="mt-1" />}
         </div>
 
         <div className="w-full mt-6 space-y-4">

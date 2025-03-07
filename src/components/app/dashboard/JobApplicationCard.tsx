@@ -4,13 +4,12 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import ApplicationStatusBadge from '@/components/app/common/ApplicationStatusBadge';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
-import { StatusMappingType, JobApplicationFull } from '@/types/application_status.type';
+import { JobApplicationFull } from '@/types/application_status.type';
 
 type JobApplicationCardProps = {
   application: JobApplicationFull;
@@ -32,15 +31,6 @@ export default function JobApplicationCard({
   const formattedDate = React.useMemo(() => {
     return format(new Date(createdAt), 'dd MMMM yyyy', { locale: fr });
   }, [createdAt]);
-
-  // Map API status to display status
-  const statusMapping: StatusMappingType = {
-    PENDING: 'En attente',
-    ACCEPTED: 'Acceptée',
-    REJECTED: 'Rejetée',
-  };
-
-  const displayStatus = statusMapping[status as ApplicationStatus] || status;
 
   return (
     <Card
@@ -78,12 +68,7 @@ export default function JobApplicationCard({
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <StatusBadge
-            status={displayStatus}
-            variant={
-              status === 'ACCEPTED' ? 'success' : status === 'REJECTED' ? 'destructive' : 'default'
-            }
-          />
+          <ApplicationStatusBadge status={status} />
           <span className="text-xs text-muted-foreground">{formattedDate}</span>
         </div>
 

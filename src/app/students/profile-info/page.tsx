@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -212,6 +212,72 @@ export default function StudentProfileForm() {
     }
   };
 
+  const fetchSchools = useCallback(async () => {
+    try {
+      const response = await fetch('/api/schools');
+      if (response.ok) {
+        const schoolsData = await response.json();
+        setSchools(schoolsData);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des écoles:', error);
+    }
+  }, []);
+
+  const loadStudentProfile = useCallback(async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      console.log("Tentative de chargement du profil pour l'utilisateur:", session.user.id);
+      const studentData = await getStudentByUserId(session.user.id);
+      console.log("Données brutes reçues de l'API:", studentData);
+      console.log('Email scolaire reçu:', studentData?.studentEmail);
+
+      if (studentData) {
+        console.log("Données de l'étudiant à charger dans le formulaire:", {
+          firstName: studentData.user?.firstname,
+          lastName: studentData.user?.lastname,
+          status: studentData.status,
+          school: studentData.schoolId,
+          availability: studentData.availability,
+          alternanceRhythm: studentData.apprenticeshipRythm,
+          description: studentData.description,
+          skills: studentData.skills,
+          previousCompanies: studentData.previousCompanies,
+          schoolEmail: studentData.studentEmail,
+        });
+
+        setPhotoUrl(studentData.user?.profilePicture || '');
+
+        // Mettre à jour les valeurs du formulaire
+        const formData = {
+          firstName: studentData.user?.firstname || '',
+          lastName: studentData.user?.lastname || '',
+          status: studentData.status || 'ACTIVE',
+          school: studentData.schoolId || '',
+          availability: studentData.availability ?? true,
+          alternanceRhythm: studentData.apprenticeshipRythm || '',
+          description: studentData.description || '',
+          skills: studentData.skills
+            ? studentData.skills.split(',').map((skill: string) => skill.trim())
+            : [],
+          previousCompanies: studentData.previousCompanies || '',
+          schoolEmail: studentData.studentEmail || '',
+        };
+
+        console.log('Données formatées pour le formulaire:', formData);
+        console.log('Email scolaire dans formData:', formData.schoolEmail);
+        form.reset(formData);
+        console.log('Valeur du champ email scolaire après reset:', form.getValues('schoolEmail'));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du profil:', error);
+      toast.error('Impossible de charger votre profil');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session?.user?.id, form]);
+
   useEffect(() => {
     // Rediriger si non connecté
     if (status === 'unauthenticated') {
@@ -219,77 +285,9 @@ export default function StudentProfileForm() {
       return;
     }
 
-    // Charger les écoles depuis l'API
-    const fetchSchools = async () => {
-      try {
-        const response = await fetch('/api/schools');
-        if (response.ok) {
-          const schoolsData = await response.json();
-          setSchools(schoolsData);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des écoles:', error);
-      }
-    };
-
-    // Charger le profil étudiant
-    const loadStudentProfile = async () => {
-      if (!session?.user?.id) return;
-
-      try {
-        console.log("Tentative de chargement du profil pour l'utilisateur:", session.user.id);
-        const studentData = await getStudentByUserId(session.user.id);
-        console.log("Données brutes reçues de l'API:", studentData);
-        console.log('Email scolaire reçu:', studentData?.studentEmail);
-
-        if (studentData) {
-          console.log("Données de l'étudiant à charger dans le formulaire:", {
-            firstName: studentData.user?.firstname,
-            lastName: studentData.user?.lastname,
-            status: studentData.status,
-            school: studentData.schoolId,
-            availability: studentData.availability,
-            alternanceRhythm: studentData.apprenticeshipRythm,
-            description: studentData.description,
-            skills: studentData.skills,
-            previousCompanies: studentData.previousCompanies,
-            schoolEmail: studentData.studentEmail,
-          });
-
-          setPhotoUrl(studentData.user?.profilePicture || '');
-
-          // Mettre à jour les valeurs du formulaire
-          const formData = {
-            firstName: studentData.user?.firstname || '',
-            lastName: studentData.user?.lastname || '',
-            status: studentData.status || 'ACTIVE',
-            school: studentData.schoolId || '',
-            availability: studentData.availability ?? true,
-            alternanceRhythm: studentData.apprenticeshipRythm || '',
-            description: studentData.description || '',
-            skills: studentData.skills
-              ? studentData.skills.split(',').map((skill: string) => skill.trim())
-              : [],
-            previousCompanies: studentData.previousCompanies || '',
-            schoolEmail: studentData.studentEmail || '',
-          };
-
-          console.log('Données formatées pour le formulaire:', formData);
-          console.log('Email scolaire dans formData:', formData.schoolEmail);
-          form.reset(formData);
-          console.log('Valeur du champ email scolaire après reset:', form.getValues('schoolEmail'));
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement du profil:', error);
-        toast.error('Impossible de charger votre profil');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchSchools();
     loadStudentProfile();
-  }, [session, status, router, form.reset]);
+  }, [status, router, fetchSchools, loadStudentProfile]);
 
   const formValues = form.watch();
 
@@ -392,10 +390,13 @@ export default function StudentProfileForm() {
       if (uploadedCv) {
         try {
           const uploadResult = await handleCvUpload(uploadedCv);
-          if (!uploadResult) {
+          if (!uploadResult || 'error' in uploadResult || !('fileUrl' in uploadResult)) {
             throw new Error("Échec de l'upload du CV");
           }
-          cvData = uploadResult;
+          cvData = {
+            fileUrl: uploadResult.fileUrl,
+            fileId: uploadResult.fileUrl, // Utiliser l'URL comme ID pour le moment
+          };
         } catch (error) {
           console.error("Erreur lors de l'upload du CV:", error);
           toast.error("Erreur lors de l'upload du CV");

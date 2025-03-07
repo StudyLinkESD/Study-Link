@@ -69,7 +69,7 @@ export default function CompanyProfileForm() {
   const uploadLogo = async (file: File): Promise<string | null> => {
     try {
       const result = await uploadFileToSupabase(file, 'studylink_images');
-      if (!result) {
+      if (!result || 'error' in result || !('fileUrl' in result)) {
         throw new Error("Erreur lors de l'upload du logo");
       }
       return result.fileUrl;
@@ -81,7 +81,7 @@ export default function CompanyProfileForm() {
 
   const createCompany = async (data: FormData) => {
     try {
-      let logoId = null;
+      let logo = null;
       if (uploadedLogo) {
         const logoUrl = await uploadLogo(uploadedLogo);
         if (logoUrl) {
@@ -99,7 +99,7 @@ export default function CompanyProfileForm() {
             throw new Error("Erreur lors de la création de l'entrée du fichier");
           }
           const uploadData = await uploadResponse.json();
-          logoId = uploadData.uuid;
+          logo = uploadData.uuid;
         }
       }
 
@@ -111,7 +111,7 @@ export default function CompanyProfileForm() {
         body: JSON.stringify({
           userId: session?.user?.id,
           name: data.name,
-          logoId: logoId,
+          logo: logo,
         }),
       });
 
@@ -129,7 +129,7 @@ export default function CompanyProfileForm() {
 
   const updateCompany = async (id: string, data: FormData) => {
     try {
-      let logoId = null;
+      let logo = null;
       if (uploadedLogo) {
         const logoUrl = await uploadLogo(uploadedLogo);
         if (logoUrl) {
@@ -147,7 +147,7 @@ export default function CompanyProfileForm() {
             throw new Error("Erreur lors de la création de l'entrée du fichier");
           }
           const uploadData = await uploadResponse.json();
-          logoId = uploadData.uuid;
+          logo = uploadData.uuid;
         }
       }
 
@@ -158,7 +158,7 @@ export default function CompanyProfileForm() {
         },
         body: JSON.stringify({
           name: data.name,
-          logoId: logoId,
+          logo: logo,
         }),
       });
 
@@ -188,8 +188,8 @@ export default function CompanyProfileForm() {
             });
 
             // Charger le logo si disponible
-            if (companyData.logoId) {
-              const logoResponse = await fetch(`/api/upload-files/${companyData.logoId}`);
+            if (companyData.logo) {
+              const logoResponse = await fetch(`/api/upload-files/${companyData.logo}`);
               if (logoResponse.ok) {
                 const logoData = await logoResponse.json();
                 setLogoUrl(logoData.fileUrl);

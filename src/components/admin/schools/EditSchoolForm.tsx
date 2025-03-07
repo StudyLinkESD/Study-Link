@@ -71,17 +71,27 @@ export function EditSchoolForm({ school, onSuccess, onCancel }: EditSchoolFormPr
 
       const result = await handleUploadFile(e, 'studylink_images');
 
-      if (result.error) {
+      if (!result) {
         setFormErrors((prev) => ({
           ...prev,
-          logo: result.error,
+          logo: "Erreur lors de l'upload du fichier",
         }));
         e.target.value = '';
         setFormData((prev) => ({ ...prev, logo: null }));
         return;
       }
 
-      setLogoUrl(result.url);
+      if ('code' in result) {
+        setFormErrors((prev) => ({
+          ...prev,
+          logo: result.message,
+        }));
+        e.target.value = '';
+        setFormData((prev) => ({ ...prev, logo: null }));
+        return;
+      }
+
+      setLogoUrl(result.fileUrl);
     } catch {
       setFormErrors((prev) => ({
         ...prev,

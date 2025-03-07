@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { useStudentApplications } from '@/hooks/students/dashboard/useStudentApplications';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import StatusBadge from '@/components/app/common/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, Clock, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,22 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 import { APPLICATION_STATUS } from '@/constants/status';
-
-// Composant pour afficher le badge de statut, extrait pour plus de clarté
-const ApplicationStatusBadge = React.memo(({ status }: { status: string }) => {
-  switch (status) {
-    case APPLICATION_STATUS.PENDING:
-      return <StatusBadge status="En attente" variant="default" />;
-    case APPLICATION_STATUS.ACCEPTED:
-      return <StatusBadge status="Acceptée" variant="success" />;
-    case APPLICATION_STATUS.REJECTED:
-      return <StatusBadge status="Refusée" className="bg-red-200 text-red-800" />;
-    default:
-      return <StatusBadge status="Inconnu" variant="outline" />;
-  }
-});
-
-ApplicationStatusBadge.displayName = 'ApplicationStatusBadge';
+import ApplicationStatusBadge from '@/components/app/common/ApplicationStatusBadge';
 
 function StudentDashboardPageComponent() {
   const { data: session } = useSession();

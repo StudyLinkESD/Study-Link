@@ -7,28 +7,50 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
-): Promise<NextResponse<StudentResponseDTO | { error: string }>> {
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
-    const { id } = params;
-    console.log("Recherche de l'étudiant avec id:", id);
-
+    const { id } = await params;
     const student = await prisma.student.findUnique({
       where: {
         id: id,
       },
-      include: {
-        user: true,
-        school: true,
+      select: {
+        id: true,
+        userId: true,
+        schoolId: true,
+        primaryRecommendationId: true,
+        status: true,
+        skills: true,
+        apprenticeshipRythm: true,
+        description: true,
+        curriculumVitae: true,
+        previousCompanies: true,
+        availability: true,
+        studentEmail: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstname: true,
+            lastname: true,
+            profilePicture: true,
+          },
+        },
+        school: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     if (!student) {
-      console.log('Aucun étudiant trouvé pour id:', id);
       return NextResponse.json({ error: 'Étudiant non trouvé' }, { status: 404 });
     }
-
-    console.log('Étudiant trouvé:', student);
 
     const formattedStudent: StudentResponseDTO = {
       id: student.id,
@@ -45,6 +67,8 @@ export async function GET(
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
+      createdAt: student.createdAt,
+      updatedAt: student.updatedAt,
       user: {
         id: student.user.id,
         email: student.user.email,
@@ -57,7 +81,7 @@ export async function GET(
             id: student.school.id,
             name: student.school.name,
           }
-        : undefined,
+        : null,
     };
 
     return NextResponse.json(formattedStudent);
@@ -72,10 +96,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } },
-): Promise<NextResponse<StudentResponseDTO | { error: string }>> {
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = (await request.json()) as UpdateStudentDTO;
 
     const user = await prisma.user.findUnique({
@@ -135,6 +159,8 @@ export async function PUT(
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
+      createdAt: student.createdAt,
+      updatedAt: student.updatedAt,
       user: {
         id: student.user.id,
         email: student.user.email,
@@ -147,7 +173,7 @@ export async function PUT(
             id: student.school.id,
             name: student.school.name,
           }
-        : undefined,
+        : null,
     };
 
     return NextResponse.json(formattedStudent);
@@ -162,10 +188,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Vérifier d'abord si l'utilisateur existe
     const user = await prisma.user.findUnique({

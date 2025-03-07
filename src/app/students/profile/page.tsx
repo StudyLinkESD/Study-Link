@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import StudentStatusBadge from '@/components/app/common/StudentStatusBadge';
 import InfoItem from '@/components/app/common/InfoItems';
 import SectionCard from '@/components/app/common/SectionCard';
 import SkillsList from '@/components/app/common/SkillsList';
@@ -144,7 +144,7 @@ export default function StudentProfilePage() {
                 {firstName} {lastName}
               </h2>
 
-              <StatusBadge status={student.status} className="mt-2" />
+              <StudentStatusBadge status={student.status} className="mt-2" />
 
               <div className="w-full mt-6 space-y-4">
                 {student.school && <InfoItem icon={School}>{student.school.name}</InfoItem>}

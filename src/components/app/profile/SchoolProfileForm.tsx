@@ -96,17 +96,11 @@ export default function SchoolProfileForm({
       label: 'Informations générales',
       content: (
         <div className="space-y-6">
-          <ProfileFormSection title="Logo de l'école" icon={<GraduationCap className="w-5 h-5" />}>
-            <ProfilePhotoUpload
-              currentPhotoUrl={logoUrl || undefined}
-              onPhotoChange={handleLogoChange}
-            />
+          <ProfileFormSection title="Logo de l'école" icon={GraduationCap}>
+            <ProfilePhotoUpload currentPhotoUrl={logoUrl} onPhotoChange={handleLogoChange} />
           </ProfileFormSection>
 
-          <ProfileFormSection
-            title="Informations de base"
-            icon={<GraduationCap className="w-5 h-5" />}
-          >
+          <ProfileFormSection title="Informations de base" icon={GraduationCap}>
             <div className="space-y-6">
               <ProfileFormField
                 type="text"
@@ -154,7 +148,7 @@ export default function SchoolProfileForm({
             </div>
           </ProfileFormSection>
 
-          <ProfileFormSection title="Spécialités" icon={<Users className="w-5 h-5" />}>
+          <ProfileFormSection title="Spécialités" icon={Users}>
             <div className="space-y-4">
               {availableSpecialties.map((specialty) => (
                 <div key={specialty.value} className="flex items-center space-x-2">
@@ -189,7 +183,7 @@ export default function SchoolProfileForm({
       label: 'Coordonnées',
       content: (
         <div className="space-y-6">
-          <ProfileFormSection title="Informations de contact" icon={<Phone className="w-5 h-5" />}>
+          <ProfileFormSection title="Informations de contact" icon={Phone}>
             <div className="space-y-6">
               <ProfileFormField
                 type="text"

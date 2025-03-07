@@ -12,17 +12,13 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import ApplicationStatusBadge from '@/components/app/common/ApplicationStatusBadge';
 import { useJobApplication } from '@/context/job-application.context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Prisma } from '@prisma/client';
-import {
-  ApplicationStatus,
-  getStatusLabel,
-  getStatusVariant,
-} from '@/utils/students/dashboard/status-mapping.utils';
+import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
 
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   include: {
@@ -69,7 +65,7 @@ export default function JobApplicationView({
       setApplications(updatedApplications);
       setSelectedApplication({ ...selectedApplication, status: newStatus });
 
-      toast.success(`Statut mis à jour avec succès: ${getStatusLabel(newStatus)}`);
+      toast.success('Statut mis à jour avec succès');
     } catch (error) {
       console.error('Error updating application status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
@@ -140,14 +136,14 @@ export default function JobApplicationView({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-lg">Statut</h3>
-            <StatusBadge status={getStatusLabel(status)} variant={getStatusVariant(status)} />
+            <ApplicationStatusBadge status={status} />
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="status-select">Mettre à jour le statut</Label>
             <Select
               defaultValue={status}
-              onValueChange={(value) => updateApplicationStatus(value as ApplicationStatus)}
+              onValueChange={(value: ApplicationStatus) => updateApplicationStatus(value)}
             >
               <SelectTrigger id="status-select">
                 <SelectValue placeholder="Sélectionner un statut" />

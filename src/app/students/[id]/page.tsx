@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import BackButton from '@/components/app/common/BackButton';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import StudentStatusBadge from '@/components/app/common/StudentStatusBadge';
 import InfoItem from '@/components/app/common/InfoItems';
 import SectionCard from '@/components/app/common/SectionCard';
 import SkillsList from '@/components/app/common/SkillsList';
@@ -23,13 +23,13 @@ import RecommendationsList from '@/components/app/common/RecommendationsList';
 import { getStudentById } from '@/services/student.service';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function Page({ params }: PageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   if (!id) {
     console.error('No student ID provided');
@@ -102,8 +102,8 @@ export default async function Page({ params }: PageProps) {
                   {student.firstName} {student.lastName}
                 </h1>
 
-                {/* Utilisation du composant StatusBadge */}
-                <StatusBadge status={student.status} className="mt-2" />
+                {/* Utilisation du composant StudentStatusBadge */}
+                <StudentStatusBadge status={student.status} className="mt-2" />
 
                 <div className="w-full mt-6 space-y-4">
                   {student.school && <InfoItem icon={School}>{student.school}</InfoItem>}

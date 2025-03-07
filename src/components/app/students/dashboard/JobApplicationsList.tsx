@@ -139,8 +139,8 @@ export default function JobApplicationsList({
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (app) =>
-          app.student.user.firstname.toLowerCase().includes(searchLower) ||
-          app.student.user.lastname.toLowerCase().includes(searchLower) ||
+          (app.student.user.firstname?.toLowerCase() || '').includes(searchLower) ||
+          (app.student.user.lastname?.toLowerCase() || '').includes(searchLower) ||
           app.job.name.toLowerCase().includes(searchLower) ||
           app.job.company.name.toLowerCase().includes(searchLower),
       );
@@ -189,6 +189,22 @@ export default function JobApplicationsList({
                       ...app,
                       createdAt: app.createdAt.toISOString(),
                       updatedAt: app.updatedAt.toISOString(),
+                      student: {
+                        ...app.student,
+                        user: {
+                          ...app.student.user,
+                          firstname: app.student.user.firstname || '',
+                          lastname: app.student.user.lastname || '',
+                          profilePictureId: app.student.user.profilePicture || null,
+                        },
+                      },
+                      job: {
+                        ...app.job,
+                        company: {
+                          ...app.job.company,
+                          logoId: app.job.company.logo || null,
+                        },
+                      },
                     }}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
@@ -210,6 +226,22 @@ export default function JobApplicationsList({
                       ...app,
                       createdAt: app.createdAt.toISOString(),
                       updatedAt: app.updatedAt.toISOString(),
+                      student: {
+                        ...app.student,
+                        user: {
+                          ...app.student.user,
+                          firstname: app.student.user.firstname || '',
+                          lastname: app.student.user.lastname || '',
+                          profilePictureId: app.student.user.profilePicture || null,
+                        },
+                      },
+                      job: {
+                        ...app.job,
+                        company: {
+                          ...app.job.company,
+                          logoId: app.job.company.logo || null,
+                        },
+                      },
                     }}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
@@ -231,6 +263,22 @@ export default function JobApplicationsList({
                       ...app,
                       createdAt: app.createdAt.toISOString(),
                       updatedAt: app.updatedAt.toISOString(),
+                      student: {
+                        ...app.student,
+                        user: {
+                          ...app.student.user,
+                          firstname: app.student.user.firstname || '',
+                          lastname: app.student.user.lastname || '',
+                          profilePictureId: app.student.user.profilePicture || null,
+                        },
+                      },
+                      job: {
+                        ...app.job,
+                        company: {
+                          ...app.job.company,
+                          logoId: app.job.company.logo || null,
+                        },
+                      },
                     }}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />
@@ -252,6 +300,22 @@ export default function JobApplicationsList({
                       ...app,
                       createdAt: app.createdAt.toISOString(),
                       updatedAt: app.updatedAt.toISOString(),
+                      student: {
+                        ...app.student,
+                        user: {
+                          ...app.student.user,
+                          firstname: app.student.user.firstname || '',
+                          lastname: app.student.user.lastname || '',
+                          profilePictureId: app.student.user.profilePicture || null,
+                        },
+                      },
+                      job: {
+                        ...app.job,
+                        company: {
+                          ...app.job.company,
+                          logoId: app.job.company.logo || null,
+                        },
+                      },
                     }}
                     onDeleteClick={() => handleDeleteClick(app.id)}
                   />

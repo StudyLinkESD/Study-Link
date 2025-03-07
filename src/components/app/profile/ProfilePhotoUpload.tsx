@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { User } from 'lucide-react';
+import Image from 'next/image';
 import FileUploadInput from '@/components/app/common/FileUploadInput';
 
 interface ProfilePhotoUploadProps {
-  currentPhotoUrl?: string;
+  currentPhotoUrl?: string | null;
   onPhotoChange: (file: File | null, url?: string) => void;
 }
 
@@ -31,7 +32,14 @@ export default function ProfilePhotoUpload({
     <div className="flex flex-col items-center space-y-4">
       <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gray-100">
         {previewUrl ? (
-          <img src={previewUrl} alt="Photo de profil" className="w-full h-full object-cover" />
+          <Image
+            src={previewUrl}
+            alt="Photo de profil"
+            className="object-cover"
+            fill
+            sizes="128px"
+            priority
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <User className="w-16 h-16 text-gray-400" />
@@ -39,10 +47,12 @@ export default function ProfilePhotoUpload({
         )}
       </div>
       <FileUploadInput
-        onFileChange={handleFileChange}
+        id="profile-photo-upload"
+        onChange={handleFileChange}
         accept="image/*"
-        maxSize={5 * 1024 * 1024} // 5MB
-        label="Changer la photo"
+        preview={previewUrl || undefined}
+        previewType="avatar"
+        hint="Format recommandé : JPG ou PNG, 500x500px minimum"
       />
     </div>
   );

@@ -20,7 +20,7 @@ interface BaseFieldProps {
 
 interface TextFieldProps extends BaseFieldProps {
   type: 'text' | 'textarea';
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
   placeholder?: string;
   maxLength?: number;
@@ -28,7 +28,7 @@ interface TextFieldProps extends BaseFieldProps {
 
 interface SelectFieldProps extends BaseFieldProps {
   type: 'select';
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
   placeholder?: string;
@@ -36,7 +36,7 @@ interface SelectFieldProps extends BaseFieldProps {
 
 interface RadioFieldProps extends BaseFieldProps {
   type: 'radio';
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
 }
@@ -51,33 +51,30 @@ export default function ProfileFormField(props: ProfileFormFieldProps) {
       case 'text':
         return (
           <Input
-            id={name}
-            name={name}
-            value={props.value}
+            id={props.name}
+            type="text"
+            value={props.value || ''}
             onChange={(e) => props.onChange(e.target.value)}
             placeholder={props.placeholder}
             maxLength={props.maxLength}
-            className={cn(error && 'border-red-500')}
+            className={cn(props.error && 'border-red-500')}
           />
         );
-
       case 'textarea':
         return (
           <Textarea
-            id={name}
-            name={name}
-            value={props.value}
+            id={props.name}
+            value={props.value || ''}
             onChange={(e) => props.onChange(e.target.value)}
             placeholder={props.placeholder}
             maxLength={props.maxLength}
-            className={cn(error && 'border-red-500')}
+            className={cn('min-h-[100px]', props.error && 'border-red-500')}
           />
         );
-
       case 'select':
         return (
-          <Select value={props.value} onValueChange={props.onChange}>
-            <SelectTrigger className={cn(error && 'border-red-500')}>
+          <Select value={props.value || ''} onValueChange={props.onChange}>
+            <SelectTrigger>
               <SelectValue placeholder={props.placeholder} />
             </SelectTrigger>
             <SelectContent>
@@ -89,18 +86,13 @@ export default function ProfileFormField(props: ProfileFormFieldProps) {
             </SelectContent>
           </Select>
         );
-
       case 'radio':
         return (
-          <RadioGroup
-            value={props.value}
-            onValueChange={props.onChange}
-            className={cn(error && 'border-red-500')}
-          >
+          <RadioGroup value={props.value || ''} onValueChange={props.onChange}>
             {props.options.map((option) => (
               <div key={option.value} className="flex items-center space-x-2">
-                <RadioGroupItem value={option.value} id={`${name}-${option.value}`} />
-                <Label htmlFor={`${name}-${option.value}`}>{option.label}</Label>
+                <RadioGroupItem value={option.value} id={`${props.name}-${option.value}`} />
+                <Label htmlFor={`${props.name}-${option.value}`}>{option.label}</Label>
               </div>
             ))}
           </RadioGroup>

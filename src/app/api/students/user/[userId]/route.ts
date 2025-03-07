@@ -4,10 +4,10 @@ import { StudentResponseDTO } from '@/dto/student.dto';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } },
+  { params }: { params: Promise<{ userId: string }> },
 ): Promise<NextResponse<StudentResponseDTO | { error: string }>> {
   try {
-    const { userId } = params;
+    const { userId } = await params;
     console.log("Recherche de l'étudiant pour userId:", userId);
 
     const student = await prisma.student.findUnique({
@@ -42,6 +42,8 @@ export async function GET(
       previousCompanies: student.previousCompanies,
       availability: student.availability,
       studentEmail: student.studentEmail,
+      createdAt: student.createdAt,
+      updatedAt: student.updatedAt,
       user: {
         id: student.user.id,
         email: student.user.email,
@@ -54,7 +56,7 @@ export async function GET(
             id: student.school.id,
             name: student.school.name,
           }
-        : undefined,
+        : null,
     };
 
     return NextResponse.json(formattedStudent);

@@ -1,9 +1,10 @@
 import { ReactNode } from 'react';
+import { LucideIcon } from 'lucide-react';
 import SectionCard from '@/components/app/common/SectionCard';
 
 interface ProfileFormSectionProps {
   title: string;
-  icon: ReactNode;
+  icon: LucideIcon;
   children: ReactNode;
 }
 

@@ -3,7 +3,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useJob } from '@/context/job.context';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import JobTypeBadge from '@/components/app/common/JobTypeBadge';
+import SkillBadge from '@/components/app/common/SkillBadge';
 
 const JobView = () => {
   const { selectedJob } = useJob();
@@ -39,7 +40,7 @@ const JobView = () => {
           </div>
 
           <div className="flex gap-2 mb-6">
-            <StatusBadge status={selectedJob.status} />
+            <JobTypeBadge type={selectedJob.status} />
             {selectedJob.availability && (
               <span className="text-sm text-muted-foreground">{selectedJob.availability}</span>
             )}
@@ -54,7 +55,7 @@ const JobView = () => {
             <h2 className="text-lg font-semibold mb-2">Compétences requises</h2>
             <div className="flex flex-wrap gap-2">
               {selectedJob.skills.map((skill) => (
-                <StatusBadge key={skill.id} status={skill.name} variant="outline" />
+                <SkillBadge key={skill.id} label={skill.name} />
               ))}
             </div>
           </div>

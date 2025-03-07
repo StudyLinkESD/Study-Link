@@ -1,7 +1,7 @@
 // SkillsSelector.tsx
 import { useId } from 'react';
 import { Label } from '@/components/ui/label';
-import StatusBadge from '@/components/app/common/StatusBadge';
+import SkillBadge from '@/components/app/common/SkillBadge';
 
 type Skill = {
   id: string;
@@ -57,7 +57,7 @@ export default function SkillsSelector({
         <Label>Compétences sélectionnées</Label>
         <div className="mt-2 flex flex-wrap gap-2">
           {selectedSkills.length > 0 ? (
-            selectedSkills.map((skill, index) => <StatusBadge key={index} status={skill} />)
+            selectedSkills.map((skill, index) => <SkillBadge key={index} skill={skill} />)
           ) : (
             <p className="text-muted-foreground text-sm italic">Aucune compétence sélectionnée</p>
           )}
