@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { Job } from '@prisma/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/';
+import { toast } from 'sonner';
+
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+
 import { jobService } from '@/services/api';
 
 interface CreateJobModalProps {
@@ -48,7 +51,7 @@ export default function CreateJobModal({ isOpen, onClose, onJobCreated }: Create
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">
+            <label htmlFor="name" className="mb-1 block text-sm font-medium">
               Nom du poste
             </label>
             <Input
@@ -59,7 +62,7 @@ export default function CreateJobModal({ isOpen, onClose, onJobCreated }: Create
             />
           </div>
           <div>
-            <label htmlFor="skills" className="block text-sm font-medium mb-1">
+            <label htmlFor="skills" className="mb-1 block text-sm font-medium">
               Compétences requises
             </label>
             <Input
@@ -70,7 +73,7 @@ export default function CreateJobModal({ isOpen, onClose, onJobCreated }: Create
             />
           </div>
           <div>
-            <label htmlFor="description" className="block text-sm font-medium mb-1">
+            <label htmlFor="description" className="mb-1 block text-sm font-medium">
               Description
             </label>
             <Textarea
