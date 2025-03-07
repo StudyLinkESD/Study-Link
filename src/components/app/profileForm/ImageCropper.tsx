@@ -40,6 +40,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         sm: 40,
         md: 64,
         lg: 96,
+        sm: 40,
+        md: 64,
+        lg: 96,
       };
 
       const newPreviewUrls: { [key: string]: string } = {};
@@ -123,14 +126,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
                 size === 'lg' && 'w-24 h-24',
               )}
             >
-              <Image
-                src={url}
-                alt={`Aperçu ${size}`}
-                className="w-full h-full object-cover"
-                width={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
-                height={size === 'sm' ? 40 : size === 'md' ? 64 : 96}
-                priority
-              />
+              <img src={url} alt={`Aperçu ${size}`} className="w-full h-full object-cover" />
             </Avatar>
           </div>
         ))}
