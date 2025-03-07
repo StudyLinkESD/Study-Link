@@ -17,12 +17,16 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Admin, CompanyOwner, School, SchoolOwner, Student, User } from '@prisma/client';
+import { Suspense } from 'react';
 
 type AppUser = User & {
   admin: Admin | null;
   schoolOwner: (SchoolOwner & { school: School | null }) | null;
   companyOwner: (CompanyOwner & { company: { id: string; name: string } | null }) | null;
   student: (Student & { school: School | null }) | null;
+  firstName: string | null;
+  lastName: string | null;
+  profilePicture: string | null;
 };
 
 const ITEMS_PER_PAGE = 20;
@@ -73,8 +77,8 @@ const UsersList = () => {
         const matchesSchool = !school || getSchoolId(user) === school;
         const matchesSearch =
           !searchTerm ||
-          user.firstname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesType && matchesSchool && matchesSearch;
@@ -229,23 +233,23 @@ const UsersList = () => {
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      {user.profilePictureId ? (
+                      {user.profilePicture ? (
                         <Image
-                          src={user.profilePictureId}
-                          alt={`${user.firstname} ${user.lastname}`}
+                          src={user.profilePicture}
+                          alt={`${user.firstName} ${user.lastName}`}
                           width={40}
                           height={40}
                           className="rounded-full object-cover"
                         />
                       ) : (
                         <span className="text-gray-500 text-lg font-semibold">
-                          {user.firstname?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                          {user.firstName?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </span>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {user.firstname} {user.lastname}
+                    {user.firstName} {user.lastName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -275,4 +279,12 @@ const UsersList = () => {
   );
 };
 
-export default UsersList;
+const UsersPage = () => {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <UsersList />
+    </Suspense>
+  );
+};
+
+export default UsersPage;

@@ -13,9 +13,10 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { Search } from 'lucide-react';
+import { Search, Users } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 type SchoolWithDomain = {
   id: string;
@@ -132,6 +133,11 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
     );
   }
 
+  const displayedSchools = filteredSchools.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center gap-4">
@@ -158,51 +164,101 @@ export function SchoolList({ onEdit, onEditEnd }: SchoolListProps) {
         </div>
       </div>
 
-      <div className="grid gap-4">
-        {schools.map((school) => (
-          <Card key={school.id} className="overflow-hidden py-0">
-            <div className="flex items-stretch">
-              <div className="w-20 bg-gray-50 p-3 flex items-center justify-center border-r">
-                {school.logo ? (
-                  <Image
-                    src={school.logo}
-                    alt={school.name}
-                    className="max-w-full max-h-full object-contain"
-                    width={80}
-                    height={80}
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
-                    {school.name.charAt(0)}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-grow px-6 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{school.name}</h3>
-                    <p className="text-sm text-gray-500">{school.domain.domain}</p>
-                  </div>
-                  <Badge variant={school.isActive ? 'success' : 'destructive'} className="ml-2">
-                    {school.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setEditingSchool(school)}>
-                    Modifier
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-        {schools.length === 0 && (
-          <Card className="p-6">
-            <p className="text-center text-gray-500">Aucune école trouvée</p>
-          </Card>
-        )}
+      <div className="border rounded-lg">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                Logo
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nom
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Domaine
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[340px]">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {isLoading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center">
+                  Chargement...
+                </td>
+              </tr>
+            ) : displayedSchools.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center">
+                  Aucune école trouvée
+                </td>
+              </tr>
+            ) : (
+              displayedSchools.map((school) => (
+                <tr key={school.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      {school.logo ? (
+                        <Image
+                          src={school.logo}
+                          alt={school.name}
+                          width={40}
+                          height={40}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-500 text-lg font-semibold">
+                          {school.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{school.name}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{school.domain.domain}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Badge variant={school.isActive ? 'success' : 'destructive'}>
+                      {school.isActive ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/admin/users?type=student&school=${school.id}`}
+                          className="flex items-center"
+                        >
+                          <Users className="w-4 h-4 mr-2" />
+                          Étudiants
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/admin/users?type=school_owner&school=${school.id}`}
+                          className="flex items-center"
+                        >
+                          <Users className="w-4 h-4 mr-2" />
+                          Administrateurs
+                        </Link>
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingSchool(school)}>
+                        Modifier
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {filteredSchools.length > 0 && (
