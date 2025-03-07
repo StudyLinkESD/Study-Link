@@ -80,7 +80,6 @@ const CompaniesList = () => {
         </div>
       </div>
 
-      {/* Table des entreprises */}
       <div className="rounded-lg border">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -138,7 +137,6 @@ const CompaniesList = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       {filteredCompanies.length > 0 && (
         <div className="mt-6 flex justify-center">
           <Pagination

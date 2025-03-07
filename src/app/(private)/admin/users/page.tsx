@@ -196,7 +196,6 @@ const UsersList = () => {
         </div>
       </div>
 
-      {/* Table des utilisateurs */}
       <div className="rounded-lg border">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -270,7 +269,6 @@ const UsersList = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="mt-6 flex justify-center">
         <Pagination
           currentPage={currentPage}
