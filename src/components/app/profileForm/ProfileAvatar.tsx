@@ -46,11 +46,19 @@ const ProfileAvatarComponent = ({
 
     if (photoUrl) {
       let cleanUrl = photoUrl;
+
+      // Traitement des URL de l'API
       if (cleanUrl.startsWith('/api/files/')) {
         cleanUrl = cleanUrl.substring('/api/files/'.length);
-        console.log('ProfileAvatar - URL nettoyée:', cleanUrl);
-        setImageUrl(cleanUrl);
+        console.log('ProfileAvatar - URL nettoyée (API):', cleanUrl);
       }
+
+      // Traitement des URL Supabase
+      if (cleanUrl.includes('supabase.co/storage/v1/object/public/')) {
+        console.log('ProfileAvatar - URL Supabase détectée:', cleanUrl);
+      }
+
+      setImageUrl(cleanUrl);
 
       const img = new Image();
       img.onload = () => {

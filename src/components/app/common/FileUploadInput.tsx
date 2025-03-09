@@ -1,4 +1,4 @@
-import { File as FileIcon, Upload } from 'lucide-react';
+import { File as FileIcon, Loader2, Upload } from 'lucide-react';
 
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
@@ -19,6 +19,7 @@ type FileUploadInputProps = {
   lastName?: string;
   hint?: string;
   initialFileName?: string;
+  isLoading?: boolean;
 };
 
 export default function FileUploadInput({
@@ -31,6 +32,7 @@ export default function FileUploadInput({
   lastName,
   hint,
   initialFileName,
+  isLoading = false,
 }: FileUploadInputProps) {
   const [uploadProgress, setUploadProgress] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -76,6 +78,8 @@ export default function FileUploadInput({
   };
 
   const uploadFile = async (file: File) => {
+    if (isLoading) return;
+
     setUploadProgress(true);
     setErrorMessage(null);
 
@@ -95,9 +99,9 @@ export default function FileUploadInput({
         return;
       }
 
-      setTimeout(() => {
-        onChange(file, result.url || undefined);
-      }, 0);
+      console.log('URL obtenue après upload:', result.url);
+
+      onChange(file, result.url);
     } catch (error) {
       console.error("Erreur lors de l'upload du fichier:", error);
       setErrorMessage(
@@ -164,7 +168,7 @@ export default function FileUploadInput({
               type="file"
               accept={accept}
               onChange={handleFileSelection}
-              disabled={uploadProgress}
+              disabled={uploadProgress || isLoading}
               className="hidden"
             />
             <div className="text-muted-foreground flex-1 truncate rounded-md border px-3 py-2 text-sm">
@@ -175,11 +179,15 @@ export default function FileUploadInput({
               variant="outline"
               size="sm"
               onClick={triggerFileInput}
-              disabled={uploadProgress}
+              disabled={uploadProgress || isLoading}
               onSubmit={(e) => e.preventDefault()}
             >
-              <Upload size={16} className="mr-2" />
-              Parcourir
+              {isLoading ? (
+                <Loader2 size={16} className="mr-2 animate-spin" />
+              ) : (
+                <Upload size={16} className="mr-2" />
+              )}
+              {isLoading ? 'Chargement...' : 'Parcourir'}
             </Button>
           </div>
 

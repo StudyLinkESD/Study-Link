@@ -46,6 +46,7 @@ model Student {
   availability            Boolean
   jobRequests             JobRequest[]
   recommendations         Recommendation[] @relation("StudentRecommendations")
+  experiences             Experience[]
 }
 
 model CompanyOwner {
@@ -167,4 +168,17 @@ model Account {
   session_state     String?
 
   @@unique([provider, providerAccountId])
+}
+
+model Experience {
+  id        String    @id @default(cuid())
+  student   Student   @relation(fields: [studentId], references: [id])
+  studentId String
+  company   String
+  position  String
+  type      String
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

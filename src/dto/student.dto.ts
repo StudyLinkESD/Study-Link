@@ -8,11 +8,22 @@ export interface CreateStudentDTO {
   description: string;
   curriculumVitae?: string | null;
   previousCompanies: string;
+  experiences?: ExperienceDTO[];
   availability: boolean;
   user?: {
     firstName: string | null;
     lastName: string | null;
   };
+}
+
+export interface ExperienceDTO {
+  id?: string;
+  position: string;
+  company: string;
+  startDate: string;
+  endDate?: string;
+  description?: string;
+  type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
 }
 
 export interface UpdateStudentDTO
@@ -24,6 +35,7 @@ export interface StudentResponseDTO extends Omit<CreateStudentDTO, 'skills'> {
   id: string;
   primaryRecommendationId: string | null;
   skills: string;
+  experiences?: ExperienceDTO[];
   user: {
     id: string;
     email: string;
