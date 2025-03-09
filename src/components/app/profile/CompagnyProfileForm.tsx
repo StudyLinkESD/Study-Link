@@ -82,16 +82,13 @@ function StudentProfileContent() {
         const studentId = studentIdFromUrl || studentIdFromSession;
 
         if (!studentId) {
-          console.log('No student ID available, redirecting to profile creation');
           setLoading(false);
           return;
         }
 
-        console.log('Fetching student with ID:', studentId);
         const studentData = await getStudentById(studentId);
 
         if (!studentData) {
-          console.log('Student not found, redirecting to profile creation');
           setLoading(false);
           return;
         }
@@ -160,18 +157,6 @@ function StudentProfileContent() {
   const photoUrl = cleanPhotoUrl(student.user?.profilePicture);
 
   const studentEmail = student.studentEmail || '';
-
-  console.log("Informations de l'utilisateur:", {
-    firstName,
-    lastName,
-    photoUrl,
-    studentEmail,
-    originalPhotoUrl: student.user?.profilePicture,
-    sessionUserImage: session?.user?.image,
-    studentId: student.id,
-    userId: student.userId,
-    userObject: student.user,
-  });
 
   const experiences = student.previousCompanies
     .split(',')

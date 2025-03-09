@@ -35,15 +35,6 @@ function validateFile(file: File, allowedTypes: string[]): FileValidationResult 
   const fileExt = file.name.split('.').pop()?.toLowerCase();
   const mimeType = file.type.toLowerCase();
 
-  console.log('Validation du fichier:', {
-    fileName: file.name,
-    fileExt,
-    mimeType,
-    allowedTypes,
-    fileSize: file.size,
-    maxSize: MAX_FILE_SIZE,
-  });
-
   if (!fileExt || !allowedTypes.includes(fileExt)) {
     return {
       isValid: false,
@@ -90,13 +81,6 @@ export async function handleUploadFile(
   const file = e.target.files?.[0];
   if (!file) return { url: null, error: 'Aucun fichier sélectionné' };
 
-  console.log("Début de l'upload du fichier:", {
-    fileName: file.name,
-    fileType: file.type,
-    fileSize: file.size,
-    bucket,
-  });
-
   let allowedTypes: string[];
   if (bucket === 'studylink_images') {
     allowedTypes = [...SUPPORTED_FILE_TYPES.images, ...SUPPORTED_FILE_TYPES.documents];
@@ -117,19 +101,11 @@ export async function handleUploadFile(
     const fileName = `public/${Date.now()}.${validation.normalizedExt}`;
     const contentType = MIME_TYPES[validation.normalizedExt!] || 'application/octet-stream';
 
-    console.log("Tentative d'upload vers Supabase:", {
-      bucket,
-      fileName,
-      contentType,
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: true,
+      contentType: contentType,
     });
-
-    const { error: uploadError, data } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: true,
-        contentType: contentType,
-      });
 
     if (uploadError) {
       console.error("Erreur lors de l'upload vers Supabase:", uploadError);
@@ -139,9 +115,7 @@ export async function handleUploadFile(
       };
     }
 
-    console.log('Upload réussi, données:', data);
     const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
-    console.log('URL publique:', publicUrlData.publicUrl);
 
     return { url: publicUrlData.publicUrl, error: undefined };
   } catch (error) {

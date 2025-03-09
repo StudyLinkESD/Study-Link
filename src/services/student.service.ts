@@ -14,7 +14,6 @@ function getBaseUrl() {
 async function serverFetch(url: string, options: RequestInit = {}) {
   const baseUrl = getBaseUrl();
   const fullUrl = `${baseUrl}${url}`;
-  console.log('Fetching from:', fullUrl);
 
   try {
     const axiosConfig: AxiosRequestConfig = {
@@ -46,8 +45,6 @@ async function serverFetch(url: string, options: RequestInit = {}) {
 
 export async function getStudents(): Promise<StudentResponseDTO[]> {
   try {
-    console.log('Fetching all students...');
-
     if (process.env.NODE_ENV === 'production') {
       const students = await prisma.student.findMany({
         include: {
@@ -73,7 +70,6 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
     }
 
     const students = await serverFetch('/students');
-    console.log('Raw students data:', students);
 
     if (!Array.isArray(students)) {
       throw new Error('Students data is not an array');
@@ -106,12 +102,10 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
 
 export async function getStudentById(id: string): Promise<StudentResponseDTO | null> {
   try {
-    console.log('Fetching student with ID:', id);
     const student = await serverFetch(`/students/${id}`);
     return student;
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
-      console.log('Student not found');
       return null;
     }
     console.error("Erreur lors de la récupération de l'étudiant:", error);

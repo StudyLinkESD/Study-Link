@@ -10,12 +10,31 @@ const prisma = new PrismaClient();
 
 export async function GET(): Promise<NextResponse<CompanyResponseDTO[] | { error: string }>> {
   try {
-    const companies = await prisma.company.findMany();
-    return NextResponse.json(companies);
+    const companies = await prisma.company.findMany({
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        companyOwners: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+
+    const companyResponses: CompanyResponseDTO[] = companies.map((company) => ({
+      id: company.id,
+      name: company.name,
+      logo: company.logo,
+      companyOwners: company.companyOwners,
+    }));
+
+    return NextResponse.json(companyResponses);
   } catch (error) {
-    console.error('Erreur lors de la récupération des compagnies:', error);
+    console.error('Erreur lors de la récupération des entreprises:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des compagnies' },
+      { error: 'Erreur lors de la récupération des entreprises' },
       { status: 500 },
     );
   }
@@ -40,6 +59,16 @@ export async function POST(
 
     const company = await prisma.company.create({
       data: body,
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        companyOwners: {
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(company, { status: 201 });

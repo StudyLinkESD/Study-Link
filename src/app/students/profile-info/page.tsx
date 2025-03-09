@@ -160,19 +160,16 @@ function StudentProfileContent() {
 
   const getStudentById = async (id: string) => {
     try {
-      console.log("Recherche de l'étudiant pour id:", id);
       const response = await fetch(`/api/students/${id}`);
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log('Aucun étudiant trouvé pour id:', id);
           return null;
         }
         throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
       }
 
       const data = await response.json();
-      console.log("Données de l'étudiant récupérées:", data);
       return data;
     } catch (error) {
       console.error("Erreur lors de la récupération de l'étudiant:", error);
@@ -182,19 +179,16 @@ function StudentProfileContent() {
 
   const getStudentByUserId = async (userId: string) => {
     try {
-      console.log("Recherche de l'étudiant pour userId:", userId);
       const response = await fetch(`/api/students/user/${userId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log('Aucun étudiant trouvé pour userId:', userId);
           return null;
         }
         throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
       }
 
       const data = await response.json();
-      console.log("Données de l'étudiant récupérées:", data);
       return data;
     } catch (error) {
       console.error("Erreur lors de la récupération de l'étudiant:", error);
@@ -204,7 +198,6 @@ function StudentProfileContent() {
 
   const createStudent = async (data: CreateStudentData) => {
     try {
-      console.log('Envoi des données au serveur:', data);
       const response = await fetch(`/api/students`, {
         method: 'POST',
         headers: {
@@ -214,7 +207,6 @@ function StudentProfileContent() {
       });
 
       const responseData = await response.json();
-      console.log('Réponse brute du serveur:', responseData);
 
       if (!response.ok) {
         console.error("Réponse d'erreur du serveur:", responseData);
@@ -237,8 +229,6 @@ function StudentProfileContent() {
 
   const updateStudent = async (id: string, data: CreateStudentData) => {
     try {
-      console.log('Mise à jour du profil étudiant pour id:', id);
-
       const updateData = {
         status: data.status,
         skills: data.skills,
@@ -248,8 +238,6 @@ function StudentProfileContent() {
         previousCompanies: data.previousCompanies,
         availability: data.availability,
       };
-
-      console.log('Données envoyées pour la mise à jour:', updateData);
 
       const response = await fetch(`/api/students/${id}`, {
         method: 'PUT',
@@ -294,26 +282,9 @@ function StudentProfileContent() {
     if (id) {
       setStudentId(id);
       try {
-        console.log("Tentative de chargement du profil pour l'étudiant:", id);
         const studentData = await getStudentById(id);
-        console.log("Données brutes reçues de l'API:", studentData);
 
         if (studentData) {
-          console.log("Données de l'étudiant à charger dans le formulaire:", {
-            firstName: studentData.user?.firstName,
-            lastName: studentData.user?.lastName,
-            status: studentData.status,
-            school: studentData.schoolId,
-            availability: studentData.availability,
-            alternanceRhythm: studentData.apprenticeshipRhythm,
-            description: studentData.description,
-            skills: studentData.skills
-              ? studentData.skills.split(',').map((s: string) => s.trim())
-              : [],
-            previousCompanies: studentData.previousCompanies,
-            schoolEmail: studentData.studentEmail,
-          });
-
           setPhotoUrl(studentData.user?.profilePicture || '');
           setCvUrl(studentData.curriculumVitae || '');
 
@@ -337,26 +308,10 @@ function StudentProfileContent() {
       }
     } else if (session?.user?.id) {
       try {
-        console.log("Tentative de chargement du profil pour l'utilisateur:", session.user.id);
         const studentData = await getStudentByUserId(session.user.id);
-        console.log("Données brutes reçues de l'API:", studentData);
 
         if (studentData) {
           setStudentId(studentData.id);
-          console.log("Données de l'étudiant à charger dans le formulaire:", {
-            firstName: studentData.user?.firstName,
-            lastName: studentData.user?.lastName,
-            status: studentData.status,
-            school: studentData.schoolId,
-            availability: studentData.availability,
-            alternanceRhythm: studentData.apprenticeshipRhythm,
-            description: studentData.description,
-            skills: studentData.skills
-              ? studentData.skills.split(',').map((s: string) => s.trim())
-              : [],
-            previousCompanies: studentData.previousCompanies,
-            schoolEmail: studentData.studentEmail,
-          });
 
           setPhotoUrl(studentData.user?.profilePicture || '');
           setCvUrl(studentData.curriculumVitae || '');
@@ -425,7 +380,6 @@ function StudentProfileContent() {
 
           if (session && session.user) {
             session.user.image = url;
-            console.log('Photo de profil mise à jour dans la session:', url);
 
             const event = new Event('visibilitychange');
             document.dispatchEvent(event);
@@ -446,12 +400,6 @@ function StudentProfileContent() {
   const handleCvUpload = async (file: File | null) => {
     if (file) {
       try {
-        console.log("Début de l'upload du CV:", {
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-        });
-
         const syntheticEvent = {
           target: {
             files: [file],
@@ -468,7 +416,6 @@ function StudentProfileContent() {
           throw new Error(uploadResult.error || "Échec de l'upload du CV");
         }
 
-        console.log('Upload réussi:', uploadResult);
         setUploadedCv(file);
         setCvUrl(uploadResult.url);
         return uploadResult.url;
@@ -505,8 +452,6 @@ function StudentProfileContent() {
         previousCompanies: data.previousCompanies || 'Aucune expérience précédente',
         availability: data.availability || true,
       };
-
-      console.log("Données envoyées à l'API:", studentData);
 
       if (
         !studentData.userId ||
@@ -568,7 +513,6 @@ function StudentProfileContent() {
         result = await updateStudent(studentId, studentData);
         toast.success('Profil mis à jour avec succès');
       } else {
-        console.log("Création d'un nouveau profil étudiant");
         result = await createStudent(studentData);
         if (result && result.id) {
           setStudentId(result.id);
@@ -1012,9 +956,6 @@ function StudentProfileContent() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Bouton Enregistrer cliqué');
-                        console.log('État du formulaire:', formValues);
-                        console.log('Erreurs:', form.formState.errors);
 
                         if (form.formState.isValid) {
                           onSubmit(form.getValues());

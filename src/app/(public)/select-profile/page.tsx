@@ -34,14 +34,7 @@ export default function SelectProfilePage() {
                   <li>• Recherchez des profils d&apos;étudiants</li>
                   <li>• Gérez vos recrutements</li>
                 </ul>
-                <div className="relative">
-                  <Button className="mt-4 w-full" variant="outline">
-                    Bientôt disponible
-                  </Button>
-                  <div className="bg-background/80 absolute inset-0 flex items-center justify-center backdrop-blur-[1px]">
-                    <span className="text-muted-foreground text-sm">En développement</span>
-                  </div>
-                </div>
+                <Button className="mt-4 w-full">Créer un profil entreprise</Button>
               </CardContent>
             </Link>
           </Card>
