@@ -11,27 +11,27 @@ export default async function StudentsPage() {
     const studentsData = await getStudents();
 
     const students = studentsData.map((student) => {
-      const skillsArray = student.skills.split(',').map((s) => ({ id: s.trim(), name: s.trim() }));
+      const skillsArray =
+        student.skills?.split(',').map((s) => ({ id: s.trim(), name: s.trim() })) || [];
 
-      let status: 'Alternant' | 'Stagiaire' = 'Stagiaire';
-
-      const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
-      if (
-        skillsArray.some((skill) =>
-          alternanceKeywords.some((keyword) => skill.name.toLowerCase().includes(keyword)),
-        )
-      ) {
-        status = 'Alternant';
-      }
+      const mappedStatus =
+        student.status === 'Alternant' || student.status === 'Stagiaire'
+          ? student.status
+          : 'Alternant';
 
       return {
         id: student.id,
-        firstName: student.user?.firstName || '',
-        lastName: student.user?.lastName || '',
-        photoUrl: student.user?.profilePicture ? `/api/files/${student.user.profilePicture}` : '',
-        status,
+        firstName: student.user?.firstName || 'Anonyme',
+        lastName: student.user?.lastName || 'Anonyme',
+        photoUrl: student.user?.profilePicture || '',
+        status: mappedStatus,
         school: student.school?.name || '',
         skills: skillsArray,
+        description: student.description || '',
+        apprenticeshipRhythm: student.apprenticeshipRhythm || null,
+        availability: student.availability ?? false,
+        studentEmail: student.studentEmail || '',
+        curriculumVitae: student.curriculumVitae || null,
       };
     });
 

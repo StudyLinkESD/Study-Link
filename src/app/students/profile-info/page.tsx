@@ -7,8 +7,8 @@ import { useSession } from 'next-auth/react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 
 import FileUploadInput from '@/components/app/common/FileUploadInput';
 import SectionCard from '@/components/app/common/SectionCard';
@@ -33,6 +33,10 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { cn } from '@/lib/utils';
 
+import { CreateStudentData } from '@/dto/student.dto';
+import { validateSchoolEmail } from '@/services/school.service';
+import { handleUploadFile } from '@/services/uploadFile';
+
 const profileSchema = z.object({
   firstName: z
     .string()
@@ -52,13 +56,7 @@ const profileSchema = z.object({
     required_error: 'Veuillez sélectionner votre statut',
   }),
   school: z.string().min(1, { message: 'Veuillez sélectionner votre école' }),
-  availability: z
-    .string()
-    .regex(/^(0[1-9]|1[0-2])\/20[2-9][0-9]$/, {
-      message: 'Format attendu : MM/YYYY (ex: 09/2024)',
-    })
-    .optional()
-    .or(z.literal('')),
+  availability: z.boolean().default(true),
   alternanceRhythm: z
     .string()
     .min(5, { message: "Veuillez décrire votre rythme d'alternance" })
@@ -67,7 +65,7 @@ const profileSchema = z.object({
     .or(z.literal('')),
   description: z
     .string()
-    .min(100, { message: 'La description doit contenir au moins 100 caractères' })
+    .min(20, { message: 'La description doit contenir au moins 20 caractères' })
     .max(500, { message: 'La description ne doit pas dépasser 500 caractères' })
     .optional()
     .or(z.literal('')),
@@ -75,6 +73,10 @@ const profileSchema = z.object({
     .array(z.string())
     .min(3, { message: 'Veuillez sélectionner au moins 3 compétences' })
     .max(10, { message: 'Vous ne pouvez pas sélectionner plus de 10 compétences' }),
+  previousCompanies: z
+    .string()
+    .min(1, { message: 'Veuillez renseigner vos entreprises précédentes' }),
+  schoolEmail: z.string().email('Veuillez entrer un email valide'),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -84,25 +86,38 @@ interface School {
   name: string;
 }
 
-interface CreateStudentData {
-  userId: string;
-  schoolId: string;
-  status: 'Alternant' | 'Stagiaire';
-  skills: string;
-  apprenticeshipRhythm: string | null;
-  description: string;
-  curriculumVitaeId: string | null;
-  previousCompanies: string;
-  availability: boolean;
+interface ErrorDetail {
+  message: string;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function StudentProfileForm() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <StudentProfileContent />
+    </Suspense>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="container mx-auto flex min-h-[400px] max-w-4xl items-center justify-center px-4 py-8">
+      <div className="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent"></div>
+    </div>
+  );
+}
+
+function StudentProfileContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [photoUrl, setPhotoUrl] = useState('');
   const [uploadedCv, setUploadedCv] = useState<File | null>(null);
+  const [cvUrl, setCvUrl] = useState<string>('');
   const [selectedTab, setSelectedTab] = useState('personal');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
 
   const availableSkills = [
@@ -126,14 +141,7 @@ export default function StudentProfileForm() {
     { id: 'supinfo', name: 'Supinfo' },
   ]);
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors, isSubmitting, dirtyFields, touchedFields },
-  } = useForm<ProfileFormData>({
+  const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     mode: 'onChange',
     defaultValues: {
@@ -141,25 +149,53 @@ export default function StudentProfileForm() {
       lastName: '',
       status: 'Alternant',
       school: '',
-      availability: '',
+      availability: true,
       alternanceRhythm: '',
       description: '',
       skills: [],
+      previousCompanies: '',
+      schoolEmail: '',
     },
   });
 
-  const getStudentByUserId = async (userId: string) => {
+  const getStudentById = async (id: string) => {
     try {
-      const response = await fetch(`/api/students/students/${userId}`);
+      console.log("Recherche de l'étudiant pour id:", id);
+      const response = await fetch(`/api/students/${id}`);
 
       if (!response.ok) {
         if (response.status === 404) {
+          console.log('Aucun étudiant trouvé pour id:', id);
           return null;
         }
         throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log("Données de l'étudiant récupérées:", data);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'étudiant:", error);
+      return null;
+    }
+  };
+
+  const getStudentByUserId = async (userId: string) => {
+    try {
+      console.log("Recherche de l'étudiant pour userId:", userId);
+      const response = await fetch(`/api/students/user/${userId}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('Aucun étudiant trouvé pour userId:', userId);
+          return null;
+        }
+        throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
+      }
+
+      const data = await response.json();
+      console.log("Données de l'étudiant récupérées:", data);
+      return data;
     } catch (error) {
       console.error("Erreur lors de la récupération de l'étudiant:", error);
       return null;
@@ -167,38 +203,186 @@ export default function StudentProfileForm() {
   };
 
   const createStudent = async (data: CreateStudentData) => {
-    const response = await fetch(`/api/students`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      console.log('Envoi des données au serveur:', data);
+      const response = await fetch(`/api/students`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de la création du profil étudiant');
+      const responseData = await response.json();
+      console.log('Réponse brute du serveur:', responseData);
+
+      if (!response.ok) {
+        console.error("Réponse d'erreur du serveur:", responseData);
+        if (responseData.details) {
+          console.error('Détails des erreurs:', responseData.details);
+          throw new Error(responseData.details.map((d: ErrorDetail) => d.message).join(', '));
+        }
+        throw new Error(responseData.error || 'Erreur lors de la création du profil étudiant');
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error('Erreur détaillée dans createStudent:', error);
+      if (error instanceof Error) {
+        throw new Error(`Erreur lors de la création de l'étudiant: ${error.message}`);
+      }
+      throw error;
     }
-
-    return response.json();
   };
 
   const updateStudent = async (id: string, data: CreateStudentData) => {
-    const response = await fetch(`/api/students/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      console.log('Mise à jour du profil étudiant pour id:', id);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de la mise à jour du profil étudiant');
+      const updateData = {
+        status: data.status,
+        skills: data.skills,
+        apprenticeshipRhythm: data.apprenticeshipRhythm,
+        description: data.description,
+        curriculumVitae: data.curriculumVitae,
+        previousCompanies: data.previousCompanies,
+        availability: data.availability,
+      };
+
+      console.log('Données envoyées pour la mise à jour:', updateData);
+
+      const response = await fetch(`/api/students/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Réponse d'erreur du serveur:", errorData);
+        throw new Error(errorData.error || 'Erreur lors de la mise à jour du profil étudiant');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Erreur dans updateStudent:', error);
+      throw error;
+    }
+  };
+
+  const fetchSchools = useCallback(async () => {
+    try {
+      const response = await fetch('/api/schools');
+      if (response.ok) {
+        const schoolsData = await response.json();
+        setSchools(schoolsData);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des écoles:', error);
+    }
+  }, []);
+
+  const loadStudentProfile = useCallback(async () => {
+    const studentIdFromUrl = searchParams.get('studentId');
+
+    const studentIdFromSession = session?.user?.studentId;
+
+    const id = studentIdFromUrl || studentIdFromSession;
+
+    if (id) {
+      setStudentId(id);
+      try {
+        console.log("Tentative de chargement du profil pour l'étudiant:", id);
+        const studentData = await getStudentById(id);
+        console.log("Données brutes reçues de l'API:", studentData);
+
+        if (studentData) {
+          console.log("Données de l'étudiant à charger dans le formulaire:", {
+            firstName: studentData.user?.firstName,
+            lastName: studentData.user?.lastName,
+            status: studentData.status,
+            school: studentData.schoolId,
+            availability: studentData.availability,
+            alternanceRhythm: studentData.apprenticeshipRhythm,
+            description: studentData.description,
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies,
+            schoolEmail: studentData.studentEmail,
+          });
+
+          setPhotoUrl(studentData.user?.profilePicture || '');
+          setCvUrl(studentData.curriculumVitae || '');
+
+          form.reset({
+            firstName: studentData.user?.firstName || '',
+            lastName: studentData.user?.lastName || '',
+            status: studentData.status || 'Alternant',
+            school: studentData.schoolId || '',
+            availability: studentData.availability !== undefined ? studentData.availability : true,
+            alternanceRhythm: studentData.apprenticeshipRhythm || '',
+            description: studentData.description || '',
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies || '',
+            schoolEmail: studentData.studentEmail || '',
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du profil de l'étudiant:", error);
+      }
+    } else if (session?.user?.id) {
+      try {
+        console.log("Tentative de chargement du profil pour l'utilisateur:", session.user.id);
+        const studentData = await getStudentByUserId(session.user.id);
+        console.log("Données brutes reçues de l'API:", studentData);
+
+        if (studentData) {
+          setStudentId(studentData.id);
+          console.log("Données de l'étudiant à charger dans le formulaire:", {
+            firstName: studentData.user?.firstName,
+            lastName: studentData.user?.lastName,
+            status: studentData.status,
+            school: studentData.schoolId,
+            availability: studentData.availability,
+            alternanceRhythm: studentData.apprenticeshipRhythm,
+            description: studentData.description,
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies,
+            schoolEmail: studentData.studentEmail,
+          });
+
+          setPhotoUrl(studentData.user?.profilePicture || '');
+          setCvUrl(studentData.curriculumVitae || '');
+
+          form.reset({
+            firstName: studentData.user?.firstName || '',
+            lastName: studentData.user?.lastName || '',
+            status: studentData.status || 'Alternant',
+            school: studentData.schoolId || '',
+            availability: studentData.availability !== undefined ? studentData.availability : true,
+            alternanceRhythm: studentData.apprenticeshipRhythm || '',
+            description: studentData.description || '',
+            skills: studentData.skills
+              ? studentData.skills.split(',').map((s: string) => s.trim())
+              : [],
+            previousCompanies: studentData.previousCompanies || '',
+            schoolEmail: studentData.studentEmail || '',
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du profil de l'utilisateur:", error);
+      }
     }
 
-    return response.json();
-  };
+    setIsLoading(false);
+  }, [searchParams, session?.user?.id, session?.user?.studentId, form]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -206,108 +390,162 @@ export default function StudentProfileForm() {
       return;
     }
 
-    const fetchSchools = async () => {
+    fetchSchools();
+    loadStudentProfile();
+  }, [status, router, fetchSchools, loadStudentProfile]);
+
+  const formValues = form.watch();
+
+  const handlePhotoUpload = async (file: File | null, url?: string) => {
+    if (file && url) {
       try {
-        const response = await fetch('/api/schools');
-        if (response.ok) {
-          const schoolsData = await response.json();
-          setSchools(
-            schoolsData.map((school: School) => ({
-              id: school.id,
-              name: school.name,
-            })),
-          );
+        setPhotoUrl(url);
+        if (session?.user?.id) {
+          const userResponse = await fetch(`/api/users/${session.user.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              profilePicture: url,
+            }),
+          });
+
+          if (!userResponse.ok) {
+            console.error(
+              'Erreur lors de la mise à jour de la photo de profil:',
+              await userResponse.text(),
+            );
+            toast.error('Erreur lors de la mise à jour de la photo de profil');
+            return;
+          }
+
+          const updatedUser = await userResponse.json();
+          console.log('Utilisateur mis à jour:', updatedUser);
+
+          if (session && session.user) {
+            session.user.image = url;
+            console.log('Photo de profil mise à jour dans la session:', url);
+
+            const event = new Event('visibilitychange');
+            document.dispatchEvent(event);
+          }
+
+          toast.success('Photo de profil mise à jour avec succès');
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des écoles:', error);
+        console.error('Erreur lors de la mise à jour de la photo de profil:', error);
+        toast.error('Erreur lors de la mise à jour de la photo de profil');
       }
-    };
-
-    fetchSchools();
-
-    if (status === 'authenticated' && session?.user?.id) {
-      const loadStudentProfile = async () => {
-        try {
-          const studentData = await getStudentByUserId(session.user.id);
-
-          if (studentData) {
-            setStudentId(studentData.id);
-
-            reset({
-              firstName: session.user.name?.split(' ')[0] || '',
-              lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
-              status: studentData.status as 'Alternant' | 'Stagiaire',
-              school: studentData.schoolId,
-              availability: studentData.availability ? 'Disponible' : '',
-              alternanceRhythm: studentData.apprenticeshipRhythm || '',
-              description: studentData.description,
-              skills: studentData.skills.split(',').map((s: string) => s.trim()),
-            });
-
-            if (session.user.image) {
-              setPhotoUrl(session.user.image);
-            } else if (studentData.user?.profilePicture) {
-              setPhotoUrl(`/api/files/${studentData.user.profilePicture}`);
-            }
-
-            if (studentData.curriculumVitaeId) {
-              console.log('CV déjà chargé:', studentData.curriculumVitaeId);
-            }
-          } else {
-            if (session.user.name) {
-              const names = session.user.name.split(' ');
-              reset({
-                firstName: names[0] || '',
-                lastName: names.slice(1).join(' ') || '',
-                status: 'Alternant',
-                school: '',
-                skills: [],
-              });
-            }
-
-            if (session.user.image) {
-              setPhotoUrl(session.user.image);
-            }
-          }
-        } catch (error) {
-          console.error('Erreur lors du chargement du profil:', error);
-          toast.error('Impossible de charger votre profil');
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      loadStudentProfile();
-    } else {
-      setIsLoading(false);
-    }
-  }, [status, session, router, reset]);
-
-  const formValues = watch();
-
-  const handlePhotoUpload = (file: File | null, url?: string) => {
-    if (file) {
-      const imageUrl = url || URL.createObjectURL(file);
+    } else if (file) {
+      const imageUrl = URL.createObjectURL(file);
       setPhotoUrl(imageUrl);
     }
   };
 
-  const handleCvUpload = (file: File | null) => {
+  const handleCvUpload = async (file: File | null) => {
     if (file) {
-      setUploadedCv(file);
+      try {
+        console.log("Début de l'upload du CV:", {
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+        });
+
+        const syntheticEvent = {
+          target: {
+            files: [file],
+          },
+          preventDefault: () => {},
+          stopPropagation: () => {},
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+        const uploadResult = await handleUploadFile(syntheticEvent, 'studylink_images');
+
+        if (!uploadResult.url) {
+          console.error("L'upload a échoué - aucune URL retournée");
+          console.error('Erreur détaillée:', uploadResult.error);
+          throw new Error(uploadResult.error || "Échec de l'upload du CV");
+        }
+
+        console.log('Upload réussi:', uploadResult);
+        setUploadedCv(file);
+        setCvUrl(uploadResult.url);
+        return uploadResult.url;
+      } catch (error) {
+        console.error("Erreur détaillée lors de l'upload du CV:", error);
+        toast.error("Erreur lors de l'upload du CV");
+        return null;
+      }
     }
+    return null;
   };
 
   const onSubmit = async (data: ProfileFormData) => {
-    if (!session?.user?.id) {
-      toast.error('Vous devez être connecté pour enregistrer votre profil');
-      return;
-    }
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      if (data.firstName || data.lastName) {
+      const isValidSchoolEmail = await validateSchoolEmail(data.schoolEmail);
+      if (!isValidSchoolEmail) {
+        toast.error("L'email scolaire n'est pas valide pour l'école sélectionnée");
+        setIsSubmitting(false);
+        return;
+      }
+      const studentData: CreateStudentData = {
+        userId: session?.user?.id || '',
+        schoolId: data.school,
+        studentEmail: data.schoolEmail,
+        status: data.status,
+        skills: data.skills.join(', '),
+        apprenticeshipRhythm: data.alternanceRhythm || null,
+        description:
+          data.description ||
+          'Je suis un étudiant en alternance passionné par le développement web. Je recherche une entreprise pour mettre en pratique mes compétences et continuer mon apprentissage. Mon objectif est de contribuer à des projets innovants tout en développant mes compétences techniques et professionnelles.',
+        previousCompanies: data.previousCompanies || 'Aucune expérience précédente',
+        availability: data.availability || true,
+      };
+
+      console.log("Données envoyées à l'API:", studentData);
+
+      if (
+        !studentData.userId ||
+        !studentData.schoolId ||
+        !studentData.status ||
+        !studentData.skills ||
+        !studentData.description ||
+        !studentData.previousCompanies ||
+        studentData.availability === undefined
+      ) {
+        console.error('Données manquantes:', {
+          userId: !studentData.userId,
+          schoolId: !studentData.schoolId,
+          status: !studentData.status,
+          skills: !studentData.skills,
+          description: !studentData.description,
+          previousCompanies: !studentData.previousCompanies,
+          availability: studentData.availability === undefined,
+        });
+        throw new Error('Toutes les données requises ne sont pas présentes');
+      }
+
+      if (uploadedCv) {
         try {
-          await fetch(`/api/users/${session.user.id}`, {
+          const cvUrl = await handleCvUpload(uploadedCv);
+          if (cvUrl) {
+            studentData.curriculumVitae = cvUrl;
+          }
+        } catch (error) {
+          console.error('Erreur lors du téléchargement du CV:', error);
+          toast.error('Erreur lors du téléchargement du CV');
+        }
+      }
+
+      let result;
+
+      if (studentId) {
+        try {
+          const userResponse = await fetch(`/api/users/${session?.user?.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -317,38 +555,37 @@ export default function StudentProfileForm() {
               lastName: data.lastName,
             }),
           });
+
+          if (!userResponse.ok) {
+            throw new Error('Erreur lors de la mise à jour des informations utilisateur');
+          }
         } catch (error) {
           console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+          toast.error('Erreur lors de la mise à jour des informations utilisateur');
+          return;
         }
-      }
 
-      const studentData = {
-        userId: session.user.id,
-        schoolId: data.school,
-        status: data.status,
-        skills: data.skills.join(', '),
-        apprenticeshipRhythm: data.alternanceRhythm || null,
-        description: data.description || '',
-        curriculumVitaeId: uploadedCv ? uploadedCv.name : null,
-        previousCompanies: '',
-        availability: !!data.availability,
-      };
-
-      if (studentId) {
-        await updateStudent(studentId, studentData);
+        result = await updateStudent(studentId, studentData);
         toast.success('Profil mis à jour avec succès');
       } else {
-        const newStudent = await createStudent(studentData);
-        setStudentId(newStudent.id);
+        console.log("Création d'un nouveau profil étudiant");
+        result = await createStudent(studentData);
+        if (result && result.id) {
+          setStudentId(result.id);
+        }
         toast.success('Profil créé avec succès');
       }
 
-      router.push(`/students/${studentId || 'profile'}`);
+      router.push(`/students/profile?studentId=${result.id}`);
     } catch (error) {
-      console.error('Erreur lors de la soumission du profil:', error);
+      console.error('Erreur lors de la soumission du formulaire:', error);
       toast.error(
-        error instanceof Error ? error.message : "Erreur lors de l'enregistrement du profil",
+        error instanceof Error
+          ? error.message
+          : 'Une erreur est survenue lors de la création du profil',
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -399,6 +636,11 @@ export default function StudentProfileForm() {
         completed: !!formValues.availability,
         required: false,
       },
+      {
+        name: 'Email scolaire',
+        completed: !!formValues.schoolEmail,
+        required: true,
+      },
     ];
   };
 
@@ -411,43 +653,27 @@ export default function StudentProfileForm() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="container mx-auto max-w-6xl px-4 py-8">
       <h1 className="mb-6 text-3xl font-bold">Compléter votre profil</h1>
       <p className="text-muted-foreground mb-8">
         Ces informations seront visibles par les entreprises et vous permettront de recevoir des
         offres correspondant à votre profil.
       </p>
 
-      <ProfileCompletion fields={getProfileCompletionFields()} />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+        <div className="md:col-span-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-          <div className="md:col-span-1">
-            <div className="sticky top-6 space-y-6">
-              <ProfilePreview
-                firstName={formValues.firstName}
-                lastName={formValues.lastName}
-                photoUrl={photoUrl}
-                status={formValues.status as 'Alternant' | 'Stagiaire'}
-                school={formValues.school}
-                alternanceRhythm={formValues.alternanceRhythm}
-                availability={formValues.availability}
-              />
-
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  'Enregistrement...'
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Enregistrer le profil
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="md:col-span-3">
+              if (form.formState.isValid) {
+                onSubmit(form.getValues());
+              } else {
+                form.trigger();
+              }
+            }}
+          >
             <Tabs value={selectedTab} onValueChange={setSelectedTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
@@ -462,18 +688,22 @@ export default function StudentProfileForm() {
                       label="Prénom"
                       htmlFor="firstName"
                       required
-                      error={errors.firstName?.message}
-                      touched={!!touchedFields.firstName}
-                      isValid={!!dirtyFields.firstName && !errors.firstName}
+                      error={form.formState.errors.firstName?.message}
+                      touched={!!form.formState.touchedFields.firstName}
+                      isValid={
+                        !!form.formState.dirtyFields.firstName && !form.formState.errors.firstName
+                      }
                       helpText="Utilisez votre prénom légal tel qu'il apparaît sur vos documents officiels"
                     >
                       <Input
                         id="firstName"
                         placeholder="Votre prénom"
-                        {...register('firstName')}
+                        {...form.register('firstName')}
                         className={cn(
-                          errors.firstName && 'border-destructive',
-                          !errors.firstName && touchedFields.firstName && 'border-green-500',
+                          form.formState.errors.firstName && 'border-destructive',
+                          !form.formState.errors.firstName &&
+                            form.formState.touchedFields.firstName &&
+                            'border-green-500',
                         )}
                       />
                     </FormField>
@@ -482,18 +712,22 @@ export default function StudentProfileForm() {
                       label="Nom"
                       htmlFor="lastName"
                       required
-                      error={errors.lastName?.message}
-                      touched={!!touchedFields.lastName}
-                      isValid={!!dirtyFields.lastName && !errors.lastName}
+                      error={form.formState.errors.lastName?.message}
+                      touched={!!form.formState.touchedFields.lastName}
+                      isValid={
+                        !!form.formState.dirtyFields.lastName && !form.formState.errors.lastName
+                      }
                       helpText="Utilisez votre nom de famille légal"
                     >
                       <Input
                         id="lastName"
                         placeholder="Votre nom"
-                        {...register('lastName')}
+                        {...form.register('lastName')}
                         className={cn(
-                          errors.lastName && 'border-destructive',
-                          !errors.lastName && touchedFields.lastName && 'border-green-500',
+                          form.formState.errors.lastName && 'border-destructive',
+                          !form.formState.errors.lastName &&
+                            form.formState.touchedFields.lastName &&
+                            'border-green-500',
                         )}
                       />
                     </FormField>
@@ -505,15 +739,18 @@ export default function StudentProfileForm() {
                     className="mt-4"
                     hint="Format recommandé : JPG ou PNG, 500x500px minimum"
                   >
-                    <FileUploadInput
-                      id="photoUpload"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      preview={photoUrl}
-                      previewType="avatar"
-                      firstName={formValues.firstName}
-                      lastName={formValues.lastName}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <FileUploadInput
+                        id="photoUpload"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        preview={photoUrl}
+                        previewType="avatar"
+                        firstName={formValues.firstName}
+                        lastName={formValues.lastName}
+                        initialFileName={photoUrl ? 'photo_profil.jpg' : ''}
+                      />
+                    </div>
                   </FormField>
 
                   <FormField
@@ -521,10 +758,10 @@ export default function StudentProfileForm() {
                     htmlFor="status"
                     required
                     className="mt-4"
-                    error={errors.status?.message}
+                    error={form.formState.errors.status?.message}
                   >
                     <Controller
-                      control={control}
+                      control={form.control}
                       name="status"
                       render={({ field }) => (
                         <RadioGroup
@@ -538,7 +775,7 @@ export default function StudentProfileForm() {
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="Stagiaire" id="stagiaire" />
-                            <Label htmlFor="stagiaire">Stagiaire</Label>
+                            <Label htmlFor="stagiare">Stagiaire</Label>
                           </div>
                         </RadioGroup>
                       )}
@@ -550,9 +787,11 @@ export default function StudentProfileForm() {
                     htmlFor="description"
                     className="mt-4"
                     hint={`${formValues.description?.length || 0}/500 caractères`}
-                    error={errors.description?.message}
-                    touched={!!touchedFields.description}
-                    isValid={!!dirtyFields.description && !errors.description}
+                    error={form.formState.errors.description?.message}
+                    touched={!!form.formState.touchedFields.description}
+                    isValid={
+                      !!form.formState.dirtyFields.description && !form.formState.errors.description
+                    }
                     helpText="Décrivez votre parcours, vos projets et ce que vous recherchez. Une bonne description augmente vos chances d'être contacté."
                   >
                     <Textarea
@@ -560,10 +799,12 @@ export default function StudentProfileForm() {
                       placeholder="Décrivez votre parcours, vos projets et vos aspirations professionnelles..."
                       className={cn(
                         'min-h-[120px]',
-                        errors.description && 'border-destructive',
-                        !errors.description && touchedFields.description && 'border-green-500',
+                        form.formState.errors.description && 'border-destructive',
+                        !form.formState.errors.description &&
+                          form.formState.touchedFields.description &&
+                          'border-green-500',
                       )}
-                      {...register('description')}
+                      {...form.register('description')}
                     />
                   </FormField>
                 </SectionCard>
@@ -577,10 +818,10 @@ export default function StudentProfileForm() {
                       label="École"
                       htmlFor="school"
                       required
-                      error={errors.school?.message}
+                      error={form.formState.errors.school?.message}
                     >
                       <Controller
-                        control={control}
+                        control={form.control}
                         name="school"
                         render={({ field }) => (
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -599,42 +840,90 @@ export default function StudentProfileForm() {
                       />
                     </FormField>
 
-                    {formValues.status === 'Alternant' && (
-                      <FormField label="Rythme d'alternance" htmlFor="alternanceRhythm">
-                        <Input
-                          id="alternanceRhythm"
-                          placeholder="Ex: 3 semaines entreprise / 1 semaine école"
-                          {...register('alternanceRhythm')}
-                        />
-                      </FormField>
-                    )}
-
                     <FormField
-                      label="Disponibilité"
-                      htmlFor="availability"
-                      hint="Format : MM/YYYY"
-                      error={errors.availability?.message}
-                      touched={!!touchedFields.availability}
-                      isValid={!!dirtyFields.availability && !errors.availability}
-                      helpText="Indiquez le mois et l'année à partir desquels vous serez disponible"
+                      label="Email scolaire"
+                      htmlFor="schoolEmail"
+                      required
+                      error={form.formState.errors.schoolEmail?.message}
+                      helpText="Votre email scolaire doit correspondre au domaine de votre école"
                     >
                       <Input
-                        id="availability"
-                        placeholder="09/2024"
-                        {...register('availability')}
+                        id="schoolEmail"
+                        placeholder="prenom.nom@ecole.fr"
+                        type="email"
+                        {...form.register('schoolEmail')}
                         className={cn(
-                          errors.availability && 'border-destructive',
-                          !errors.availability && touchedFields.availability && 'border-green-500',
+                          form.formState.errors.schoolEmail && 'border-destructive',
+                          !form.formState.errors.schoolEmail &&
+                            form.formState.touchedFields.schoolEmail &&
+                            'border-green-500',
                         )}
                       />
                     </FormField>
+
+                    {form.watch('status') === 'Alternant' && (
+                      <FormField
+                        label="Rythme d'alternance"
+                        htmlFor="alternanceRhythm"
+                        required
+                        error={form.formState.errors.alternanceRhythm?.message}
+                      >
+                        <Input
+                          id="alternanceRhythm"
+                          placeholder="Ex: 3 semaines entreprise / 1 semaine école"
+                          {...form.register('alternanceRhythm')}
+                          className={cn(
+                            form.formState.errors.alternanceRhythm && 'border-destructive',
+                            !form.formState.errors.alternanceRhythm &&
+                              form.formState.touchedFields.alternanceRhythm &&
+                              'border-green-500',
+                          )}
+                        />
+                      </FormField>
+                    )}
 
                     <FormField
                       label="CV (facultatif)"
                       htmlFor="cvUpload"
                       hint="Format accepté : PDF"
                     >
-                      <FileUploadInput id="cvUpload" accept=".pdf" onChange={handleCvUpload} />
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <FileUploadInput
+                          id="cvUpload"
+                          accept=".pdf"
+                          onChange={(file) => handleCvUpload(file)}
+                          preview={cvUrl}
+                          initialFileName={uploadedCv?.name || 'cv.pdf'}
+                        />
+                      </div>
+                    </FormField>
+
+                    <FormField
+                      label="Disponibilité"
+                      htmlFor="availability"
+                      required
+                      error={form.formState.errors.availability?.message}
+                    >
+                      <Controller
+                        control={form.control}
+                        name="availability"
+                        render={({ field }) => (
+                          <RadioGroup
+                            onValueChange={(value) => field.onChange(value === 'true')}
+                            defaultValue={field.value ? 'true' : 'false'}
+                            className="flex flex-col space-y-1"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="true" id="available" />
+                              <Label htmlFor="available">Je suis disponible</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="false" id="unavailable" />
+                              <Label htmlFor="unavailable">Je ne suis pas disponible</Label>
+                            </div>
+                          </RadioGroup>
+                        )}
+                      />
                     </FormField>
                   </div>
                 </SectionCard>
@@ -653,35 +942,100 @@ export default function StudentProfileForm() {
                     label="Sélectionnez vos compétences"
                     htmlFor="skills"
                     required
-                    error={errors.skills?.message}
+                    error={form.formState.errors.skills?.message}
                   >
                     <Controller
-                      control={control}
+                      control={form.control}
                       name="skills"
                       render={({ field }) => (
                         <SkillsSelector
                           availableSkills={availableSkills}
                           selectedSkills={field.value}
                           onChange={field.onChange}
-                          error={errors.skills?.message}
+                          error={form.formState.errors.skills?.message}
                         />
+                      )}
+                    />
+                  </FormField>
+
+                  <FormField
+                    label="Entreprises précédentes"
+                    htmlFor="previousCompanies"
+                    required
+                    className="mt-4"
+                    error={form.formState.errors.previousCompanies?.message}
+                  >
+                    <Input
+                      id="previousCompanies"
+                      placeholder="Listez vos entreprises précédentes"
+                      {...form.register('previousCompanies')}
+                      className={cn(
+                        form.formState.errors.previousCompanies && 'border-destructive',
+                        !form.formState.errors.previousCompanies &&
+                          form.formState.touchedFields.previousCompanies &&
+                          'border-green-500',
                       )}
                     />
                   </FormField>
                 </SectionCard>
 
-                <NavigationButtons
-                  showBackButton
-                  showSubmitButton
-                  onBack={() => setSelectedTab('education')}
-                  onSubmit
-                  isSubmitting={isSubmitting}
-                />
+                <div className="flex justify-between">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSelectedTab('education')}
+                    disabled={isSubmitting}
+                  >
+                    Précédent
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Bouton Enregistrer cliqué');
+                      console.log('État du formulaire:', formValues);
+                      console.log('Erreurs:', form.formState.errors);
+
+                      if (form.formState.isValid) {
+                        onSubmit(form.getValues());
+                      } else {
+                        form.trigger();
+                      }
+                    }}
+                  >
+                    {isSubmitting ? (
+                      'Enregistrement...'
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Enregistrer le profil
+                      </>
+                    )}
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
+          </form>
+        </div>
+
+        <div className="md:col-span-4">
+          <div className="sticky top-6 space-y-6">
+            <ProfilePreview
+              firstName={formValues.firstName}
+              lastName={formValues.lastName}
+              photoUrl={photoUrl}
+              status={formValues.status as 'Alternant' | 'Stagiaire'}
+              school={schools.find((s) => s.id === formValues.school)?.name || formValues.school}
+              alternanceRhythm={formValues.alternanceRhythm}
+              availability={formValues.availability}
+            />
+
+            <ProfileCompletion fields={getProfileCompletionFields()} />
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ type ProfilePreviewProps = {
   status?: 'Alternant' | 'Stagiaire';
   school?: string;
   alternanceRhythm?: string;
-  availability?: string;
+  availability?: boolean;
 };
 
 export default function ProfilePreview({
@@ -55,9 +55,9 @@ export default function ProfilePreview({
               {alternanceRhythm}
             </InfoItem>
           )}
-          {availability && (
+          {typeof availability !== 'undefined' && (
             <InfoItem icon={Clock} iconSize="sm">
-              Disponible dès {availability}
+              {availability ? 'Disponible' : 'Non disponible'}
             </InfoItem>
           )}
         </div>

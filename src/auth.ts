@@ -1,5 +1,5 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import NextAuth from 'next-auth';
+import NextAuth, { DefaultSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
 
@@ -14,7 +14,8 @@ declare module 'next-auth' {
       isGoogleEmail?: boolean;
       name?: string | null;
       image?: string | null;
-    };
+      studentId?: string | null;
+    } & DefaultSession['user'];
   }
 }
 
@@ -30,15 +31,26 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async jwt({ token, user, account }) {
       if (account && user) {
         token.accessToken = account.access_token;
-        token.id = user.id;
-        token.isGoogleEmail = account.provider === 'google';
+        if (user.id) {
+          token.id = user.id;
+          token.isGoogleEmail = account.provider === 'google';
+
+          const student = await prisma.student.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+          });
+          token.studentId = student?.id ?? null;
+        }
       }
       return token;
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string;
-      session.user.id = token.id as string;
-      session.user.isGoogleEmail = token.isGoogleEmail as boolean;
+      if (token) {
+        session.accessToken = token.accessToken;
+        session.user.id = token.id;
+        session.user.isGoogleEmail = token.isGoogleEmail ?? false;
+        session.user.studentId = token.studentId ?? null;
+      }
       return session;
     },
     async redirect({ url, baseUrl }) {

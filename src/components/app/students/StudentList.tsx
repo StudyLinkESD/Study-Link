@@ -18,6 +18,8 @@ const STUDENTS_PER_PAGE = 9;
 
 type Student = Omit<StudentCardProps, 'skills'> & {
   skills: { id: string; name: string }[];
+  studentEmail?: string;
+  curriculumVitae?: string | null;
 };
 
 type StudentListProps = {
@@ -89,8 +91,8 @@ function StudentListComponent({
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (student) =>
-          (student.firstName?.toLowerCase() ?? '').includes(searchLower) ||
-          (student.lastName?.toLowerCase() ?? '').includes(searchLower) ||
+          student.firstName.toLowerCase().includes(searchLower) ||
+          student.lastName.toLowerCase().includes(searchLower) ||
           (student.school && student.school.toLowerCase().includes(searchLower)),
       );
     }
@@ -103,6 +105,7 @@ function StudentListComponent({
       );
     }
 
+    console.log('Étudiants filtrés:', result);
     return result;
   }, [statusFilter, searchTerm, selectedSkills, students]);
 
@@ -123,6 +126,10 @@ function StudentListComponent({
         status={student.status}
         skills={student.skills}
         school={student.school}
+        apprenticeshipRhythm={student.apprenticeshipRhythm}
+        availability={student.availability}
+        studentEmail={student.studentEmail}
+        curriculumVitae={student.curriculumVitae}
       />
     ),
     [],
