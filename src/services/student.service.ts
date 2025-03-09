@@ -2,7 +2,12 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 import { prisma } from '@/lib/prisma';
 
-import { CreateStudentDTO, StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
+import {
+  CreateStudentDTO,
+  ExperienceDTO,
+  StudentResponseDTO,
+  UpdateStudentDTO,
+} from '@/dto/student.dto';
 
 function getBaseUrl() {
   if (process.env.NODE_ENV === 'development') {
@@ -170,6 +175,48 @@ export async function updateStudent(
       }
     }
     console.error('Failed to update student:', error);
+    throw error;
+  }
+}
+
+export async function getStudentExperiences(studentId: string): Promise<ExperienceDTO[]> {
+  try {
+    const experiences = await serverFetch(`/students/${studentId}/experiences`);
+    return experiences;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des expériences de l'étudiant:", error);
+    return [];
+  }
+}
+
+export async function createStudentExperience(
+  studentId: string,
+  data: ExperienceDTO,
+): Promise<ExperienceDTO> {
+  try {
+    const experience = await serverFetch(`/students/${studentId}/experiences`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return experience;
+  } catch (error) {
+    console.error("Erreur lors de la création de l'expérience:", error);
+    throw error;
+  }
+}
+
+export async function updateStudentExperiences(
+  studentId: string,
+  experiences: ExperienceDTO[],
+): Promise<ExperienceDTO[]> {
+  try {
+    const updatedExperiences = await serverFetch(`/students/${studentId}/experiences`, {
+      method: 'PUT',
+      body: JSON.stringify(experiences),
+    });
+    return updatedExperiences;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des expériences:', error);
     throw error;
   }
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import {
   Award,
   BookOpen,
@@ -30,6 +32,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { StudentResponseDTO } from '@/dto/student.dto';
 import { getStudentById } from '@/services/student.service';
+
+type SimpleExperience = {
+  id: string;
+  company: string;
+  position: string;
+  period: string;
+  type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
+  startDate?: Date;
+  endDate?: Date;
+};
 
 const cleanPhotoUrl = (url: string | null | undefined): string => {
   if (!url) return '';
@@ -70,15 +82,14 @@ function StudentProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [student, setStudent] = useState<StudentResponseDTO | null>(null);
+  const [experiences, setExperiences] = useState<SimpleExperience[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStudent = async () => {
+    const fetchStudentData = async () => {
       try {
         const studentIdFromUrl = searchParams.get('studentId');
-
         const studentIdFromSession = session?.user?.studentId;
-
         const studentId = studentIdFromUrl || studentIdFromSession;
 
         if (!studentId) {
@@ -94,6 +105,71 @@ function StudentProfileContent() {
         }
 
         setStudent(studentData);
+
+        try {
+          const storedExperiences = localStorage.getItem('userExperiences');
+          if (storedExperiences) {
+            const parsedExperiences = JSON.parse(storedExperiences);
+            const formattedExperiences = parsedExperiences.map(
+              (exp: {
+                id: string;
+                company: string;
+                position: string;
+                period: string;
+                type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
+                startDate?: string;
+                endDate?: string;
+              }) => ({
+                ...exp,
+                startDate: exp.startDate ? new Date(exp.startDate) : undefined,
+                endDate: exp.endDate ? new Date(exp.endDate) : undefined,
+              }),
+            );
+            setExperiences(formattedExperiences);
+            return;
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des expériences depuis localStorage:', error);
+        }
+
+        if (studentData.experiences && studentData.experiences.length > 0) {
+          const structuredExperiences = studentData.experiences.map((exp) => {
+            const startDate = exp.startDate ? new Date(exp.startDate) : undefined;
+            const endDate = exp.endDate ? new Date(exp.endDate) : undefined;
+
+            const startDateStr = startDate ? format(startDate, 'MMM yyyy', { locale: fr }) : '';
+            const endDateStr = endDate ? format(endDate, 'MMM yyyy', { locale: fr }) : 'Présent';
+            const period =
+              startDateStr && (endDateStr || 'Présent') ? `${startDateStr} - ${endDateStr}` : '';
+
+            return {
+              id: exp.id || `exp-${Math.random().toString(36).substr(2, 9)}`,
+              company: exp.company,
+              position: exp.position,
+              period: period,
+              type: exp.type as 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre',
+              startDate,
+              endDate,
+            };
+          });
+
+          setExperiences(structuredExperiences);
+        } else {
+          const oldExperiences = studentData.previousCompanies
+            ? studentData.previousCompanies
+                .split(',')
+                .map((company, index) => ({
+                  id: `exp-${index}`,
+                  company: company.trim(),
+                  position: 'Stage/Alternance',
+                  period: 'Non spécifié',
+                  type: 'Stage' as const,
+                }))
+                .filter((exp) => exp.company)
+            : [];
+
+          setExperiences(oldExperiences);
+        }
       } catch (error) {
         console.error('Error fetching student:', error);
         toast.error('Erreur lors du chargement du profil');
@@ -102,7 +178,7 @@ function StudentProfileContent() {
       }
     };
 
-    fetchStudent();
+    fetchStudentData();
   }, [searchParams, session?.user?.studentId]);
 
   if (loading) {
@@ -158,19 +234,6 @@ function StudentProfileContent() {
   const photoUrl = cleanPhotoUrl(student.user?.profilePicture);
 
   const studentEmail = student.studentEmail || '';
-
-  const experiences = student.previousCompanies
-    .split(',')
-    .map((company) => company.trim())
-    .filter(Boolean)
-    .map((company) => ({
-      id: company,
-      position: 'Stage/Alternance',
-      company: company,
-      startDate: 'Non spécifié',
-      endDate: 'Non spécifié',
-      description: '',
-    }));
 
   return (
     <main className="container mx-auto max-w-4xl px-4 py-4">

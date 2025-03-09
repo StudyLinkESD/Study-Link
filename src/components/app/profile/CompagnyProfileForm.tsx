@@ -28,6 +28,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { SimpleExperience } from '@/types/experience';
+
 import { StudentResponseDTO } from '@/dto/student.dto';
 import { getStudentById } from '@/services/student.service';
 
@@ -140,10 +142,7 @@ function StudentProfileContent() {
             Les informations de l&apos;utilisateur sont manquantes. Veuillez mettre à jour votre
             profil.
           </p>
-          <Button
-            onClick={() => router.push(`/students/profile-info?studentId=${student.id}`)}
-            className="mt-4"
-          >
+          <Button onClick={() => router.push(`/students/profile-info?studentId=${student.id}`)}>
             Mettre à jour mon profil
           </Button>
         </div>
@@ -153,23 +152,19 @@ function StudentProfileContent() {
 
   const firstName = student.user?.firstName || '';
   const lastName = student.user?.lastName || '';
-
   const photoUrl = cleanPhotoUrl(student.user?.profilePicture);
-
   const studentEmail = student.studentEmail || '';
 
-  const experiences = student.previousCompanies
-    .split(',')
-    .map((company) => company.trim())
-    .filter(Boolean)
-    .map((company) => ({
-      id: company,
-      position: 'Stage/Alternance',
-      company: company,
-      startDate: 'Non spécifié',
-      endDate: 'Non spécifié',
-      description: '',
-    }));
+  const experiences = student.experiences || [];
+  const transformedExperiences: SimpleExperience[] = experiences.map((exp) => ({
+    id: exp.id || `exp-${Math.random().toString(36).substr(2, 9)}`,
+    company: exp.company,
+    position: exp.position,
+    period: `${new Date(exp.startDate).toLocaleDateString('fr-FR')} - ${exp.endDate ? new Date(exp.endDate).toLocaleDateString('fr-FR') : 'Présent'}`,
+    type: exp.type as 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre',
+    startDate: new Date(exp.startDate),
+    endDate: exp.endDate ? new Date(exp.endDate) : undefined,
+  }));
 
   return (
     <main className="container mx-auto max-w-4xl px-4 py-4">
@@ -215,47 +210,6 @@ function StudentProfileContent() {
                 <InfoItem icon={Mail}>
                   <span className="break-all">{studentEmail || session?.user?.email}</span>
                 </InfoItem>
-
-                {student.curriculumVitae && (
-                  <div className="mt-4">
-                    <h3 className="mb-2 text-sm font-medium">Curriculum Vitae</h3>
-                    <div className="flex flex-col space-y-2">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => window.open(student.curriculumVitae || '', '_blank')}
-                      >
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Voir mon CV
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        className="w-full"
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = student.curriculumVitae || '';
-                          link.setAttribute('download', `CV_${firstName}_${lastName}.pdf`);
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                      >
-                        <Briefcase className="mr-2 h-4 w-4" />
-                        Télécharger
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {!student.curriculumVitae && (
-                  <div className="mt-4">
-                    <h3 className="mb-2 text-sm font-medium">Curriculum Vitae</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Aucun CV n&apos;a été ajouté. Modifiez votre profil pour en ajouter un.
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           </CardContent>
@@ -277,17 +231,21 @@ function StudentProfileContent() {
               </SectionCard>
 
               <SectionCard title="Expérience" icon={Briefcase}>
-                <ExperienceTimeline experiences={experiences} />
+                <ExperienceTimeline experiences={transformedExperiences} />
               </SectionCard>
             </TabsContent>
 
             <TabsContent value="skills">
               <SectionCard title="Compétences" icon={Award}>
                 <SkillsList
-                  skills={student.skills.split(',').map((skill) => ({
-                    id: skill.trim(),
-                    name: skill.trim(),
-                  }))}
+                  skills={
+                    student.skills
+                      ? student.skills.split(',').map((skill) => ({
+                          id: skill.trim(),
+                          name: skill.trim(),
+                        }))
+                      : []
+                  }
                 />
               </SectionCard>
             </TabsContent>

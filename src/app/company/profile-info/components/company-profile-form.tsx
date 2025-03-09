@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-// Schéma de validation pour le formulaire
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Le nom de l'entreprise doit contenir au moins 2 caractères.",
@@ -41,7 +40,6 @@ export function CompanyProfileForm({ company }: CompanyProfileFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialiser le formulaire avec les valeurs existantes
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,12 +48,10 @@ export function CompanyProfileForm({ company }: CompanyProfileFormProps) {
     },
   });
 
-  // Fonction pour soumettre le formulaire
   const onSubmit = async (data: CompanyFormValues) => {
     try {
       setIsLoading(true);
 
-      // Appel API pour mettre à jour le profil de l'entreprise
       const response = await fetch(`/api/companies/${company.id}`, {
         method: 'PUT',
         headers: {

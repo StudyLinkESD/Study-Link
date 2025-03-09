@@ -42,10 +42,16 @@ const ProfileAvatarComponent = ({
 
     if (photoUrl) {
       let cleanUrl = photoUrl;
+
       if (cleanUrl.startsWith('/api/files/')) {
         cleanUrl = cleanUrl.substring('/api/files/'.length);
         setImageUrl(cleanUrl);
       }
+
+      if (cleanUrl.includes('supabase.co/storage/v1/object/public/')) {
+      }
+
+      setImageUrl(cleanUrl);
 
       const img = new Image();
       img.onload = () => {
