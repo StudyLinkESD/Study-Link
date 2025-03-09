@@ -28,6 +28,7 @@ export async function POST(request: Request) {
           email: normalizedEmail,
           firstName: '',
           lastName: '',
+          type: 'student',
         },
       });
     }
