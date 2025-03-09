@@ -108,17 +108,7 @@ export async function getStudentById(id: string): Promise<StudentResponseDTO | n
   try {
     console.log('Fetching student with ID:', id);
     const student = await serverFetch(`/students/${id}`);
-
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
-
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
+    return student;
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
       console.log('Student not found');
@@ -132,17 +122,7 @@ export async function getStudentById(id: string): Promise<StudentResponseDTO | n
 export async function getStudentByUserId(userId: string): Promise<StudentResponseDTO | null> {
   try {
     const student = await serverFetch(`/students/user/${userId}`);
-
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
-
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
+    return student;
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
       return null;
@@ -185,16 +165,7 @@ export async function updateStudent(
       body: JSON.stringify(data),
     });
 
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
-
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
+    return student;
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('404')) {
