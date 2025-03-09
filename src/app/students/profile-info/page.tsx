@@ -653,386 +653,405 @@ function StudentProfileContent() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Compléter votre profil</h1>
-      <p className="text-muted-foreground mb-8">
-        Ces informations seront visibles par les entreprises et vous permettront de recevoir des
-        offres correspondant à votre profil.
-      </p>
+    <div>
+      <div className="container mx-auto px-4 py-4">
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/select-profile')}
+          className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+        >
+          ← Retour à la sélection de profil
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-        <div className="md:col-span-8">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Compléter votre profil</h1>
+              <p className="text-muted-foreground mt-2">
+                Ces informations seront visibles par les entreprises et vous permettront de recevoir
+                des offres correspondant à votre profil.
+              </p>
+            </div>
+          </div>
+        </div>
 
-              if (form.formState.isValid) {
-                onSubmit(form.getValues());
-              } else {
-                form.trigger();
-              }
-            }}
-          >
-            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
-                <TabsTrigger value="education">Formation</TabsTrigger>
-                <TabsTrigger value="skills">Compétences</TabsTrigger>
-              </TabsList>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+          <div className="md:col-span-8">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
 
-              <TabsContent value="personal" className="mt-6 space-y-6">
-                <SectionCard title="Informations de base" icon={User}>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <FormField
-                      label="Prénom"
-                      htmlFor="firstName"
-                      required
-                      error={form.formState.errors.firstName?.message}
-                      touched={!!form.formState.touchedFields.firstName}
-                      isValid={
-                        !!form.formState.dirtyFields.firstName && !form.formState.errors.firstName
-                      }
-                      helpText="Utilisez votre prénom légal tel qu'il apparaît sur vos documents officiels"
-                    >
-                      <Input
-                        id="firstName"
-                        placeholder="Votre prénom"
-                        {...form.register('firstName')}
-                        className={cn(
-                          form.formState.errors.firstName && 'border-destructive',
-                          !form.formState.errors.firstName &&
-                            form.formState.touchedFields.firstName &&
-                            'border-green-500',
-                        )}
-                      />
-                    </FormField>
+                if (form.formState.isValid) {
+                  onSubmit(form.getValues());
+                } else {
+                  form.trigger();
+                }
+              }}
+            >
+              <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
+                  <TabsTrigger value="education">Formation</TabsTrigger>
+                  <TabsTrigger value="skills">Compétences</TabsTrigger>
+                </TabsList>
 
-                    <FormField
-                      label="Nom"
-                      htmlFor="lastName"
-                      required
-                      error={form.formState.errors.lastName?.message}
-                      touched={!!form.formState.touchedFields.lastName}
-                      isValid={
-                        !!form.formState.dirtyFields.lastName && !form.formState.errors.lastName
-                      }
-                      helpText="Utilisez votre nom de famille légal"
-                    >
-                      <Input
-                        id="lastName"
-                        placeholder="Votre nom"
-                        {...form.register('lastName')}
-                        className={cn(
-                          form.formState.errors.lastName && 'border-destructive',
-                          !form.formState.errors.lastName &&
-                            form.formState.touchedFields.lastName &&
-                            'border-green-500',
-                        )}
-                      />
-                    </FormField>
-                  </div>
-
-                  <FormField
-                    label="Photo de profil"
-                    htmlFor="photoUpload"
-                    className="mt-4"
-                    hint="Format recommandé : JPG ou PNG, 500x500px minimum"
-                  >
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <FileUploadInput
-                        id="photoUpload"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        preview={photoUrl}
-                        previewType="avatar"
-                        firstName={formValues.firstName}
-                        lastName={formValues.lastName}
-                        initialFileName={photoUrl ? 'photo_profil.jpg' : ''}
-                      />
-                    </div>
-                  </FormField>
-
-                  <FormField
-                    label="Statut"
-                    htmlFor="status"
-                    required
-                    className="mt-4"
-                    error={form.formState.errors.status?.message}
-                  >
-                    <Controller
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col space-y-1"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Alternant" id="alternant" />
-                            <Label htmlFor="alternant">Alternant</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Stagiaire" id="stagiaire" />
-                            <Label htmlFor="stagiare">Stagiaire</Label>
-                          </div>
-                        </RadioGroup>
-                      )}
-                    />
-                  </FormField>
-
-                  <FormField
-                    label="Description"
-                    htmlFor="description"
-                    className="mt-4"
-                    hint={`${formValues.description?.length || 0}/500 caractères`}
-                    error={form.formState.errors.description?.message}
-                    touched={!!form.formState.touchedFields.description}
-                    isValid={
-                      !!form.formState.dirtyFields.description && !form.formState.errors.description
-                    }
-                    helpText="Décrivez votre parcours, vos projets et ce que vous recherchez. Une bonne description augmente vos chances d'être contacté."
-                  >
-                    <Textarea
-                      id="description"
-                      placeholder="Décrivez votre parcours, vos projets et vos aspirations professionnelles..."
-                      className={cn(
-                        'min-h-[120px]',
-                        form.formState.errors.description && 'border-destructive',
-                        !form.formState.errors.description &&
-                          form.formState.touchedFields.description &&
-                          'border-green-500',
-                      )}
-                      {...form.register('description')}
-                    />
-                  </FormField>
-                </SectionCard>
-                <NavigationButtons showNextButton onNext={() => setSelectedTab('education')} />
-              </TabsContent>
-
-              <TabsContent value="education" className="mt-6 space-y-6">
-                <SectionCard title="Formation et disponibilité" icon={School}>
-                  <div className="space-y-4">
-                    <FormField
-                      label="École"
-                      htmlFor="school"
-                      required
-                      error={form.formState.errors.school?.message}
-                    >
-                      <Controller
-                        control={form.control}
-                        name="school"
-                        render={({ field }) => (
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez votre école" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {schools.map((school) => (
-                                <SelectItem key={school.id} value={school.id}>
-                                  {school.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </FormField>
-
-                    <FormField
-                      label="Email scolaire"
-                      htmlFor="schoolEmail"
-                      required
-                      error={form.formState.errors.schoolEmail?.message}
-                      helpText="Votre email scolaire doit correspondre au domaine de votre école"
-                    >
-                      <Input
-                        id="schoolEmail"
-                        placeholder="prenom.nom@ecole.fr"
-                        type="email"
-                        {...form.register('schoolEmail')}
-                        className={cn(
-                          form.formState.errors.schoolEmail && 'border-destructive',
-                          !form.formState.errors.schoolEmail &&
-                            form.formState.touchedFields.schoolEmail &&
-                            'border-green-500',
-                        )}
-                      />
-                    </FormField>
-
-                    {form.watch('status') === 'Alternant' && (
+                <TabsContent value="personal" className="mt-6 space-y-6">
+                  <SectionCard title="Informations de base" icon={User}>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <FormField
-                        label="Rythme d'alternance"
-                        htmlFor="alternanceRhythm"
+                        label="Prénom"
+                        htmlFor="firstName"
                         required
-                        error={form.formState.errors.alternanceRhythm?.message}
+                        error={form.formState.errors.firstName?.message}
+                        touched={!!form.formState.touchedFields.firstName}
+                        isValid={
+                          !!form.formState.dirtyFields.firstName && !form.formState.errors.firstName
+                        }
+                        helpText="Utilisez votre prénom légal tel qu'il apparaît sur vos documents officiels"
                       >
                         <Input
-                          id="alternanceRhythm"
-                          placeholder="Ex: 3 semaines entreprise / 1 semaine école"
-                          {...form.register('alternanceRhythm')}
+                          id="firstName"
+                          placeholder="Votre prénom"
+                          {...form.register('firstName')}
                           className={cn(
-                            form.formState.errors.alternanceRhythm && 'border-destructive',
-                            !form.formState.errors.alternanceRhythm &&
-                              form.formState.touchedFields.alternanceRhythm &&
+                            form.formState.errors.firstName && 'border-destructive',
+                            !form.formState.errors.firstName &&
+                              form.formState.touchedFields.firstName &&
                               'border-green-500',
                           )}
                         />
                       </FormField>
-                    )}
+
+                      <FormField
+                        label="Nom"
+                        htmlFor="lastName"
+                        required
+                        error={form.formState.errors.lastName?.message}
+                        touched={!!form.formState.touchedFields.lastName}
+                        isValid={
+                          !!form.formState.dirtyFields.lastName && !form.formState.errors.lastName
+                        }
+                        helpText="Utilisez votre nom de famille légal"
+                      >
+                        <Input
+                          id="lastName"
+                          placeholder="Votre nom"
+                          {...form.register('lastName')}
+                          className={cn(
+                            form.formState.errors.lastName && 'border-destructive',
+                            !form.formState.errors.lastName &&
+                              form.formState.touchedFields.lastName &&
+                              'border-green-500',
+                          )}
+                        />
+                      </FormField>
+                    </div>
 
                     <FormField
-                      label="CV (facultatif)"
-                      htmlFor="cvUpload"
-                      hint="Format accepté : PDF"
+                      label="Photo de profil"
+                      htmlFor="photoUpload"
+                      className="mt-4"
+                      hint="Format recommandé : JPG ou PNG, 500x500px minimum"
                     >
                       <div onClick={(e) => e.stopPropagation()}>
                         <FileUploadInput
-                          id="cvUpload"
-                          accept=".pdf"
-                          onChange={(file) => handleCvUpload(file)}
-                          preview={cvUrl}
-                          initialFileName={uploadedCv?.name || 'cv.pdf'}
+                          id="photoUpload"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          preview={photoUrl}
+                          previewType="avatar"
+                          firstName={formValues.firstName}
+                          lastName={formValues.lastName}
+                          initialFileName={photoUrl ? 'photo_profil.jpg' : ''}
                         />
                       </div>
                     </FormField>
 
                     <FormField
-                      label="Disponibilité"
-                      htmlFor="availability"
+                      label="Statut"
+                      htmlFor="status"
                       required
-                      error={form.formState.errors.availability?.message}
+                      className="mt-4"
+                      error={form.formState.errors.status?.message}
                     >
                       <Controller
                         control={form.control}
-                        name="availability"
+                        name="status"
                         render={({ field }) => (
                           <RadioGroup
-                            onValueChange={(value) => field.onChange(value === 'true')}
-                            defaultValue={field.value ? 'true' : 'false'}
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
                             className="flex flex-col space-y-1"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="true" id="available" />
-                              <Label htmlFor="available">Je suis disponible</Label>
+                              <RadioGroupItem value="Alternant" id="alternant" />
+                              <Label htmlFor="alternant">Alternant</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="false" id="unavailable" />
-                              <Label htmlFor="unavailable">Je ne suis pas disponible</Label>
+                              <RadioGroupItem value="Stagiaire" id="stagiaire" />
+                              <Label htmlFor="stagiare">Stagiaire</Label>
                             </div>
                           </RadioGroup>
                         )}
                       />
                     </FormField>
-                  </div>
-                </SectionCard>
 
-                <NavigationButtons
-                  showBackButton
-                  showNextButton
-                  onBack={() => setSelectedTab('personal')}
-                  onNext={() => setSelectedTab('skills')}
-                />
-              </TabsContent>
-
-              <TabsContent value="skills" className="mt-6 space-y-6">
-                <SectionCard title="Compétences et expertises" icon={Briefcase}>
-                  <FormField
-                    label="Sélectionnez vos compétences"
-                    htmlFor="skills"
-                    required
-                    error={form.formState.errors.skills?.message}
-                  >
-                    <Controller
-                      control={form.control}
-                      name="skills"
-                      render={({ field }) => (
-                        <SkillsSelector
-                          availableSkills={availableSkills}
-                          selectedSkills={field.value}
-                          onChange={field.onChange}
-                          error={form.formState.errors.skills?.message}
-                        />
-                      )}
-                    />
-                  </FormField>
-
-                  <FormField
-                    label="Entreprises précédentes"
-                    htmlFor="previousCompanies"
-                    required
-                    className="mt-4"
-                    error={form.formState.errors.previousCompanies?.message}
-                  >
-                    <Input
-                      id="previousCompanies"
-                      placeholder="Listez vos entreprises précédentes"
-                      {...form.register('previousCompanies')}
-                      className={cn(
-                        form.formState.errors.previousCompanies && 'border-destructive',
-                        !form.formState.errors.previousCompanies &&
-                          form.formState.touchedFields.previousCompanies &&
-                          'border-green-500',
-                      )}
-                    />
-                  </FormField>
-                </SectionCard>
-
-                <div className="flex justify-between">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setSelectedTab('education')}
-                    disabled={isSubmitting}
-                  >
-                    Précédent
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Bouton Enregistrer cliqué');
-                      console.log('État du formulaire:', formValues);
-                      console.log('Erreurs:', form.formState.errors);
-
-                      if (form.formState.isValid) {
-                        onSubmit(form.getValues());
-                      } else {
-                        form.trigger();
+                    <FormField
+                      label="Description"
+                      htmlFor="description"
+                      className="mt-4"
+                      hint={`${formValues.description?.length || 0}/500 caractères`}
+                      error={form.formState.errors.description?.message}
+                      touched={!!form.formState.touchedFields.description}
+                      isValid={
+                        !!form.formState.dirtyFields.description &&
+                        !form.formState.errors.description
                       }
-                    }}
-                  >
-                    {isSubmitting ? (
-                      'Enregistrement...'
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Enregistrer le profil
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </form>
-        </div>
+                      helpText="Décrivez votre parcours, vos projets et ce que vous recherchez. Une bonne description augmente vos chances d'être contacté."
+                    >
+                      <Textarea
+                        id="description"
+                        placeholder="Décrivez votre parcours, vos projets et vos aspirations professionnelles..."
+                        className={cn(
+                          'min-h-[120px]',
+                          form.formState.errors.description && 'border-destructive',
+                          !form.formState.errors.description &&
+                            form.formState.touchedFields.description &&
+                            'border-green-500',
+                        )}
+                        {...form.register('description')}
+                      />
+                    </FormField>
+                  </SectionCard>
+                  <NavigationButtons showNextButton onNext={() => setSelectedTab('education')} />
+                </TabsContent>
 
-        <div className="md:col-span-4">
-          <div className="sticky top-6 space-y-6">
-            <ProfilePreview
-              firstName={formValues.firstName}
-              lastName={formValues.lastName}
-              photoUrl={photoUrl}
-              status={formValues.status as 'Alternant' | 'Stagiaire'}
-              school={schools.find((s) => s.id === formValues.school)?.name || formValues.school}
-              alternanceRhythm={formValues.alternanceRhythm}
-              availability={formValues.availability}
-            />
+                <TabsContent value="education" className="mt-6 space-y-6">
+                  <SectionCard title="Formation et disponibilité" icon={School}>
+                    <div className="space-y-4">
+                      <FormField
+                        label="École"
+                        htmlFor="school"
+                        required
+                        error={form.formState.errors.school?.message}
+                      >
+                        <Controller
+                          control={form.control}
+                          name="school"
+                          render={({ field }) => (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionnez votre école" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {schools.map((school) => (
+                                  <SelectItem key={school.id} value={school.id}>
+                                    {school.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </FormField>
 
-            <ProfileCompletion fields={getProfileCompletionFields()} />
+                      <FormField
+                        label="Email scolaire"
+                        htmlFor="schoolEmail"
+                        required
+                        error={form.formState.errors.schoolEmail?.message}
+                        helpText="Votre email scolaire doit correspondre au domaine de votre école"
+                      >
+                        <Input
+                          id="schoolEmail"
+                          placeholder="prenom.nom@ecole.fr"
+                          type="email"
+                          {...form.register('schoolEmail')}
+                          className={cn(
+                            form.formState.errors.schoolEmail && 'border-destructive',
+                            !form.formState.errors.schoolEmail &&
+                              form.formState.touchedFields.schoolEmail &&
+                              'border-green-500',
+                          )}
+                        />
+                      </FormField>
+
+                      {form.watch('status') === 'Alternant' && (
+                        <FormField
+                          label="Rythme d'alternance"
+                          htmlFor="alternanceRhythm"
+                          required
+                          error={form.formState.errors.alternanceRhythm?.message}
+                        >
+                          <Input
+                            id="alternanceRhythm"
+                            placeholder="Ex: 3 semaines entreprise / 1 semaine école"
+                            {...form.register('alternanceRhythm')}
+                            className={cn(
+                              form.formState.errors.alternanceRhythm && 'border-destructive',
+                              !form.formState.errors.alternanceRhythm &&
+                                form.formState.touchedFields.alternanceRhythm &&
+                                'border-green-500',
+                            )}
+                          />
+                        </FormField>
+                      )}
+
+                      <FormField
+                        label="CV (facultatif)"
+                        htmlFor="cvUpload"
+                        hint="Format accepté : PDF"
+                      >
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <FileUploadInput
+                            id="cvUpload"
+                            accept=".pdf"
+                            onChange={(file) => handleCvUpload(file)}
+                            preview={cvUrl}
+                            initialFileName={uploadedCv?.name || 'cv.pdf'}
+                          />
+                        </div>
+                      </FormField>
+
+                      <FormField
+                        label="Disponibilité"
+                        htmlFor="availability"
+                        required
+                        error={form.formState.errors.availability?.message}
+                      >
+                        <Controller
+                          control={form.control}
+                          name="availability"
+                          render={({ field }) => (
+                            <RadioGroup
+                              onValueChange={(value) => field.onChange(value === 'true')}
+                              defaultValue={field.value ? 'true' : 'false'}
+                              className="flex flex-col space-y-1"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="true" id="available" />
+                                <Label htmlFor="available">Je suis disponible</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="false" id="unavailable" />
+                                <Label htmlFor="unavailable">Je ne suis pas disponible</Label>
+                              </div>
+                            </RadioGroup>
+                          )}
+                        />
+                      </FormField>
+                    </div>
+                  </SectionCard>
+
+                  <NavigationButtons
+                    showBackButton
+                    showNextButton
+                    onBack={() => setSelectedTab('personal')}
+                    onNext={() => setSelectedTab('skills')}
+                  />
+                </TabsContent>
+
+                <TabsContent value="skills" className="mt-6 space-y-6">
+                  <SectionCard title="Compétences et expertises" icon={Briefcase}>
+                    <FormField
+                      label="Sélectionnez vos compétences"
+                      htmlFor="skills"
+                      required
+                      error={form.formState.errors.skills?.message}
+                    >
+                      <Controller
+                        control={form.control}
+                        name="skills"
+                        render={({ field }) => (
+                          <SkillsSelector
+                            availableSkills={availableSkills}
+                            selectedSkills={field.value}
+                            onChange={field.onChange}
+                            error={form.formState.errors.skills?.message}
+                          />
+                        )}
+                      />
+                    </FormField>
+
+                    <FormField
+                      label="Entreprises précédentes"
+                      htmlFor="previousCompanies"
+                      required
+                      className="mt-4"
+                      error={form.formState.errors.previousCompanies?.message}
+                    >
+                      <Input
+                        id="previousCompanies"
+                        placeholder="Listez vos entreprises précédentes"
+                        {...form.register('previousCompanies')}
+                        className={cn(
+                          form.formState.errors.previousCompanies && 'border-destructive',
+                          !form.formState.errors.previousCompanies &&
+                            form.formState.touchedFields.previousCompanies &&
+                            'border-green-500',
+                        )}
+                      />
+                    </FormField>
+                  </SectionCard>
+
+                  <div className="flex justify-between">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSelectedTab('education')}
+                      disabled={isSubmitting}
+                    >
+                      Précédent
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Bouton Enregistrer cliqué');
+                        console.log('État du formulaire:', formValues);
+                        console.log('Erreurs:', form.formState.errors);
+
+                        if (form.formState.isValid) {
+                          onSubmit(form.getValues());
+                        } else {
+                          form.trigger();
+                        }
+                      }}
+                    >
+                      {isSubmitting ? (
+                        'Enregistrement...'
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Enregistrer le profil
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </form>
+          </div>
+
+          <div className="md:col-span-4">
+            <div className="sticky top-6 space-y-6">
+              <ProfilePreview
+                firstName={formValues.firstName}
+                lastName={formValues.lastName}
+                photoUrl={photoUrl}
+                status={formValues.status as 'Alternant' | 'Stagiaire'}
+                school={schools.find((s) => s.id === formValues.school)?.name || formValues.school}
+                alternanceRhythm={formValues.alternanceRhythm}
+                availability={formValues.availability}
+              />
+
+              <ProfileCompletion fields={getProfileCompletionFields()} />
+            </div>
           </div>
         </div>
       </div>
