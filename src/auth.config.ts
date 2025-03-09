@@ -35,7 +35,7 @@ export default {
             process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
           const modifiedUrl = url.replace(
             /callbackUrl=([^&]*)/,
-            `callbackUrl=${encodeURIComponent(`${baseUrl}/students/profile-info`)}`,
+            `callbackUrl=${encodeURIComponent(`${baseUrl}/select-profile`)}`,
           );
 
           const emailHtml = await render(

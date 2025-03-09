@@ -57,7 +57,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (url.startsWith('http')) return url;
       if (url.startsWith('/')) return `${baseUrl}${url}`;
 
-      return `${baseUrl}/students/profile-info`;
+      return `${baseUrl}/select-profile`;
     },
     async signIn({ account, profile, user }) {
       if (account?.provider === 'google' && profile?.email) {
