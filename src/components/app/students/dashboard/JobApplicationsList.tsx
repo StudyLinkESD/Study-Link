@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { JobRequestFull } from '@/types/request_status.type';
 
-// Alias pour la compatibilité
 type JobApplicationFull = JobRequestFull;
 
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
