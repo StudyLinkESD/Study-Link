@@ -8,6 +8,44 @@ import { JobRequestResponseDTO, UpdateJobRequestDTO } from '@/dto/job-request.dt
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/job-requests/{id}:
+ *   get:
+ *     tags:
+ *       - Job Requests
+ *     summary: Récupère les détails d'une demande d'emploi
+ *     description: Retourne les informations détaillées d'une demande d'emploi spécifique
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de la demande d'emploi
+ *     responses:
+ *       200:
+ *         description: Détails de la demande d'emploi récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JobRequestResponseDTO'
+ *       404:
+ *         description: Demande d'emploi non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -48,6 +86,68 @@ export async function GET(
   }
 }
 
+/**
+ * @swagger
+ * /api/job-requests/{id}:
+ *   put:
+ *     tags:
+ *       - Job Requests
+ *     summary: Met à jour une demande d'emploi
+ *     description: Met à jour le statut et/ou le message d'une demande d'emploi
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de la demande d'emploi à mettre à jour
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateJobRequestRequest'
+ *     responses:
+ *       200:
+ *         description: Demande d'emploi mise à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JobRequestResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *       404:
+ *         description: Demande d'emploi non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -99,6 +199,49 @@ export async function PUT(
   }
 }
 
+/**
+ * @swagger
+ * /api/job-requests/{id}:
+ *   delete:
+ *     tags:
+ *       - Job Requests
+ *     summary: Supprime une demande d'emploi
+ *     description: Marque une demande d'emploi comme supprimée (soft delete)
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de la demande d'emploi à supprimer
+ *     responses:
+ *       200:
+ *         description: Demande d'emploi supprimée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: "Job request supprimée avec succès"
+ *       404:
+ *         description: Demande d'emploi non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

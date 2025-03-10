@@ -6,6 +6,58 @@ import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/job-requests:
+ *   get:
+ *     tags:
+ *       - Job Requests
+ *     summary: Récupère les demandes d'emploi de l'étudiant connecté
+ *     description: Retourne la liste des demandes d'emploi de l'étudiant authentifié
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Numéro de la page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Nombre d'éléments par page
+ *     responses:
+ *       200:
+ *         description: Liste des demandes d'emploi récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JobRequestsListResponse'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Accès non autorisé (utilisateur non étudiant)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function GET() {
   try {
     const session = await auth();
@@ -61,6 +113,66 @@ export async function GET() {
   }
 }
 
+/**
+ * @swagger
+ * /api/job-requests:
+ *   post:
+ *     tags:
+ *       - Job Requests
+ *     summary: Crée une nouvelle demande d'emploi
+ *     description: Permet à un étudiant de postuler à une offre d'emploi
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateJobRequestRequest'
+ *     responses:
+ *       201:
+ *         description: Demande d'emploi créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JobRequestResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Accès non autorisé (utilisateur non étudiant)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Offre d'emploi non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: L'étudiant a déjà postulé à cette offre
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function POST(request: Request) {
   try {
     const session = await auth();
