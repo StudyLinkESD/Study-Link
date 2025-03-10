@@ -107,10 +107,22 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
 
 export async function getStudentById(id: string): Promise<StudentResponseDTO | null> {
   try {
+    console.log('Fetching student with ID:', id);
     const student = await serverFetch(`/students/${id}`);
-    return student;
+
+    const [userData, schoolData] = await Promise.all([
+      serverFetch(`/users/${student.userId}`),
+      serverFetch(`/schools/${student.schoolId}`),
+    ]);
+
+    return {
+      ...student,
+      user: userData,
+      school: schoolData,
+    };
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
+      console.log('Student not found');
       return null;
     }
     console.error("Erreur lors de la récupération de l'étudiant:", error);

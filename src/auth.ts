@@ -71,7 +71,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         });
 
         if (existingUser) {
-          if (!existingUser.Account.some((acc) => acc.provider === 'google')) {
+          const hasGoogleAccount = existingUser.Account.some((acc) => acc.provider === 'google');
+
+          if (!hasGoogleAccount) {
             await prisma.account.create({
               data: {
                 userId: existingUser.id,

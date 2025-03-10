@@ -47,6 +47,7 @@ export async function POST(request: Request) {
           firstName: body.owner.firstName,
           lastName: body.owner.lastName,
           email: body.owner.email.toLowerCase(),
+          type: 'school_owner',
         },
       });
 
