@@ -2,46 +2,53 @@ export interface CreateStudentDTO {
   userId: string;
   schoolId: string;
   studentEmail: string;
-  status: string;
+  status: 'Alternant' | 'Stagiaire';
   skills: string;
-  apprenticeshipRhythm?: string;
+  apprenticeshipRhythm: string | null;
   description: string;
-  curriculumVitae?: string;
+  curriculumVitae?: string | null;
   previousCompanies: string;
-  availability: boolean;
-}
-
-export interface UpdateStudentDTO {
-  status?: string;
-  skills?: string;
-  apprenticeshipRhythm?: string;
-  description?: string;
-  curriculumVitae?: string;
-  previousCompanies?: string;
-  availability?: boolean;
-}
-
-export interface StudentResponseDTO {
-  id: string;
-  userId: string;
-  schoolId: string;
-  primaryRecommendationId?: string;
-  status: string;
-  skills: string;
-  apprenticeshipRhythm?: string;
-  description: string;
-  curriculumVitae?: string;
-  previousCompanies: string;
+  experiences?: ExperienceDTO[];
   availability: boolean;
   user?: {
+    firstName: string | null;
+    lastName: string | null;
+  };
+}
+
+export interface ExperienceDTO {
+  id?: string;
+  position: string;
+  company: string;
+  startDate: string;
+  endDate?: string;
+  description?: string;
+  type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
+}
+
+export interface UpdateStudentDTO
+  extends Partial<Omit<CreateStudentDTO, 'userId' | 'schoolId' | 'studentEmail'>> {
+  updatedAt?: Date;
+}
+
+export interface StudentResponseDTO extends Omit<CreateStudentDTO, 'skills'> {
+  id: string;
+  primaryRecommendationId: string | null;
+  skills: string;
+  experiences?: ExperienceDTO[];
+  user: {
     id: string;
     email: string;
     firstName: string | null;
     lastName: string | null;
     profilePicture?: string | null;
   };
-  school?: {
+  school: {
     id: string;
     name: string;
-  };
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
+export type CreateStudentData = CreateStudentDTO;

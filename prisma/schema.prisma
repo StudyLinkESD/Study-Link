@@ -14,6 +14,7 @@ model User {
   name              String?
   firstName         String?
   lastName          String?
+  type              UserType
   profileCompleted  Boolean             @default(false)
   profilePicture    String?
   emailVerified     DateTime?
@@ -26,6 +27,13 @@ model User {
   admin             Admin?
   verificationToken VerificationToken[]
   Account           Account[]
+}
+
+enum UserType {
+  student
+  company_owner
+  school_owner
+  admin
 }
 
 model Student {
@@ -46,6 +54,7 @@ model Student {
   availability            Boolean
   jobRequests             JobRequest[]
   recommendations         Recommendation[] @relation("StudentRecommendations")
+  experiences             Experience[]
 }
 
 model CompanyOwner {
@@ -132,6 +141,8 @@ model Job {
   featuredImage String?
   description   String
   skills        String?
+  type          String    
+  availability  String?  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
@@ -167,4 +178,17 @@ model Account {
   session_state     String?
 
   @@unique([provider, providerAccountId])
+}
+
+model Experience {
+  id        String    @id @default(cuid())
+  student   Student   @relation(fields: [studentId], references: [id])
+  studentId String
+  company   String
+  position  String
+  type      String
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

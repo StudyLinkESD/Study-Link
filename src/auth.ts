@@ -1,7 +1,9 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import NextAuth from 'next-auth';
+import NextAuth, { DefaultSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
+
+import { UserType } from '@/types/user.type';
 
 import authConfig from '@/auth.config';
 
@@ -14,7 +16,8 @@ declare module 'next-auth' {
       isGoogleEmail?: boolean;
       name?: string | null;
       image?: string | null;
-    };
+      studentId?: string | null;
+    } & DefaultSession['user'];
   }
 }
 
@@ -30,22 +33,33 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async jwt({ token, user, account }) {
       if (account && user) {
         token.accessToken = account.access_token;
-        token.id = user.id;
-        token.isGoogleEmail = account.provider === 'google';
+        if (user.id) {
+          token.id = user.id;
+          token.isGoogleEmail = account.provider === 'google';
+
+          const student = await prisma.student.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+          });
+          token.studentId = student?.id ?? null;
+        }
       }
       return token;
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string;
-      session.user.id = token.id as string;
-      session.user.isGoogleEmail = token.isGoogleEmail as boolean;
+      if (token) {
+        session.accessToken = token.accessToken;
+        session.user.id = token.id;
+        session.user.isGoogleEmail = token.isGoogleEmail ?? false;
+        session.user.studentId = token.studentId ?? null;
+      }
       return session;
     },
     async redirect({ url, baseUrl }) {
       if (url.startsWith('http')) return url;
       if (url.startsWith('/')) return `${baseUrl}${url}`;
 
-      return `${baseUrl}/students/profile-info`;
+      return `${baseUrl}/select-profile`;
     },
     async signIn({ account, profile, user }) {
       if (account?.provider === 'google' && profile?.email) {
@@ -59,7 +73,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         });
 
         if (existingUser) {
-          if (!existingUser.Account.some((acc) => acc.provider === 'google')) {
+          const hasGoogleAccount = existingUser.Account.some((acc) => acc.provider === 'google');
+
+          if (!hasGoogleAccount) {
             await prisma.account.create({
               data: {
                 userId: existingUser.id,
@@ -79,8 +95,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         if (profile.name) {
           const nameParts = profile.name.split(' ');
-          const firstName = nameParts[0] || '';
-          const lastName = nameParts.slice(1).join(' ') || '';
+          const firstName = nameParts[0] || null;
+          const lastName = nameParts.slice(1).join(' ') || null;
 
           try {
             await prisma.user.create({
@@ -88,6 +104,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 email: profile.email,
                 firstName,
                 lastName,
+                type: UserType.STUDENT,
+                profileCompleted: false,
                 Account: {
                   create: {
                     type: account.type,
@@ -120,6 +138,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             await prisma.user.create({
               data: {
                 email: user.email,
+                firstName: null,
+                lastName: null,
+                type: UserType.STUDENT,
+                profileCompleted: false,
               },
             });
           } catch (error) {

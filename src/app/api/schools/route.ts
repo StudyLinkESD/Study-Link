@@ -79,6 +79,7 @@ export async function POST(
           email: body.owner.email,
           firstName: body.owner.firstName,
           lastName: body.owner.lastName,
+          type: 'school_owner',
         },
       });
 

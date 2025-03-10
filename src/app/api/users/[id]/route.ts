@@ -1,8 +1,8 @@
-import { User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
+const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
@@ -71,22 +71,44 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-export async function PUT(request: NextRequest): Promise<NextResponse> {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
+    const id = (await params).id;
     if (!id) {
       return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
 
-    const body = (await request.json()) as Partial<User>;
+    const data = await request.json();
+
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
 
     const updatedUser = await prisma.user.update({
-      where: { id },
+      where: {
+        id: id,
+      },
       data: {
-        ...(body.email && { email: body.email.toLowerCase() }),
-        ...(body.firstName && { firstName: body.firstName }),
-        ...(body.lastName && { lastName: body.lastName }),
-        ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
+        firstName: data.firstName,
+        lastName: data.lastName,
+        profilePicture: data.profilePicture,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        profilePicture: true,
       },
     });
 

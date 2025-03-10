@@ -65,7 +65,7 @@ const AuthForm = () => {
   const handleGoogleAuth = async () => {
     try {
       setIsGoogleLoading(true);
-      await signIn('google', { callbackUrl: '/students/profile-info' });
+      await signIn('google', { callbackUrl: '/select-profile' });
     } catch {
       toast.error("Une erreur est survenue lors de l'authentification avec Google");
     } finally {

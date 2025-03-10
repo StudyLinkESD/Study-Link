@@ -20,7 +20,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { userService, UserType } from '@/services/user.service';
+import { UserType } from '@/types/user.type';
+
+import { userService } from '@/services/user.service';
 
 type AppUser = User & {
   admin: Admin | null;

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { checkCompanyExists, validateCompanyData } from '@/utils/validation/company.validation';
 
@@ -9,25 +9,34 @@ import { CompanyResponseDTO, UpdateCompanyDTO } from '@/dto/company.dto';
 const prisma = new PrismaClient();
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<CompanyResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
-    const companyCheck = await checkCompanyExists(id);
+    const { id } = await context.params;
+    const company = await prisma.company.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        companyOwners: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
 
-    if (!companyCheck.exists) {
-      return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
-    }
-
-    if (!companyCheck.company) {
-      return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
+    if (!company) {
+      return NextResponse.json({ error: 'Entreprise non trouvée' }, { status: 404 });
     }
 
     const companyResponse: CompanyResponseDTO = {
-      id: companyCheck.company.id,
-      name: companyCheck.company.name,
-      logo: companyCheck.company.logo,
+      id: company.id,
+      name: company.name,
+      logo: company.logo,
+      companyOwners: company.companyOwners,
     };
 
     return NextResponse.json(companyResponse);
@@ -41,15 +50,15 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<CompanyResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
+    const { id } = await context.params;
     const companyCheck = await checkCompanyExists(id);
 
     if (!companyCheck.exists) {
-      return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
+      return NextResponse.json({ error: 'Entreprise non trouvée' }, { status: 404 });
     }
 
     const body = (await request.json()) as UpdateCompanyDTO;
@@ -81,10 +90,22 @@ export async function PUT(
         id: true,
         name: true,
         logo: true,
+        companyOwners: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json(updatedCompany);
+    const companyResponse: CompanyResponseDTO = {
+      id: updatedCompany.id,
+      name: updatedCompany.name,
+      logo: updatedCompany.logo,
+      companyOwners: updatedCompany.companyOwners,
+    };
+
+    return NextResponse.json(companyResponse);
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la compagnie:', error);
     return NextResponse.json(
@@ -95,11 +116,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
-    const id = (await params).id;
+    const { id } = await context.params;
     const companyCheck = await checkCompanyExists(id);
 
     if (!companyCheck.exists) {

@@ -1,6 +1,5 @@
 'use client';
 
-import axios from 'axios';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CheckCircle, Clock, ExternalLink, Loader2, Trash2, XCircle } from 'lucide-react';
@@ -46,7 +45,7 @@ ApplicationStatusBadge.displayName = 'ApplicationStatusBadge';
 
 function StudentDashboardPageComponent() {
   const { data: session } = useSession();
-  const { applications, setApplications, isLoading } = useStudentApplications(session);
+  const { applications, isLoading, deleteApplication } = useStudentApplications(session);
   const [statusFilter, setStatusFilter] = useState<string>(APPLICATION_STATUS.ALL);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
@@ -82,11 +81,10 @@ function StudentDashboardPageComponent() {
     if (!applicationToDelete) return;
 
     try {
-      const response = await axios.delete(`/api/job-requests/${applicationToDelete}`);
+      const success = await deleteApplication(applicationToDelete);
 
-      if (response.status >= 400) throw new Error('Failed to delete application');
+      if (!success) throw new Error('Failed to delete application');
 
-      setApplications(applications.filter((app) => app.id !== applicationToDelete));
       toast.success('Candidature supprimée avec succès');
     } catch (error) {
       console.error('Error deleting application:', error);
@@ -95,7 +93,7 @@ function StudentDashboardPageComponent() {
       setDeleteDialogOpen(false);
       setApplicationToDelete(null);
     }
-  }, [applicationToDelete, applications, setApplications]);
+  }, [applicationToDelete, deleteApplication]);
 
   if (isLoading) {
     return (

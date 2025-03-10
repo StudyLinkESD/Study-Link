@@ -2,7 +2,12 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 import { prisma } from '@/lib/prisma';
 
-import { CreateStudentDTO, StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
+import {
+  CreateStudentDTO,
+  ExperienceDTO,
+  StudentResponseDTO,
+  UpdateStudentDTO,
+} from '@/dto/student.dto';
 
 function getBaseUrl() {
   if (process.env.NODE_ENV === 'development') {
@@ -14,7 +19,6 @@ function getBaseUrl() {
 async function serverFetch(url: string, options: RequestInit = {}) {
   const baseUrl = getBaseUrl();
   const fullUrl = `${baseUrl}${url}`;
-  console.log('Fetching from:', fullUrl);
 
   try {
     const axiosConfig: AxiosRequestConfig = {
@@ -46,8 +50,6 @@ async function serverFetch(url: string, options: RequestInit = {}) {
 
 export async function getStudents(): Promise<StudentResponseDTO[]> {
   try {
-    console.log('Fetching all students...');
-
     if (process.env.NODE_ENV === 'production') {
       const students = await prisma.student.findMany({
         include: {
@@ -73,7 +75,6 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
     }
 
     const students = await serverFetch('/students');
-    console.log('Raw students data:', students);
 
     if (!Array.isArray(students)) {
       throw new Error('Students data is not an array');
@@ -132,17 +133,7 @@ export async function getStudentById(id: string): Promise<StudentResponseDTO | n
 export async function getStudentByUserId(userId: string): Promise<StudentResponseDTO | null> {
   try {
     const student = await serverFetch(`/students/user/${userId}`);
-
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
-
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
+    return student;
   } catch (error) {
     if (error instanceof Error && error.message.includes('404')) {
       return null;
@@ -185,16 +176,7 @@ export async function updateStudent(
       body: JSON.stringify(data),
     });
 
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
-
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
+    return student;
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('404')) {
@@ -205,6 +187,48 @@ export async function updateStudent(
       }
     }
     console.error('Failed to update student:', error);
+    throw error;
+  }
+}
+
+export async function getStudentExperiences(studentId: string): Promise<ExperienceDTO[]> {
+  try {
+    const experiences = await serverFetch(`/students/${studentId}/experiences`);
+    return experiences;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des expériences de l'étudiant:", error);
+    return [];
+  }
+}
+
+export async function createStudentExperience(
+  studentId: string,
+  data: ExperienceDTO,
+): Promise<ExperienceDTO> {
+  try {
+    const experience = await serverFetch(`/students/${studentId}/experiences`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return experience;
+  } catch (error) {
+    console.error("Erreur lors de la création de l'expérience:", error);
+    throw error;
+  }
+}
+
+export async function updateStudentExperiences(
+  studentId: string,
+  experiences: ExperienceDTO[],
+): Promise<ExperienceDTO[]> {
+  try {
+    const updatedExperiences = await serverFetch(`/students/${studentId}/experiences`, {
+      method: 'PUT',
+      body: JSON.stringify(experiences),
+    });
+    return updatedExperiences;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des expériences:', error);
     throw error;
   }
 }
