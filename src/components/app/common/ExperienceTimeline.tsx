@@ -55,7 +55,6 @@ const ExperienceTimeline: FC<ExperienceTimelineProps> = ({
     <div className={`space-y-8 ${className}`}>
       {experiences.map((exp) => (
         <div key={exp.id} className="relative border-l-2 border-gray-200 pb-6 pl-6">
-          {/* Point de repère sur la timeline */}
           <div className="bg-primary absolute -left-1.5 top-1.5 h-3 w-3 rounded-full"></div>
 
           <div className="mb-3 flex flex-wrap items-center gap-2">

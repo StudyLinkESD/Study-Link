@@ -1066,7 +1066,6 @@ function StudentProfileContent() {
                       </p>
                       <ExperienceForm experiences={experiences} onChange={setExperiences} />
 
-                      {/* Champ caché pour previousCompanies */}
                       <input
                         type="hidden"
                         {...form.register('previousCompanies')}

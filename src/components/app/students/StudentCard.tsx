@@ -92,8 +92,6 @@ function StudentCardComponent({
                   <StudentStatusBadge status={status} />
                 </div>
               </div>
-
-              {/* Informations de l'école et du rythme d'alternance */}
               <div className="mb-4 space-y-3">
                 {school && (
                   <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -120,8 +118,7 @@ function StudentCardComponent({
                   </div>
                 )}
               </div>
-
-              {/* Compétences */}
+              ${' '}
               <div className="space-y-2">
                 <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
                   <Briefcase className="h-4 w-4" />

@@ -91,7 +91,6 @@ export default function CompanyPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* Colonne de gauche - Informations principales */}
         <div className="md:col-span-1">
           <Card>
             <CardContent className="pt-6">
@@ -172,7 +171,6 @@ export default function CompanyPage() {
           </Card>
         </div>
 
-        {/* Colonne de droite - Onglets */}
         <div className="md:col-span-2">
           <Tabs defaultValue="about">
             <TabsList className="grid w-full grid-cols-2">
