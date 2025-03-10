@@ -1,9 +1,6 @@
-// TODO: Réactiver Swagger une fois la documentation API prête
-// import { createSwaggerSpec } from 'next-swagger-doc';
+import { createSwaggerSpec } from 'next-swagger-doc';
 
 export const getApiDocs = () => {
-  return {};
-  /* Configuration Swagger à réactiver ultérieurement
   const spec = createSwaggerSpec({
     apiFolder: 'src/app/api',
     definition: {
@@ -13,65 +10,13 @@ export const getApiDocs = () => {
         version: '1.0.0',
         description: "Documentation de l'API Study Link",
       },
-      components: {
-        schemas: {
-          User: {
-            type: 'object',
-            properties: {
-              id: { type: 'string' },
-              email: { type: 'string' },
-              firstName: { type: 'string', nullable: true },
-              lastName: { type: 'string', nullable: true },
-              type: { type: 'string', enum: ['student', 'company-owner', 'school-owner', 'admin'] },
-              profilePicture: { type: 'string', nullable: true },
-              createdAt: { type: 'string', format: 'date-time' },
-              updatedAt: { type: 'string', format: 'date-time' },
-              deletedAt: { type: 'string', format: 'date-time', nullable: true },
-            },
-          },
-          UserWithRelations: {
-            allOf: [
-              { $ref: '#/components/schemas/User' },
-              {
-                type: 'object',
-                properties: {
-                  student: { $ref: '#/components/schemas/StudentRelations' },
-                  schoolOwner: { $ref: '#/components/schemas/SchoolOwnerRelations' },
-                  companyOwner: { $ref: '#/components/schemas/CompanyOwnerRelations' },
-                },
-              },
-            ],
-          },
-          StudentRelations: {
-            type: 'object',
-            properties: {
-              id: { type: 'string' },
-              userId: { type: 'string' },
-              schoolId: { type: 'string' },
-              status: { type: 'string' },
-              skills: { type: 'string' },
-              description: { type: 'string' },
-              previousCompanies: { type: 'string' },
-              availability: { type: 'boolean' },
-              school: { $ref: '#/components/schemas/School' },
-              jobRequests: {
-                type: 'array',
-                items: { $ref: '#/components/schemas/JobRequest' },
-              },
-            },
-          },
-          Error: {
-            type: 'object',
-            properties: {
-              error: { type: 'string' },
-              details: {
-                type: 'array',
-                items: { type: 'object' },
-                nullable: true,
-              },
-            },
-          },
+      servers: [
+        {
+          url: '/',
+          description: 'API Server',
         },
+      ],
+      components: {
         securitySchemes: {
           BearerAuth: {
             type: 'http',
@@ -79,10 +24,94 @@ export const getApiDocs = () => {
             bearerFormat: 'JWT',
           },
         },
+        schemas: {
+          UserType: {
+            type: 'string',
+            enum: ['student', 'company-owner', 'school-owner', 'admin'],
+          },
+          UserResponseDTO: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                format: 'uuid',
+              },
+              email: {
+                type: 'string',
+                format: 'email',
+              },
+              firstName: {
+                type: 'string',
+                nullable: true,
+              },
+              lastName: {
+                type: 'string',
+                nullable: true,
+              },
+              type: {
+                $ref: '#/components/schemas/UserType',
+              },
+              profilePicture: {
+                type: 'string',
+                nullable: true,
+              },
+              profileCompleted: {
+                type: 'boolean',
+              },
+              emailVerified: {
+                type: 'boolean',
+              },
+              createdAt: {
+                type: 'string',
+                format: 'date-time',
+              },
+              updatedAt: {
+                type: 'string',
+                format: 'date-time',
+              },
+            },
+          },
+          AuthenticateRequest: {
+            type: 'object',
+            required: ['email'],
+            properties: {
+              email: {
+                type: 'string',
+                format: 'email',
+                description: "Adresse email de l'utilisateur",
+              },
+            },
+          },
+          AuthenticateResponse: {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                description: 'Message de confirmation',
+              },
+              isNewUser: {
+                type: 'boolean',
+                description: "Indique si l'utilisateur vient d'être créé",
+              },
+            },
+          },
+          ErrorResponse: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'string',
+                description: "Message d'erreur",
+              },
+            },
+          },
+        },
       },
-      security: [{ BearerAuth: [] }],
+      security: [
+        {
+          BearerAuth: [],
+        },
+      ],
     },
   });
   return spec;
-  */
 };

@@ -6,6 +6,43 @@ import { UserType } from '@/types/user.type';
 
 import { signIn } from '@/auth';
 
+/**
+ * @swagger
+ * /api/auth/authenticate:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Authentifie un utilisateur via email
+ *     description: |
+ *       Cette route permet d'authentifier un utilisateur en utilisant son adresse email.
+ *       Si l'utilisateur n'existe pas, un nouveau compte est créé.
+ *       Un email de connexion est envoyé à l'adresse fournie.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AuthenticateRequest'
+ *     responses:
+ *       200:
+ *         description: Email de connexion envoyé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthenticateResponse'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
