@@ -17,7 +17,6 @@ import { JobRequestFull } from '@/types/request_status.type';
 
 import { useJobRequest } from '@/context/job-request.context';
 
-// Réutilisation du type JobRequestFull pour JobApplicationFull
 type JobApplicationFull = JobRequestFull;
 
 type JobApplicationCardProps = {
