@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Session } from 'next-auth';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { JobApplicationFull } from '@/types/application_status.type';
 
@@ -9,33 +9,49 @@ export function useStudentApplications(session: Session | null) {
   const [applications, setApplications] = useState<JobApplicationFull[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  useEffect(() => {
-    if (!session?.user?.email) {
+  const fetchApplications = useCallback(async () => {
+    if (!session?.user?.id) {
       setIsLoading(false);
       return;
     }
 
-    const fetchApplications = async (userId: string) => {
-      try {
-        const response = await axios.get(`${apiUrl}/users/${userId}/job-requests`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        });
-        setApplications(response.data);
-      } catch (err) {
-        setError(err as Error);
-        console.error('Error fetching applications:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    try {
+      setIsLoading(true);
+      const response = await axios.get('/api/student/job-applications');
+      setApplications(response.data);
+    } catch (err) {
+      setError(err as Error);
+      console.error('Error fetching applications:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session?.user?.id]);
 
-    fetchApplications(session.user.id);
-  }, [session?.user?.email, apiUrl, session?.user.id]);
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
-  return { applications, setApplications, isLoading, error };
+  const deleteApplication = useCallback(async (applicationId: string) => {
+    try {
+      await axios.delete(`/api/student/job-applications/${applicationId}`);
+      // Mettre à jour l'état local après la suppression
+      setApplications((prevApplications) =>
+        prevApplications.filter((app) => app.id !== applicationId),
+      );
+      return true;
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      return false;
+    }
+  }, []);
+
+  return {
+    applications,
+    setApplications,
+    isLoading,
+    error,
+    deleteApplication,
+    refreshApplications: fetchApplications,
+  };
 }
