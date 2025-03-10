@@ -2,7 +2,12 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 import { prisma } from '@/lib/prisma';
 
-import { CreateStudentDTO, StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
+import {
+  CreateStudentDTO,
+  ExperienceDTO,
+  StudentResponseDTO,
+  UpdateStudentDTO,
+} from '@/dto/student.dto';
 
 function getBaseUrl() {
   if (process.env.NODE_ENV === 'development') {
@@ -14,7 +19,6 @@ function getBaseUrl() {
 async function serverFetch(url: string, options: RequestInit = {}) {
   const baseUrl = getBaseUrl();
   const fullUrl = `${baseUrl}${url}`;
-  console.log('Fetching from:', fullUrl);
 
   try {
     const axiosConfig: AxiosRequestConfig = {
@@ -103,44 +107,25 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
 
 export async function getStudentById(id: string): Promise<StudentResponseDTO | null> {
   try {
-    if (!id) {
-      console.error('Invalid student ID provided');
-      return null;
-    }
+    console.log('Fetching student with ID:', id);
+    const student = await serverFetch(`/students/${id}`);
 
-    const student = await prisma.student.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            profilePicture: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
+    const [userData, schoolData] = await Promise.all([
+      serverFetch(`/users/${student.userId}`),
+      serverFetch(`/schools/${student.schoolId}`),
+    ]);
 
-    if (!student) {
-      console.error('Student not found in database');
-      return null;
-    }
-
-    return student as unknown as StudentResponseDTO;
+    return {
+      ...student,
+      user: userData,
+      school: schoolData,
+    };
   } catch (error) {
-    console.error("Erreur détaillée lors de la récupération de l'étudiant:", {
-      error,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      errorStack: error instanceof Error ? error.stack : undefined,
-    });
+    if (error instanceof Error && error.message.includes('404')) {
+      console.log('Student not found');
+      return null;
+    }
+    console.error("Erreur lors de la récupération de l'étudiant:", error);
     return null;
   }
 }
@@ -202,6 +187,48 @@ export async function updateStudent(
       }
     }
     console.error('Failed to update student:', error);
+    throw error;
+  }
+}
+
+export async function getStudentExperiences(studentId: string): Promise<ExperienceDTO[]> {
+  try {
+    const experiences = await serverFetch(`/students/${studentId}/experiences`);
+    return experiences;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des expériences de l'étudiant:", error);
+    return [];
+  }
+}
+
+export async function createStudentExperience(
+  studentId: string,
+  data: ExperienceDTO,
+): Promise<ExperienceDTO> {
+  try {
+    const experience = await serverFetch(`/students/${studentId}/experiences`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return experience;
+  } catch (error) {
+    console.error("Erreur lors de la création de l'expérience:", error);
+    throw error;
+  }
+}
+
+export async function updateStudentExperiences(
+  studentId: string,
+  experiences: ExperienceDTO[],
+): Promise<ExperienceDTO[]> {
+  try {
+    const updatedExperiences = await serverFetch(`/students/${studentId}/experiences`, {
+      method: 'PUT',
+      body: JSON.stringify(experiences),
+    });
+    return updatedExperiences;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des expériences:', error);
     throw error;
   }
 }

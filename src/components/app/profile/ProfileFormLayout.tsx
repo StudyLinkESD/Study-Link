@@ -34,7 +34,6 @@ export default function ProfileFormLayout({
   return (
     <div className="container mx-auto py-8">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Colonne principale */}
         <div className="space-y-6 lg:col-span-2">
           <Tabs defaultValue={tabs[0].id} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -52,7 +51,6 @@ export default function ProfileFormLayout({
           </Tabs>
         </div>
 
-        {/* Colonne latérale */}
         <div className="space-y-6">
           <SectionCard title="Progression du profil" icon={BarChart2}>
             <ProfileCompletion fields={adaptedFields} />

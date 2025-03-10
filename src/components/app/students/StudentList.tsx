@@ -105,7 +105,6 @@ function StudentListComponent({
       );
     }
 
-    console.log('Étudiants filtrés:', result);
     return result;
   }, [statusFilter, searchTerm, selectedSkills, students]);
 
