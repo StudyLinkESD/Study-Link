@@ -251,4 +251,120 @@ export const studentSchemas = {
       ],
     },
   },
+  StudentJobRequestResponseDTO: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'string',
+        format: 'uuid',
+        description: "Identifiant unique de la demande d'emploi",
+      },
+      studentId: {
+        type: 'string',
+        format: 'uuid',
+        description: "Identifiant de l'étudiant",
+      },
+      jobId: {
+        type: 'string',
+        format: 'uuid',
+        description: "Identifiant de l'offre d'emploi",
+      },
+      status: {
+        type: 'string',
+        enum: ['PENDING', 'ACCEPTED', 'REJECTED'],
+        description: "Statut de la demande d'emploi",
+      },
+      createdAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Date de création',
+      },
+      updatedAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Date de dernière modification',
+      },
+    },
+    example: {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      studentId: '123e4567-e89b-12d3-a456-426614174000',
+      jobId: '987fcdeb-51a2-4bc1-9e3d-14af6324a000',
+      status: 'PENDING',
+      createdAt: '2024-03-10T12:00:00Z',
+      updatedAt: '2024-03-10T12:00:00Z',
+    },
+  },
+  CreateStudentJobRequestDTO: {
+    type: 'object',
+    required: ['jobId'],
+    properties: {
+      jobId: {
+        type: 'string',
+        format: 'uuid',
+        description: "Identifiant de l'offre d'emploi",
+      },
+    },
+    example: {
+      jobId: '987fcdeb-51a2-4bc1-9e3d-14af6324a000',
+    },
+  },
+  UpdateStudentJobRequestDTO: {
+    type: 'object',
+    required: ['status'],
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['PENDING', 'ACCEPTED', 'REJECTED'],
+        description: "Nouveau statut de la demande d'emploi",
+      },
+      message: {
+        type: 'string',
+        description: 'Message optionnel accompagnant le changement de statut',
+      },
+    },
+    example: {
+      status: 'ACCEPTED',
+      message: 'Votre candidature a été acceptée',
+    },
+  },
+  StudentJobRequestError: {
+    type: 'object',
+    properties: {
+      error: {
+        type: 'string',
+        description: "Code d'erreur",
+      },
+      message: {
+        type: 'string',
+        description: "Message d'erreur",
+      },
+      details: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            field: {
+              type: 'string',
+              description: 'Champ en erreur',
+            },
+            message: {
+              type: 'string',
+              description: "Message d'erreur",
+            },
+          },
+        },
+        description: 'Détails des erreurs de validation',
+      },
+    },
+    example: {
+      error: 'VALIDATION_ERROR',
+      message: 'Données invalides',
+      details: [
+        {
+          field: 'status',
+          message: 'Le statut doit être PENDING, ACCEPTED ou REJECTED',
+        },
+      ],
+    },
+  },
 };

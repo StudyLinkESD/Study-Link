@@ -6,6 +6,45 @@ import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/students/job-requests:
+ *   get:
+ *     tags:
+ *       - Students
+ *       - Job Requests
+ *     summary: Récupère les demandes d'emploi des étudiants
+ *     description: Retourne la liste des demandes d'emploi avec pagination
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Numéro de la page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Nombre d'éléments par page
+ *     responses:
+ *       200:
+ *         description: Liste des demandes d'emploi récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentJobRequestResponseDTO'
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès non autorisé
+ *       500:
+ *         description: Erreur serveur
+ */
 export async function GET() {
   try {
     const session = await auth();
@@ -58,6 +97,45 @@ export async function GET() {
   }
 }
 
+/**
+ * @swagger
+ * /api/students/job-requests:
+ *   post:
+ *     tags:
+ *       - Students
+ *       - Job Requests
+ *     summary: Crée une nouvelle demande d'emploi
+ *     description: Permet à un étudiant de postuler à une offre d'emploi
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateStudentJobRequestDTO'
+ *     responses:
+ *       201:
+ *         description: Demande d'emploi créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentJobRequestResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentJobRequestError'
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès non autorisé
+ *       404:
+ *         description: Offre d'emploi non trouvée
+ *       409:
+ *         description: L'étudiant a déjà postulé à cette offre
+ *       500:
+ *         description: Erreur serveur
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

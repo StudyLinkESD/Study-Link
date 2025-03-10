@@ -11,14 +11,13 @@ const prisma = new PrismaClient();
 
 /**
  * @swagger
- * /api/job-requests/{id}:
+ * /api/students/job-requests/{id}:
  *   get:
  *     tags:
+ *       - Students
  *       - Job Requests
- *     summary: Récupère les détails d'une demande d'emploi
- *     description: Retourne les informations détaillées d'une demande d'emploi spécifique
- *     security:
- *       - BearerAuth: []
+ *     summary: Récupère une demande d'emploi spécifique
+ *     description: Retourne les détails d'une demande d'emploi par son ID
  *     parameters:
  *       - in: path
  *         name: id
@@ -29,23 +28,19 @@ const prisma = new PrismaClient();
  *         description: ID de la demande d'emploi
  *     responses:
  *       200:
- *         description: Détails de la demande d'emploi récupérés avec succès
+ *         description: Demande d'emploi récupérée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/JobRequestResponseDTO'
+ *               $ref: '#/components/schemas/StudentJobRequestResponseDTO'
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès non autorisé
  *       404:
  *         description: Demande d'emploi non trouvée
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Erreur serveur
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 export async function GET(
   request: Request,
@@ -89,14 +84,13 @@ export async function GET(
 
 /**
  * @swagger
- * /api/job-requests/{id}:
+ * /api/students/job-requests/{id}:
  *   put:
  *     tags:
+ *       - Students
  *       - Job Requests
  *     summary: Met à jour une demande d'emploi
- *     description: Met à jour le statut et/ou le message d'une demande d'emploi
- *     security:
- *       - BearerAuth: []
+ *     description: Modifie les informations d'une demande d'emploi existante
  *     parameters:
  *       - in: path
  *         name: id
@@ -104,50 +98,34 @@ export async function GET(
  *         schema:
  *           type: string
  *           format: uuid
- *         description: ID de la demande d'emploi à mettre à jour
+ *         description: ID de la demande d'emploi
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateJobRequestRequest'
+ *             $ref: '#/components/schemas/UpdateStudentJobRequestDTO'
  *     responses:
  *       200:
  *         description: Demande d'emploi mise à jour avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/JobRequestResponseDTO'
+ *               $ref: '#/components/schemas/StudentJobRequestResponseDTO'
  *       400:
  *         description: Données invalides
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 details:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       field:
- *                         type: string
- *                       message:
- *                         type: string
+ *               $ref: '#/components/schemas/StudentJobRequestError'
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès non autorisé
  *       404:
  *         description: Demande d'emploi non trouvée
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Erreur serveur
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 export async function PUT(
   request: Request,
@@ -200,6 +178,43 @@ export async function PUT(
   }
 }
 
+/**
+ * @swagger
+ * /api/students/job-requests/{id}:
+ *   delete:
+ *     tags:
+ *       - Students
+ *       - Job Requests
+ *     summary: Supprime une demande d'emploi
+ *     description: Supprime une demande d'emploi existante
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de la demande d'emploi
+ *     responses:
+ *       200:
+ *         description: Demande d'emploi supprimée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Demande d'emploi supprimée avec succès"
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès non autorisé
+ *       404:
+ *         description: Demande d'emploi non trouvée
+ *       500:
+ *         description: Erreur serveur
+ */
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
