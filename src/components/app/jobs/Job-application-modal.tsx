@@ -53,7 +53,7 @@ export function JobApplicationModal({
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/student/job-applications', {
+      const response = await fetch('/api/students/job-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
