@@ -151,6 +151,8 @@ async function main() {
         description:
           "Nous recherchons un développeur full stack passionné pour un contrat d'alternance de 12 mois. Vous travaillerez sur des projets innovants utilisant les dernières technologies web.",
         skills: 'React, Next.js, Node.js, TypeScript, PostgreSQL, TailwindCSS, Git',
+        type: 'Alternance',
+        availability: 'Septembre 2024',
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
