@@ -4,6 +4,46 @@ import { NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/school-domains/check:
+ *   post:
+ *     tags:
+ *       - School Domains
+ *     summary: Vérifie un domaine d'école
+ *     description: Vérifie si un domaine est autorisé et retourne les informations de l'école associée
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CheckDomainRequest'
+ *     responses:
+ *       200:
+ *         description: Domaine vérifié avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CheckDomainResponse'
+ *       400:
+ *         description: Domaine non fourni
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolDomainError'
+ *       404:
+ *         description: Domaine non reconnu ou école non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolDomainError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolDomainError'
+ */
 export async function POST(request: Request) {
   try {
     const { domain } = await request.json();
