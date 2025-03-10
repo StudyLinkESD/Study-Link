@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 import { NextResponse } from 'next/server';
 
+import { UserType } from '@/types/user.type';
+
 import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
@@ -14,48 +16,83 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const student = await prisma.student.findFirst({
-      where: {
-        userId: session.user.id,
-      },
-      include: {
-        user: true,
-      },
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { type: true },
     });
 
-    if (!student) {
-      return NextResponse.json(
-        { error: 'Only students can view job applications' },
-        { status: 403 },
-      );
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const jobRequests = await prisma.jobRequest.findMany({
-      where: {
-        studentId: student.id,
-      },
-      include: {
-        job: {
-          include: {
-            company: true,
-          },
+    if (user.type === UserType.STUDENT) {
+      const student = await prisma.student.findFirst({
+        where: {
+          userId: session.user.id,
         },
-        student: {
-          include: {
-            user: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+      });
 
-    return NextResponse.json(jobRequests);
-  } catch (error) {
-    console.error('Error fetching job requests:', error);
+      if (!student) {
+        return NextResponse.json({ error: 'Student profile not found' }, { status: 404 });
+      }
+
+      const jobRequests = await prisma.jobRequest.findMany({
+        where: {
+          studentId: student.id,
+          deletedAt: null,
+        },
+        include: {
+          job: {
+            include: {
+              company: true,
+            },
+          },
+          student: {
+            include: {
+              user: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      return NextResponse.json(jobRequests);
+    }
+
+    if (user.type === UserType.COMPANY_OWNER || user.type === UserType.ADMIN) {
+      const jobRequests = await prisma.jobRequest.findMany({
+        where: {
+          deletedAt: null,
+        },
+        include: {
+          job: {
+            include: {
+              company: true,
+            },
+          },
+          student: {
+            include: {
+              user: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      return NextResponse.json(jobRequests);
+    }
+
     return NextResponse.json(
-      { error: 'An error occurred while processing your request' },
+      { error: 'You do not have permission to view job requests' },
+      { status: 403 },
+    );
+  } catch {
+    return NextResponse.json(
+      { error: 'An error occurred while fetching job requests' },
       { status: 500 },
     );
   }
@@ -116,8 +153,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(jobRequest, { status: 201 });
-  } catch (error) {
-    console.error('Error creating job request:', error);
+  } catch {
     return NextResponse.json(
       { error: 'An error occurred while processing your request' },
       { status: 500 },
