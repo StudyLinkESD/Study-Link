@@ -24,76 +24,76 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { useStudentApplications } from '@/hooks/students/dashboard/useStudentApplications';
+import { useStudentJobRequests } from '@/hooks/students/dashboard/useStudentJobRequests';
 
-import { APPLICATION_STATUS } from '@/constants/status';
+import { REQUEST_STATUS } from '@/constants/status';
 
-const ApplicationStatusBadge = React.memo(({ status }: { status: string }) => {
+const RequestStatusBadge = React.memo(({ status }: { status: string }) => {
   switch (status) {
-    case APPLICATION_STATUS.PENDING:
+    case REQUEST_STATUS.PENDING:
       return <StatusBadge status="En attente" variant="default" />;
-    case APPLICATION_STATUS.ACCEPTED:
+    case REQUEST_STATUS.ACCEPTED:
       return <StatusBadge status="Acceptée" variant="success" />;
-    case APPLICATION_STATUS.REJECTED:
+    case REQUEST_STATUS.REJECTED:
       return <StatusBadge status="Refusée" className="bg-red-200 text-red-800" />;
     default:
       return <StatusBadge status="Inconnu" variant="outline" />;
   }
 });
 
-ApplicationStatusBadge.displayName = 'ApplicationStatusBadge';
+RequestStatusBadge.displayName = 'RequestStatusBadge';
 
 function StudentDashboardPageComponent() {
   const { data: session } = useSession();
-  const { applications, isLoading, deleteApplication } = useStudentApplications(session);
-  const [statusFilter, setStatusFilter] = useState<string>(APPLICATION_STATUS.ALL);
+  const { requests, isLoading, deleteRequest } = useStudentJobRequests(session);
+  const [statusFilter, setStatusFilter] = useState<string>(REQUEST_STATUS.ALL);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-  const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
+  const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
 
-  const filteredApplications = useMemo(() => {
-    return applications.filter((app) => {
-      const matchesStatus = statusFilter === APPLICATION_STATUS.ALL || app.status === statusFilter;
+  const filteredRequests = useMemo(() => {
+    return requests.filter((req) => {
+      const matchesStatus = statusFilter === REQUEST_STATUS.ALL || req.status === statusFilter;
       const matchesSearch =
         searchTerm === '' ||
-        app.job.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.job.company.name.toLowerCase().includes(searchTerm.toLowerCase());
+        req.job.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.job.company.name.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesStatus && matchesSearch;
     });
-  }, [applications, statusFilter, searchTerm]);
+  }, [requests, statusFilter, searchTerm]);
 
   const statusCounts = useMemo(() => {
-    return applications.reduce(
-      (acc, app) => {
-        acc[app.status] = (acc[app.status] || 0) + 1;
+    return requests.reduce(
+      (acc, req) => {
+        acc[req.status] = (acc[req.status] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
     );
-  }, [applications]);
+  }, [requests]);
 
   const handleDeleteClick = useCallback((id: string) => {
-    setApplicationToDelete(id);
+    setRequestToDelete(id);
     setDeleteDialogOpen(true);
   }, []);
 
   const confirmDelete = useCallback(async () => {
-    if (!applicationToDelete) return;
+    if (!requestToDelete) return;
 
     try {
-      const success = await deleteApplication(applicationToDelete);
+      const success = await deleteRequest(requestToDelete);
 
-      if (!success) throw new Error('Failed to delete application');
+      if (!success) throw new Error('Failed to delete job request');
 
       toast.success('Candidature supprimée avec succès');
     } catch (error) {
-      console.error('Error deleting application:', error);
+      console.error('Error deleting job request:', error);
       toast.error('Erreur lors de la suppression de la candidature');
     } finally {
       setDeleteDialogOpen(false);
-      setApplicationToDelete(null);
+      setRequestToDelete(null);
     }
-  }, [applicationToDelete, deleteApplication]);
+  }, [requestToDelete, deleteRequest]);
 
   if (isLoading) {
     return (
@@ -157,37 +157,34 @@ function StudentDashboardPageComponent() {
         </CardHeader>
         <CardContent>
           <Tabs
-            defaultValue={APPLICATION_STATUS.ALL}
+            defaultValue={REQUEST_STATUS.ALL}
             value={statusFilter}
             onValueChange={setStatusFilter}
             className="w-full"
           >
             <TabsList className="mb-6">
-              <TabsTrigger value={APPLICATION_STATUS.ALL}>Toutes</TabsTrigger>
-              <TabsTrigger value={APPLICATION_STATUS.PENDING}>En attente</TabsTrigger>
-              <TabsTrigger value={APPLICATION_STATUS.ACCEPTED}>Acceptées</TabsTrigger>
-              <TabsTrigger value={APPLICATION_STATUS.REJECTED}>Refusées</TabsTrigger>
+              <TabsTrigger value={REQUEST_STATUS.ALL}>Toutes</TabsTrigger>
+              <TabsTrigger value={REQUEST_STATUS.PENDING}>En attente</TabsTrigger>
+              <TabsTrigger value={REQUEST_STATUS.ACCEPTED}>Acceptées</TabsTrigger>
+              <TabsTrigger value={REQUEST_STATUS.REJECTED}>Refusées</TabsTrigger>
             </TabsList>
 
             <div className="space-y-4">
-              {filteredApplications.length > 0 ? (
-                filteredApplications.map((application) => (
-                  <Card key={application.id} className="overflow-hidden">
+              {filteredRequests.length > 0 ? (
+                filteredRequests.map((request) => (
+                  <Card key={request.id} className="overflow-hidden">
                     <CardContent className="p-6">
                       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                         <div>
-                          <h3 className="text-lg font-semibold">{application.job.name}</h3>
+                          <h3 className="text-lg font-semibold">{request.job.name}</h3>
                           <p className="text-muted-foreground text-sm">
-                            {application.job.company.name}
+                            {request.job.company.name}
                           </p>
                         </div>
                         <div className="flex items-center gap-4">
-                          <ApplicationStatusBadge status={application.status} />
+                          <RequestStatusBadge status={request.status} />
                           <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={`/jobs/${application.jobId}`}
-                              className="flex items-center gap-2"
-                            >
+                            <a href={`/jobs/${request.jobId}`} className="flex items-center gap-2">
                               Voir l&apos;offre
                               <ExternalLink className="h-4 w-4" />
                             </a>
@@ -198,7 +195,7 @@ function StudentDashboardPageComponent() {
                             className="text-muted-foreground hover:text-destructive h-8 w-8"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteClick(application.id);
+                              handleDeleteClick(request.id);
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -208,14 +205,14 @@ function StudentDashboardPageComponent() {
                       <div className="text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-sm">
                         <span>
                           Postuléé le{' '}
-                          {format(new Date(application.createdAt), 'dd MMMM yyyy', {
+                          {format(new Date(request.createdAt), 'dd MMMM yyyy', {
                             locale: fr,
                           })}
                         </span>
-                        {application.updatedAt !== application.createdAt && (
+                        {request.updatedAt !== request.createdAt && (
                           <span>
                             Mise à jour le{' '}
-                            {format(new Date(application.updatedAt), 'dd MMMM yyyy', {
+                            {format(new Date(request.updatedAt), 'dd MMMM yyyy', {
                               locale: fr,
                             })}
                           </span>

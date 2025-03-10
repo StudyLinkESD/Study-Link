@@ -6,7 +6,7 @@ import { Briefcase, Building2, Calendar, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
-import { JobApplicationButton } from '@/components/jobs/job-application-button';
+import { JobRequestButton } from '@/components/jobs/job-request-button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -131,7 +131,7 @@ export default async function JobPage({ params }: JobPageProps) {
                   <Calendar className="h-4 w-4" />
                   <span>Publié le {format(job.createdAt, 'd MMMM yyyy', { locale: fr })}</span>
                 </div>
-                <JobApplicationButton
+                <JobRequestButton
                   jobId={job.id}
                   hasApplied={hasApplied}
                   isAuthenticated={!!session}

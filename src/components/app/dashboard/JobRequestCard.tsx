@@ -11,45 +11,32 @@ import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
+import { JobRequestFull } from '@/types/request_status.type';
 
-import { JobApplicationFull, StatusMappingType } from '@/types/application_status.type';
+import { useJobRequest } from '@/context/job-request.context';
 
-import { useJobApplication } from '@/context/job-application.context';
-
-type JobApplicationCardProps = {
-  application: JobApplicationFull;
+type JobRequestCardProps = {
+  request: JobRequestFull;
   onDeleteClick: () => void;
 };
 
-export default function JobApplicationCard({
-  application,
-  onDeleteClick,
-}: JobApplicationCardProps) {
-  const { setSelectedApplication, selectedApplication } = useJobApplication();
-  const { student, job, status, createdAt } = application;
+export default function JobRequestCard({ request, onDeleteClick }: JobRequestCardProps) {
+  const { setSelectedRequest, selectedRequest } = useJobRequest();
+  const { student, job, status, createdAt } = request;
   const { firstName, lastName } = student.user;
 
   const handleClick = () => {
-    setSelectedApplication(application);
+    setSelectedRequest(request);
   };
 
   const formattedDate = React.useMemo(() => {
     return format(new Date(createdAt), 'dd MMMM yyyy', { locale: fr });
   }, [createdAt]);
 
-  const statusMapping: StatusMappingType = {
-    PENDING: 'En attente',
-    ACCEPTED: 'Acceptée',
-    REJECTED: 'Rejetée',
-  };
-
-  const displayStatus = statusMapping[status as ApplicationStatus] || status;
-
   return (
     <Card
       className={`cursor-pointer overflow-hidden transition-all ${
-        selectedApplication?.id === application.id ? 'ring-primary ring-2' : 'hover:border-gray-300'
+        selectedRequest?.id === request.id ? 'ring-primary ring-2' : 'hover:border-gray-300'
       }`}
       onClick={handleClick}
     >
@@ -82,12 +69,7 @@ export default function JobApplicationCard({
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <StatusBadge
-            status={displayStatus}
-            variant={
-              status === 'ACCEPTED' ? 'success' : status === 'REJECTED' ? 'destructive' : 'default'
-            }
-          />
+          <StatusBadge status={status} />
           <span className="text-muted-foreground text-xs">{formattedDate}</span>
         </div>
 

@@ -8,17 +8,13 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-interface JobApplicationButtonProps {
+interface JobRequestButtonProps {
   jobId: string;
   hasApplied: boolean;
   isAuthenticated: boolean;
 }
 
-export function JobApplicationButton({
-  jobId,
-  hasApplied,
-  isAuthenticated,
-}: JobApplicationButtonProps) {
+export function JobRequestButton({ jobId, hasApplied, isAuthenticated }: JobRequestButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -30,7 +26,7 @@ export function JobApplicationButton({
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/student/job-applications', {
+      const response = await fetch('/api/student/job-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

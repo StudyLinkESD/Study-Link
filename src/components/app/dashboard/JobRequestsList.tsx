@@ -8,7 +8,7 @@ import React, { useMemo, useReducer, useRef } from 'react';
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
 import SearchBar from '@/components/app/common/SearchBar';
-import JobApplicationCard from '@/components/app/dashboard/JobApplicationCard';
+import JobRequestCard from '@/components/app/dashboard/JobRequestCard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,9 +23,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { JobApplicationFull } from '@/types/application_status.type';
+import { JobRequestFull } from '@/types/request_status.type';
 
-import { useJobApplication } from '@/context/job-application.context';
+import { useJobRequest } from '@/context/job-request.context';
 
 const STATUS_OPTIONS = {
   ALL: 'all',
@@ -34,7 +34,7 @@ const STATUS_OPTIONS = {
   REJECTED: 'REJECTED',
 };
 
-const APPLICATIONS_PER_PAGE = 9;
+const REQUESTS_PER_PAGE = 9;
 
 type FilterState = {
   statusFilter: string;
@@ -69,14 +69,14 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
   }
 }
 
-function ApplicationFilters({
+function RequestFilters({
   state,
   dispatch,
-  applicationCount,
+  requestCount,
 }: {
   state: FilterState;
   dispatch: React.Dispatch<FilterAction>;
-  applicationCount: number;
+  requestCount: number;
 }) {
   const resetFilters = () => {
     const currentStatus = state.statusFilter;
@@ -95,7 +95,7 @@ function ApplicationFilters({
         />
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm">
-            {applicationCount} candidature{applicationCount !== 1 ? 's' : ''}
+            {requestCount} candidature{requestCount !== 1 ? 's' : ''}
           </span>
           {state.searchTerm && (
             <Button variant="outline" size="sm" onClick={resetFilters}>
@@ -115,76 +115,73 @@ function ApplicationFilters({
   );
 }
 
-export interface JobApplicationsListProps {
-  applications: JobApplicationFull[];
-  setApplications: React.Dispatch<React.SetStateAction<JobApplicationFull[]>>;
+export interface JobRequestsListProps {
+  requests: JobRequestFull[];
+  setRequests: React.Dispatch<React.SetStateAction<JobRequestFull[]>>;
 }
 
-export default function JobApplicationsList({
-  applications,
-  setApplications,
-}: JobApplicationsListProps) {
+export default function JobRequestsList({ requests, setRequests }: JobRequestsListProps) {
   const [state, dispatch] = useReducer(filterReducer, initialFilterState);
   const { statusFilter, searchTerm, currentPage } = state;
   const tabsRef = useRef<HTMLDivElement>(null);
-  const { selectedApplication, setSelectedApplication } = useJobApplication();
+  const { selectedRequest, setSelectedRequest } = useJobRequest();
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [applicationToDelete, setApplicationToDelete] = React.useState<string | null>(null);
+  const [requestToDelete, setRequestToDelete] = React.useState<string | null>(null);
 
-  const filteredApplications = useMemo(() => {
-    let result = [...applications];
+  const filteredRequests = useMemo(() => {
+    let result = [...requests];
 
     if (statusFilter !== STATUS_OPTIONS.ALL) {
-      result = result.filter((app) => app.status === statusFilter);
+      result = result.filter((req) => req.status === statusFilter);
     }
 
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(
-        (app) =>
-          (app.student.user.firstName?.toLowerCase() ?? '').includes(searchLower) ||
-          (app.student.user.lastName?.toLowerCase() ?? '').includes(searchLower) ||
-          app.job.name.toLowerCase().includes(searchLower) ||
-          app.job.company.name.toLowerCase().includes(searchLower),
+        (req) =>
+          (req.student.user.firstName?.toLowerCase() ?? '').includes(searchLower) ||
+          (req.student.user.lastName?.toLowerCase() ?? '').includes(searchLower) ||
+          req.job.name.toLowerCase().includes(searchLower) ||
+          req.job.company.name.toLowerCase().includes(searchLower),
       );
     }
 
     return result;
-  }, [statusFilter, searchTerm, applications]);
+  }, [statusFilter, searchTerm, requests]);
 
-  const totalPages = Math.ceil(filteredApplications.length / APPLICATIONS_PER_PAGE);
-  const currentApplications = useMemo(() => {
-    const indexOfLastItem = currentPage * APPLICATIONS_PER_PAGE;
-    const indexOfFirstItem = indexOfLastItem - APPLICATIONS_PER_PAGE;
-    return filteredApplications.slice(indexOfFirstItem, indexOfLastItem);
-  }, [filteredApplications, currentPage]);
+  const totalPages = Math.ceil(filteredRequests.length / REQUESTS_PER_PAGE);
+  const currentRequests = useMemo(() => {
+    const indexOfLastItem = currentPage * REQUESTS_PER_PAGE;
+    const indexOfFirstItem = indexOfLastItem - REQUESTS_PER_PAGE;
+    return filteredRequests.slice(indexOfFirstItem, indexOfLastItem);
+  }, [filteredRequests, currentPage]);
 
   const handleDeleteClick = (id: string) => {
-    setApplicationToDelete(id);
+    setRequestToDelete(id);
     setDeleteDialogOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!applicationToDelete) return;
+    if (!requestToDelete) return;
 
     try {
-      const response = await axios.delete(`/api/job-requests/${applicationToDelete}`);
+      const response = await axios.delete(`/api/job-requests/${requestToDelete}`);
 
-      if (response.status >= 400) throw new Error('Failed to delete application');
+      if (response.status >= 400) throw new Error('Failed to delete request');
 
-      setApplications(applications.filter((app) => app.id !== applicationToDelete));
+      setRequests(requests.filter((req) => req.id !== requestToDelete));
 
-      if (selectedApplication?.id === applicationToDelete) {
-        setSelectedApplication(null);
+      if (selectedRequest?.id === requestToDelete) {
+        setSelectedRequest(null);
       }
 
       toast.success('Candidature supprimée avec succès');
     } catch (error) {
-      console.error('Error deleting application:', error);
+      console.error('Error deleting request:', error);
       toast.error('Erreur lors de la suppression de la candidature');
     } finally {
       setDeleteDialogOpen(false);
-      setApplicationToDelete(null);
+      setRequestToDelete(null);
     }
   };
 
@@ -199,22 +196,19 @@ export default function JobApplicationsList({
             className="w-full"
             onValueChange={(value) => dispatch({ type: 'SET_STATUS_FILTER', payload: value })}
           >
-            <ApplicationFilters
+            <RequestFilters
               state={state}
               dispatch={dispatch}
-              applicationCount={filteredApplications.length}
+              requestCount={filteredRequests.length}
             />
 
             <TabsContent value={STATUS_OPTIONS.ALL} className="mt-0">
               <ItemGrid
-                items={currentApplications}
-                renderItem={(app) => (
-                  <JobApplicationCard
-                    application={app}
-                    onDeleteClick={() => handleDeleteClick(app.id)}
-                  />
+                items={currentRequests}
+                renderItem={(req) => (
+                  <JobRequestCard request={req} onDeleteClick={() => handleDeleteClick(req.id)} />
                 )}
-                keyExtractor={(app) => app.id}
+                keyExtractor={(req) => req.id}
                 emptyState={{
                   title: 'Aucune candidature trouvée',
                   description: 'Aucune candidature ne correspond à vos critères de recherche.',
@@ -224,14 +218,11 @@ export default function JobApplicationsList({
 
             <TabsContent value={STATUS_OPTIONS.PENDING} className="mt-0">
               <ItemGrid
-                items={currentApplications}
-                renderItem={(app) => (
-                  <JobApplicationCard
-                    application={app}
-                    onDeleteClick={() => handleDeleteClick(app.id)}
-                  />
+                items={currentRequests}
+                renderItem={(req) => (
+                  <JobRequestCard request={req} onDeleteClick={() => handleDeleteClick(req.id)} />
                 )}
-                keyExtractor={(app) => app.id}
+                keyExtractor={(req) => req.id}
                 emptyState={{
                   title: 'Aucune candidature en attente',
                   description: 'Aucune candidature en attente ne correspond à vos critères.',
@@ -241,14 +232,11 @@ export default function JobApplicationsList({
 
             <TabsContent value={STATUS_OPTIONS.ACCEPTED} className="mt-0">
               <ItemGrid
-                items={currentApplications}
-                renderItem={(app) => (
-                  <JobApplicationCard
-                    application={app}
-                    onDeleteClick={() => handleDeleteClick(app.id)}
-                  />
+                items={currentRequests}
+                renderItem={(req) => (
+                  <JobRequestCard request={req} onDeleteClick={() => handleDeleteClick(req.id)} />
                 )}
-                keyExtractor={(app) => app.id}
+                keyExtractor={(req) => req.id}
                 emptyState={{
                   title: 'Aucune candidature acceptée',
                   description: 'Aucune candidature acceptée ne correspond à vos critères.',
@@ -258,14 +246,11 @@ export default function JobApplicationsList({
 
             <TabsContent value={STATUS_OPTIONS.REJECTED} className="mt-0">
               <ItemGrid
-                items={currentApplications}
-                renderItem={(app) => (
-                  <JobApplicationCard
-                    application={app}
-                    onDeleteClick={() => handleDeleteClick(app.id)}
-                  />
+                items={currentRequests}
+                renderItem={(req) => (
+                  <JobRequestCard request={req} onDeleteClick={() => handleDeleteClick(req.id)} />
                 )}
-                keyExtractor={(app) => app.id}
+                keyExtractor={(req) => req.id}
                 emptyState={{
                   title: 'Aucune candidature rejetée',
                   description: 'Aucune candidature rejetée ne correspond à vos critères.',
@@ -295,12 +280,7 @@ export default function JobApplicationsList({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Supprimer
-            </AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete}>Supprimer</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

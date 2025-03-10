@@ -22,12 +22,12 @@ import {
 } from '@/components/ui/select';
 
 import {
-  ApplicationStatus,
   getStatusLabel,
   getStatusVariant,
+  RequestStatus,
 } from '@/utils/students/dashboard/status-mapping.utils';
 
-import { useJobApplication } from '@/context/job-application.context';
+import { useJobRequest } from '@/context/job-request.context';
 
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   include: {
@@ -44,21 +44,21 @@ type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   };
 }>;
 
-export default function JobApplicationView({
-  applications,
-  setApplications,
+export default function JobRequestView({
+  requests,
+  setRequests,
 }: {
-  applications: JobRequestWithRelations[];
-  setApplications: React.Dispatch<React.SetStateAction<JobRequestWithRelations[]>>;
+  requests: JobRequestWithRelations[];
+  setRequests: React.Dispatch<React.SetStateAction<JobRequestWithRelations[]>>;
 }) {
-  const { selectedApplication, setSelectedApplication } = useJobApplication();
+  const { selectedRequest, setSelectedRequest } = useJobRequest();
 
-  const updateApplicationStatus = async (newStatus: ApplicationStatus) => {
-    if (!selectedApplication) return;
+  const updateRequestStatus = async (newStatus: RequestStatus) => {
+    if (!selectedRequest) return;
 
     try {
       const response = await axios.put(
-        `/api/job-requests/${selectedApplication.id}`,
+        `/api/job-requests/${selectedRequest.id}`,
         { status: newStatus },
         {
           headers: {
@@ -67,23 +67,23 @@ export default function JobApplicationView({
         },
       );
 
-      if (response.status >= 400) throw new Error('Failed to update application status');
+      if (response.status >= 400) throw new Error('Failed to update request status');
 
-      const updatedApplications = applications.map((app) =>
-        app.id === selectedApplication.id ? { ...app, status: newStatus } : app,
+      const updatedRequests = requests.map((req) =>
+        req.id === selectedRequest.id ? { ...req, status: newStatus } : req,
       );
 
-      setApplications(updatedApplications);
-      setSelectedApplication({ ...selectedApplication, status: newStatus });
+      setRequests(updatedRequests);
+      setSelectedRequest({ ...selectedRequest, status: newStatus });
 
       toast.success(`Statut mis à jour avec succès: ${getStatusLabel(newStatus)}`);
     } catch (error) {
-      console.error('Error updating application status:', error);
+      console.error('Error updating request status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
     }
   };
 
-  if (!selectedApplication) {
+  if (!selectedRequest) {
     return (
       <Card className="flex h-[500px] items-center justify-center">
         <CardContent className="text-center">
@@ -98,7 +98,7 @@ export default function JobApplicationView({
     );
   }
 
-  const { student, job, status, createdAt, updatedAt } = selectedApplication;
+  const { student, job, status, createdAt, updatedAt } = selectedRequest;
   const { firstName, lastName } = student.user;
 
   const formattedCreatedDate = format(new Date(createdAt), 'dd MMMM yyyy à HH:mm', { locale: fr });
@@ -151,7 +151,7 @@ export default function JobApplicationView({
             <Label htmlFor="status-select">Mettre à jour le statut</Label>
             <Select
               defaultValue={status}
-              onValueChange={(value) => updateApplicationStatus(value as ApplicationStatus)}
+              onValueChange={(value) => updateRequestStatus(value as RequestStatus)}
             >
               <SelectTrigger id="status-select">
                 <SelectValue placeholder="Sélectionner un statut" />

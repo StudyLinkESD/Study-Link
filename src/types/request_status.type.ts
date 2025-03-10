@@ -1,9 +1,9 @@
 import { Prisma } from '@prisma/client';
 
-import { ApplicationStatus } from '@/utils/students/dashboard/status-mapping.utils';
+import { RequestStatus } from '@/utils/students/dashboard/status-mapping.utils';
 
 export type StatusMappingType = {
-  [key in ApplicationStatus]: string;
+  [key in RequestStatus]: string;
 };
 
 export type JobWithCompany = Prisma.JobGetPayload<{
@@ -20,11 +20,11 @@ export type StudentWithUser = Prisma.StudentGetPayload<{
   };
 }>;
 
-export type JobApplicationFull = {
+export type JobRequestFull = {
   id: string;
   studentId: string;
   jobId: string;
-  status: ApplicationStatus | string;
+  status: RequestStatus | string;
   createdAt: string;
   updatedAt: string;
   student: {
@@ -53,7 +53,7 @@ export type JobApplicationFull = {
   };
 };
 
-export interface JobApplicationContextType {
-  selectedApplication: JobApplicationFull | null;
-  setSelectedApplication: (application: JobApplicationFull | null) => void;
+export interface JobRequestContextType {
+  selectedRequest: JobRequestFull | null;
+  setSelectedRequest: (request: JobRequestFull | null) => void;
 }

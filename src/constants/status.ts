@@ -4,7 +4,7 @@ export const STUDENT_STATUS = {
   STAGIAIRE: 'Stagiaire',
 };
 
-export const APPLICATION_STATUS = {
+export const REQUEST_STATUS = {
   ALL: 'all',
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',
