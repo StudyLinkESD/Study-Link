@@ -1,6 +1,3 @@
-/* Styles personnalisés pour le DatePicker */
-
-/* Conteneur principal */
 .date-picker-calendar {
   font-family: inherit;
   border-radius: 0.5rem;
@@ -13,7 +10,6 @@
   width: 280px;
 }
 
-/* En-tête du calendrier */
 .react-datepicker__header {
   background-color: white;
   border-bottom: 1px solid #f3f4f6;
@@ -22,7 +18,6 @@
   text-align: center;
 }
 
-/* Mois et année */
 .react-datepicker__current-month {
   font-size: 1rem;
   font-weight: 600;
@@ -30,7 +25,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* Navigation */
 .react-datepicker__navigation {
   top: 0.75rem;
   border: none;
@@ -74,13 +68,11 @@
   transform: rotate(45deg);
 }
 
-/* Mois */
 .react-datepicker__month {
   margin: 0.5rem 0 0;
   text-align: center;
 }
 
-/* Sélecteurs de mois et d'année */
 .react-datepicker__month-dropdown-container,
 .react-datepicker__year-dropdown-container {
   display: inline-block;
@@ -98,12 +90,10 @@
   cursor: pointer;
 }
 
-/* Jours de la semaine */
 .react-datepicker__day-names {
-  display: none; /* Cacher les noms des jours */
+  display: none;
 }
 
-/* Jours */
 .react-datepicker__month-text {
   display: inline-block;
   width: 4rem;
@@ -137,7 +127,6 @@
   color: #3b82f6;
 }
 
-/* Popper */
 .date-picker-popper {
   z-index: 50;
 }
