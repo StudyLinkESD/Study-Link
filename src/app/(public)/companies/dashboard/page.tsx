@@ -15,15 +15,9 @@ const CompanyDashboardPage = () => {
   const { isLoading: isLoadingCompany } = useCompanyId(session);
 
   useEffect(() => {
-    // Rediriger si l'utilisateur n'est pas connecté
     if (status === 'unauthenticated') {
       redirect('/auth/login');
     }
-
-    // Vérifier si l'utilisateur est une entreprise (à adapter selon votre logique d'authentification)
-    // if (session?.user?.role !== 'company') {
-    //   redirect('/');
-    // }
   }, [session, status]);
 
   if (status === 'loading' || isLoadingCompany) {
