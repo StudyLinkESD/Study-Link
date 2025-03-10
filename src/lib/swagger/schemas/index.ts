@@ -8,6 +8,7 @@ import { resendSchemas } from './resend.schema';
 import { schoolDomainSchemas } from './school-domain.schema';
 import { schoolOwnerSchemas } from './school-owner.schema';
 import { schoolSchemas } from './school.schema';
+import { studentSchemas } from './student.schema';
 import { userSchemas } from './user.schema';
 
 export const schemas = {
@@ -18,8 +19,9 @@ export const schemas = {
   ...jobRequestSchemas,
   ...jobSchemas,
   ...resendSchemas,
+  ...schoolSchemas,
   ...schoolDomainSchemas,
   ...schoolOwnerSchemas,
-  ...schoolSchemas,
+  ...studentSchemas,
   ...userSchemas,
 };

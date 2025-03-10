@@ -18,6 +18,34 @@ type ValidationError = {
   message: string;
 };
 
+/**
+ * @swagger
+ * /api/students:
+ *   get:
+ *     tags:
+ *       - Students
+ *     summary: Récupère la liste des étudiants
+ *     description: Retourne la liste complète des étudiants avec leurs informations détaillées
+ *     responses:
+ *       200:
+ *         description: Liste des étudiants récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StudentResponseDTO'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur lors de la récupération des étudiants"
+ */
 export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error: string }>> {
   try {
     const students = await prisma.student.findMany({
@@ -80,6 +108,44 @@ export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error
   }
 }
 
+/**
+ * @swagger
+ * /api/students:
+ *   post:
+ *     tags:
+ *       - Students
+ *     summary: Crée un nouvel étudiant
+ *     description: Crée un nouvel étudiant avec les informations fournies
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateStudentDTO'
+ *     responses:
+ *       200:
+ *         description: Étudiant créé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to create student"
+ */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<StudentResponseDTO | ValidationErrorResponse>> {
