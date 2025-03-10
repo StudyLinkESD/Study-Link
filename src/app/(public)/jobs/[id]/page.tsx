@@ -133,6 +133,8 @@ export default async function JobPage({ params }: JobPageProps) {
                 </div>
                 <JobRequestButton
                   jobId={job.id}
+                  jobTitle={job.name}
+                  companyName={job.company.name}
                   hasApplied={hasApplied}
                   isAuthenticated={!!session}
                 />

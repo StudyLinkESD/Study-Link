@@ -202,6 +202,23 @@ function StudentDashboardPageComponent() {
                           </Button>
                         </div>
                       </div>
+
+                      {request.subject && (
+                        <div className="mt-4 border-t pt-4">
+                          <h4 className="mb-2 font-medium">Objet de la candidature</h4>
+                          <p className="text-muted-foreground">{request.subject}</p>
+                        </div>
+                      )}
+
+                      {request.message && (
+                        <div className="mt-4 border-t pt-4">
+                          <h4 className="mb-2 font-medium">Message</h4>
+                          <div className="bg-muted whitespace-pre-wrap rounded-md p-3 text-sm">
+                            {request.message}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-sm">
                         <span>
                           Postuléé le{' '}

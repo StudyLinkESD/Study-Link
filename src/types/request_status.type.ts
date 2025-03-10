@@ -25,6 +25,8 @@ export type JobRequestFull = {
   studentId: string;
   jobId: string;
   status: RequestStatus | string;
+  subject: string | null;
+  message: string | null;
   createdAt: string;
   updatedAt: string;
   student: {
