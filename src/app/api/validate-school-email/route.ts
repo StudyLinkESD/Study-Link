@@ -5,18 +5,14 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
-    console.log('Received email for validation:', email);
 
     if (!email) {
-      console.log('No email provided');
       return NextResponse.json({ error: "L'email est requis" }, { status: 400 });
     }
 
     const domain = email.split('@')[1];
-    console.log('Extracted domain:', domain);
 
     if (!domain) {
-      console.log('Invalid email format');
       return NextResponse.json({ error: "Format d'email invalide" }, { status: 400 });
     }
 
@@ -28,10 +24,7 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log('Found school:', school);
-
     if (!school) {
-      console.log('No school found for domain:', domain);
       return NextResponse.json(
         { error: "L'email scolaire doit correspondre à une école enregistrée" },
         { status: 400 },

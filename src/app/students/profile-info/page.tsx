@@ -2,6 +2,8 @@
 
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Briefcase, Save, School, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { Controller, useForm } from 'react-hook-form';
@@ -12,6 +14,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 
 import FileUploadInput from '@/components/app/common/FileUploadInput';
 import SectionCard from '@/components/app/common/SectionCard';
+import ExperienceForm from '@/components/app/profileForm/ExperienceForm';
 import FormField from '@/components/app/profileForm/FormField';
 import NavigationButtons from '@/components/app/profileForm/NavigationButton';
 import ProfileCompletion from '@/components/app/profileForm/ProfileCompletion';
@@ -33,8 +36,9 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { cn } from '@/lib/utils';
 
-import { CreateStudentData } from '@/dto/student.dto';
+import { CreateStudentData, ExperienceDTO } from '@/dto/student.dto';
 import { validateSchoolEmail } from '@/services/school.service';
+import { updateStudentExperiences } from '@/services/student.service';
 import { handleUploadFile } from '@/services/uploadFile';
 
 const profileSchema = z.object({
@@ -73,9 +77,7 @@ const profileSchema = z.object({
     .array(z.string())
     .min(3, { message: 'Veuillez sélectionner au moins 3 compétences' })
     .max(10, { message: 'Vous ne pouvez pas sélectionner plus de 10 compétences' }),
-  previousCompanies: z
-    .string()
-    .min(1, { message: 'Veuillez renseigner vos entreprises précédentes' }),
+  previousCompanies: z.string().optional().or(z.literal('')),
   schoolEmail: z.string().email('Veuillez entrer un email valide'),
 });
 
@@ -108,17 +110,29 @@ function LoadingSpinner() {
   );
 }
 
+type SimpleExperience = {
+  id: string;
+  company: string;
+  position: string;
+  period: string;
+  type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
+  startDate?: Date;
+  endDate?: Date;
+};
+
 function StudentProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [photoUrl, setPhotoUrl] = useState('');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [uploadedCv, setUploadedCv] = useState<File | null>(null);
   const [cvUrl, setCvUrl] = useState<string>('');
   const [selectedTab, setSelectedTab] = useState('personal');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [experiences, setExperiences] = useState<SimpleExperience[]>([]);
 
   const availableSkills = [
     { id: 'react', name: 'React' },
@@ -160,19 +174,16 @@ function StudentProfileContent() {
 
   const getStudentById = async (id: string) => {
     try {
-      console.log("Recherche de l'étudiant pour id:", id);
       const response = await fetch(`/api/students/${id}`);
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log('Aucun étudiant trouvé pour id:', id);
           return null;
         }
         throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
       }
 
       const data = await response.json();
-      console.log("Données de l'étudiant récupérées:", data);
       return data;
     } catch (error) {
       console.error("Erreur lors de la récupération de l'étudiant:", error);
@@ -182,19 +193,16 @@ function StudentProfileContent() {
 
   const getStudentByUserId = async (userId: string) => {
     try {
-      console.log("Recherche de l'étudiant pour userId:", userId);
       const response = await fetch(`/api/students/user/${userId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log('Aucun étudiant trouvé pour userId:', userId);
           return null;
         }
         throw new Error(`Erreur ${response.status} lors de la récupération de l'étudiant`);
       }
 
       const data = await response.json();
-      console.log("Données de l'étudiant récupérées:", data);
       return data;
     } catch (error) {
       console.error("Erreur lors de la récupération de l'étudiant:", error);
@@ -204,7 +212,6 @@ function StudentProfileContent() {
 
   const createStudent = async (data: CreateStudentData) => {
     try {
-      console.log('Envoi des données au serveur:', data);
       const response = await fetch(`/api/students`, {
         method: 'POST',
         headers: {
@@ -214,7 +221,6 @@ function StudentProfileContent() {
       });
 
       const responseData = await response.json();
-      console.log('Réponse brute du serveur:', responseData);
 
       if (!response.ok) {
         console.error("Réponse d'erreur du serveur:", responseData);
@@ -237,8 +243,6 @@ function StudentProfileContent() {
 
   const updateStudent = async (id: string, data: CreateStudentData) => {
     try {
-      console.log('Mise à jour du profil étudiant pour id:', id);
-
       const updateData = {
         status: data.status,
         skills: data.skills,
@@ -248,8 +252,6 @@ function StudentProfileContent() {
         previousCompanies: data.previousCompanies,
         availability: data.availability,
       };
-
-      console.log('Données envoyées pour la mise à jour:', updateData);
 
       const response = await fetch(`/api/students/${id}`, {
         method: 'PUT',
@@ -294,28 +296,50 @@ function StudentProfileContent() {
     if (id) {
       setStudentId(id);
       try {
-        console.log("Tentative de chargement du profil pour l'étudiant:", id);
         const studentData = await getStudentById(id);
-        console.log("Données brutes reçues de l'API:", studentData);
 
         if (studentData) {
-          console.log("Données de l'étudiant à charger dans le formulaire:", {
-            firstName: studentData.user?.firstName,
-            lastName: studentData.user?.lastName,
-            status: studentData.status,
-            school: studentData.schoolId,
-            availability: studentData.availability,
-            alternanceRhythm: studentData.apprenticeshipRhythm,
-            description: studentData.description,
-            skills: studentData.skills
-              ? studentData.skills.split(',').map((s: string) => s.trim())
-              : [],
-            previousCompanies: studentData.previousCompanies,
-            schoolEmail: studentData.studentEmail,
-          });
-
           setPhotoUrl(studentData.user?.profilePicture || '');
           setCvUrl(studentData.curriculumVitae || '');
+
+          if (studentData.experiences && studentData.experiences.length > 0) {
+            const structuredExperiences = studentData.experiences.map((exp: SimpleExperience) => {
+              const startDate = exp.startDate ? new Date(exp.startDate) : undefined;
+              const endDate = exp.endDate ? new Date(exp.endDate) : undefined;
+
+              const startDateStr = startDate ? format(startDate, 'MMMM yyyy', { locale: fr }) : '';
+              const endDateStr = endDate ? format(endDate, 'MMMM yyyy', { locale: fr }) : 'Présent';
+              const period =
+                startDateStr && (endDateStr || 'Présent') ? `${startDateStr} - ${endDateStr}` : '';
+
+              return {
+                id: exp.id || `exp-${Math.random().toString(36).substr(2, 9)}`,
+                company: exp.company,
+                position: exp.position,
+                period: period,
+                type: exp.type as 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre',
+                startDate,
+                endDate,
+              };
+            });
+
+            setExperiences(structuredExperiences);
+          } else {
+            const oldExperiences = studentData.previousCompanies
+              ? studentData.previousCompanies
+                  .split(',')
+                  .map((company: string, index: number) => ({
+                    id: `exp-${index}`,
+                    company: company.trim(),
+                    position: 'Stage/Alternance',
+                    period: 'Non spécifié',
+                    type: 'Stage' as const,
+                  }))
+                  .filter((exp: SimpleExperience) => exp.company)
+              : [];
+
+            setExperiences(oldExperiences);
+          }
 
           form.reset({
             firstName: studentData.user?.firstName || '',
@@ -337,29 +361,52 @@ function StudentProfileContent() {
       }
     } else if (session?.user?.id) {
       try {
-        console.log("Tentative de chargement du profil pour l'utilisateur:", session.user.id);
         const studentData = await getStudentByUserId(session.user.id);
-        console.log("Données brutes reçues de l'API:", studentData);
 
         if (studentData) {
           setStudentId(studentData.id);
-          console.log("Données de l'étudiant à charger dans le formulaire:", {
-            firstName: studentData.user?.firstName,
-            lastName: studentData.user?.lastName,
-            status: studentData.status,
-            school: studentData.schoolId,
-            availability: studentData.availability,
-            alternanceRhythm: studentData.apprenticeshipRhythm,
-            description: studentData.description,
-            skills: studentData.skills
-              ? studentData.skills.split(',').map((s: string) => s.trim())
-              : [],
-            previousCompanies: studentData.previousCompanies,
-            schoolEmail: studentData.studentEmail,
-          });
 
           setPhotoUrl(studentData.user?.profilePicture || '');
           setCvUrl(studentData.curriculumVitae || '');
+
+          if (studentData.experiences && studentData.experiences.length > 0) {
+            const structuredExperiences = studentData.experiences.map((exp: SimpleExperience) => {
+              const startDate = exp.startDate ? new Date(exp.startDate) : undefined;
+              const endDate = exp.endDate ? new Date(exp.endDate) : undefined;
+
+              const startDateStr = startDate ? format(startDate, 'MMMM yyyy', { locale: fr }) : '';
+              const endDateStr = endDate ? format(endDate, 'MMMM yyyy', { locale: fr }) : 'Présent';
+              const period =
+                startDateStr && (endDateStr || 'Présent') ? `${startDateStr} - ${endDateStr}` : '';
+
+              return {
+                id: exp.id || `exp-${Math.random().toString(36).substr(2, 9)}`,
+                company: exp.company,
+                position: exp.position,
+                period: period,
+                type: exp.type as 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre',
+                startDate,
+                endDate,
+              };
+            });
+
+            setExperiences(structuredExperiences);
+          } else {
+            const oldExperiences = studentData.previousCompanies
+              ? studentData.previousCompanies
+                  .split(',')
+                  .map((company: string, index: number) => ({
+                    id: `exp-${index}`,
+                    company: company.trim(),
+                    position: 'Stage/Alternance',
+                    period: 'Non spécifié',
+                    type: 'Stage' as const,
+                  }))
+                  .filter((exp: SimpleExperience) => exp.company)
+              : [];
+
+            setExperiences(oldExperiences);
+          }
 
           form.reset({
             firstName: studentData.user?.firstName || '',
@@ -394,64 +441,72 @@ function StudentProfileContent() {
     loadStudentProfile();
   }, [status, router, fetchSchools, loadStudentProfile]);
 
+  useEffect(() => {
+    if (experiences.length > 0) {
+      const companiesString = experiences.map((exp) => exp.company).join(', ');
+      form.setValue('previousCompanies', companiesString);
+    }
+  }, [experiences, form]);
+
   const formValues = form.watch();
 
   const handlePhotoUpload = async (file: File | null, url?: string) => {
-    if (file && url) {
+    if (file) {
       try {
-        setPhotoUrl(url);
-        if (session?.user?.id) {
-          const userResponse = await fetch(`/api/users/${session.user.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              profilePicture: url,
-            }),
-          });
+        setIsUploadingPhoto(true);
 
-          if (!userResponse.ok) {
-            console.error(
-              'Erreur lors de la mise à jour de la photo de profil:',
-              await userResponse.text(),
-            );
-            toast.error('Erreur lors de la mise à jour de la photo de profil');
-            return;
+        if (url) {
+          setPhotoUrl(url);
+
+          if (session?.user?.id) {
+            const userResponse = await fetch(`/api/users/${session.user.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                profilePicture: url,
+              }),
+            });
+
+            if (!userResponse.ok) {
+              console.error(
+                'Erreur lors de la mise à jour de la photo de profil:',
+                await userResponse.text(),
+              );
+              toast.error('Erreur lors de la mise à jour de la photo de profil');
+              setIsUploadingPhoto(false);
+              return;
+            }
+
+            const updatedUser = await userResponse.json();
+            console.log('Utilisateur mis à jour:', updatedUser);
+
+            if (session && session.user) {
+              session.user.image = url;
+
+              const event = new Event('visibilitychange');
+              document.dispatchEvent(event);
+            }
+
+            toast.success('Photo de profil mise à jour avec succès');
           }
-
-          const updatedUser = await userResponse.json();
-          console.log('Utilisateur mis à jour:', updatedUser);
-
-          if (session && session.user) {
-            session.user.image = url;
-            console.log('Photo de profil mise à jour dans la session:', url);
-
-            const event = new Event('visibilitychange');
-            document.dispatchEvent(event);
-          }
-
-          toast.success('Photo de profil mise à jour avec succès');
+        } else {
+          const imageUrl = URL.createObjectURL(file);
+          setPhotoUrl(imageUrl);
         }
       } catch (error) {
         console.error('Erreur lors de la mise à jour de la photo de profil:', error);
         toast.error('Erreur lors de la mise à jour de la photo de profil');
+      } finally {
+        setIsUploadingPhoto(false);
       }
-    } else if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setPhotoUrl(imageUrl);
     }
   };
 
   const handleCvUpload = async (file: File | null) => {
     if (file) {
       try {
-        console.log("Début de l'upload du CV:", {
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-        });
-
         const syntheticEvent = {
           target: {
             files: [file],
@@ -468,7 +523,6 @@ function StudentProfileContent() {
           throw new Error(uploadResult.error || "Échec de l'upload du CV");
         }
 
-        console.log('Upload réussi:', uploadResult);
         setUploadedCv(file);
         setCvUrl(uploadResult.url);
         return uploadResult.url;
@@ -499,22 +553,16 @@ function StudentProfileContent() {
         status: data.status,
         skills: data.skills.join(', '),
         apprenticeshipRhythm: data.alternanceRhythm || null,
-        description:
-          data.description ||
-          'Je suis un étudiant en alternance passionné par le développement web. Je recherche une entreprise pour mettre en pratique mes compétences et continuer mon apprentissage. Mon objectif est de contribuer à des projets innovants tout en développant mes compétences techniques et professionnelles.',
-        previousCompanies: data.previousCompanies || 'Aucune expérience précédente',
+        description: data.description || '',
+        previousCompanies: experiences.map((exp) => exp.company).join(', '),
         availability: data.availability || true,
       };
-
-      console.log("Données envoyées à l'API:", studentData);
 
       if (
         !studentData.userId ||
         !studentData.schoolId ||
         !studentData.status ||
         !studentData.skills ||
-        !studentData.description ||
-        !studentData.previousCompanies ||
         studentData.availability === undefined
       ) {
         console.error('Données manquantes:', {
@@ -522,8 +570,6 @@ function StudentProfileContent() {
           schoolId: !studentData.schoolId,
           status: !studentData.status,
           skills: !studentData.skills,
-          description: !studentData.description,
-          previousCompanies: !studentData.previousCompanies,
           availability: studentData.availability === undefined,
         });
         throw new Error('Toutes les données requises ne sont pas présentes');
@@ -543,35 +589,70 @@ function StudentProfileContent() {
 
       let result;
 
-      if (studentId) {
-        try {
-          const userResponse = await fetch(`/api/users/${session?.user?.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              firstName: data.firstName,
-              lastName: data.lastName,
-            }),
-          });
+      try {
+        const userResponse = await fetch(`/api/users/${session?.user?.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            profilePicture: photoUrl || null,
+          }),
+        });
 
-          if (!userResponse.ok) {
-            throw new Error('Erreur lors de la mise à jour des informations utilisateur');
-          }
-        } catch (error) {
-          console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
-          toast.error('Erreur lors de la mise à jour des informations utilisateur');
-          return;
+        if (!userResponse.ok) {
+          throw new Error('Erreur lors de la mise à jour des informations utilisateur');
         }
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+        toast.error('Erreur lors de la mise à jour des informations utilisateur');
+        setIsSubmitting(false);
+        return;
+      }
 
+      if (studentId) {
         result = await updateStudent(studentId, studentData);
         toast.success('Profil mis à jour avec succès');
+
+        try {
+          const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
+            id: exp.id,
+            company: exp.company,
+            position: exp.position,
+            type: exp.type,
+            startDate: exp.startDate ? exp.startDate.toISOString() : '',
+            endDate: exp.endDate ? exp.endDate.toISOString() : '',
+            description: '',
+          }));
+
+          await updateStudentExperiences(studentId, experiencesDTO);
+        } catch (error) {
+          console.error('Erreur lors de la mise à jour des expériences:', error);
+          toast.error('Erreur lors de la mise à jour des expériences');
+        }
       } else {
-        console.log("Création d'un nouveau profil étudiant");
         result = await createStudent(studentData);
         if (result && result.id) {
           setStudentId(result.id);
+
+          try {
+            const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
+              id: exp.id,
+              company: exp.company,
+              position: exp.position,
+              type: exp.type,
+              startDate: exp.startDate ? exp.startDate.toISOString() : '',
+              endDate: exp.endDate ? exp.endDate.toISOString() : '',
+              description: '',
+            }));
+
+            await updateStudentExperiences(result.id, experiencesDTO);
+          } catch (error) {
+            console.error('Erreur lors de la création des expériences:', error);
+            toast.error('Erreur lors de la création des expériences');
+          }
         }
         toast.success('Profil créé avec succès');
       }
@@ -766,6 +847,7 @@ function StudentProfileContent() {
                           firstName={formValues.firstName}
                           lastName={formValues.lastName}
                           initialFileName={photoUrl ? 'photo_profil.jpg' : ''}
+                          isLoading={isUploadingPhoto}
                         />
                       </div>
                     </FormField>
@@ -976,25 +1058,20 @@ function StudentProfileContent() {
                       />
                     </FormField>
 
-                    <FormField
-                      label="Entreprises précédentes"
-                      htmlFor="previousCompanies"
-                      required
-                      className="mt-4"
-                      error={form.formState.errors.previousCompanies?.message}
-                    >
-                      <Input
-                        id="previousCompanies"
-                        placeholder="Listez vos entreprises précédentes"
+                    <div className="mt-6">
+                      <h3 className="mb-4 text-lg font-medium">Expériences professionnelles</h3>
+                      <p className="mb-4 text-sm text-gray-500">
+                        Ajoutez vos expériences professionnelles pour les mettre en valeur sur votre
+                        profil.
+                      </p>
+                      <ExperienceForm experiences={experiences} onChange={setExperiences} />
+
+                      <input
+                        type="hidden"
                         {...form.register('previousCompanies')}
-                        className={cn(
-                          form.formState.errors.previousCompanies && 'border-destructive',
-                          !form.formState.errors.previousCompanies &&
-                            form.formState.touchedFields.previousCompanies &&
-                            'border-green-500',
-                        )}
+                        value={experiences.map((exp) => exp.company).join(', ')}
                       />
-                    </FormField>
+                    </div>
                   </SectionCard>
 
                   <div className="flex justify-between">
@@ -1012,9 +1089,6 @@ function StudentProfileContent() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Bouton Enregistrer cliqué');
-                        console.log('État du formulaire:', formValues);
-                        console.log('Erreurs:', form.formState.errors);
 
                         if (form.formState.isValid) {
                           onSubmit(form.getValues());

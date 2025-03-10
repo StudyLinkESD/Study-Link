@@ -101,6 +101,7 @@ export async function PUT(
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
+        profilePicture: data.profilePicture,
       },
       select: {
         id: true,

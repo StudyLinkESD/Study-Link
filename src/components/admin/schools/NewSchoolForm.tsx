@@ -141,8 +141,6 @@ export function NewSchoolForm({ onSuccess, onCancel }: NewSchoolFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        console.log('Erreur de réponse:', data);
-
         switch (data.error) {
           case 'DOMAIN_EXISTS':
             setFormErrors({ domain: 'Ce domaine est déjà utilisé par une autre école' });
