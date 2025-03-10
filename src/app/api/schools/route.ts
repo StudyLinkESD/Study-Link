@@ -8,6 +8,36 @@ import { SchoolResponseDTO } from '@/dto/school.dto';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/schools:
+ *   get:
+ *     tags:
+ *       - Schools
+ *     summary: Récupère la liste des écoles
+ *     description: Retourne toutes les écoles actives avec leurs informations de domaine
+ *     parameters:
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         description: Filtre les écoles par leur état d'activation
+ *     responses:
+ *       200:
+ *         description: Liste des écoles récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/SchoolResponseDTO'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolError'
+ */
 export async function GET(
   request: Request,
 ): Promise<NextResponse<SchoolResponseDTO[] | { error: string }>> {
@@ -48,6 +78,59 @@ interface CreateSchoolDTO {
   };
 }
 
+/**
+ * @swagger
+ * /api/schools:
+ *   post:
+ *     tags:
+ *       - Schools
+ *     summary: Crée une nouvelle école
+ *     description: Crée une nouvelle école avec son propriétaire
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateSchoolRequest'
+ *     responses:
+ *       200:
+ *         description: École créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                   description: "ID de l'école créée"
+ *       400:
+ *         description: Données invalides ou domaine non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolError'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Accès non autorisé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolError'
+ */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<{ id: string } | { error: string; details?: Record<string, string> }>> {
