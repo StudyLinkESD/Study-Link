@@ -18,7 +18,7 @@ export function useStudentJobRequests(session: Session | null) {
 
     try {
       setIsLoading(true);
-      const response = await axios.get('/api/student/job-requests');
+      const response = await axios.get('/api/students/job-requests');
       setRequests(response.data);
     } catch (err) {
       setError(err as Error);
@@ -34,7 +34,7 @@ export function useStudentJobRequests(session: Session | null) {
 
   const deleteRequest = useCallback(async (requestId: string) => {
     try {
-      await axios.delete(`/api/student/job-requests/${requestId}`);
+      await axios.delete(`/api/students/job-requests/${requestId}`);
       setRequests((prevRequests) => prevRequests.filter((req) => req.id !== requestId));
       return true;
     } catch (error) {
