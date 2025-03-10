@@ -8,6 +8,56 @@ import { SchoolOwnerResponseDTO, UpdateSchoolOwnerDTO } from '@/dto/school-owner
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/school-owners/{id}:
+ *   get:
+ *     tags:
+ *       - School Owners
+ *     summary: Récupère les détails d'un propriétaire d'école
+ *     description: Retourne les informations détaillées d'un propriétaire d'école spécifique
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID du propriétaire d'école
+ *     responses:
+ *       200:
+ *         description: Détails du propriétaire d'école récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerResponseDTO'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Accès non autorisé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Propriétaire d'école non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerError'
+ */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -38,6 +88,68 @@ export async function GET(
   }
 }
 
+/**
+ * @swagger
+ * /api/school-owners/{id}:
+ *   put:
+ *     tags:
+ *       - School Owners
+ *     summary: Met à jour un propriétaire d'école
+ *     description: Modifie les associations utilisateur/école d'un propriétaire d'école
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID du propriétaire d'école à mettre à jour
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateSchoolOwnerRequest'
+ *     responses:
+ *       200:
+ *         description: Propriétaire d'école mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerResponseDTO'
+ *       400:
+ *         description: Données invalides ou utilisateur déjà propriétaire
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerError'
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Accès non autorisé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Propriétaire d'école, utilisateur ou école non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerError'
+ */
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -83,6 +195,61 @@ export async function PUT(
   }
 }
 
+/**
+ * @swagger
+ * /api/school-owners/{id}:
+ *   delete:
+ *     tags:
+ *       - School Owners
+ *     summary: Supprime un propriétaire d'école
+ *     description: Supprime l'association entre un utilisateur et une école
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID du propriétaire d'école à supprimer
+ *     responses:
+ *       200:
+ *         description: Propriétaire d'école supprimé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *               example:
+ *                 message: "Propriétaire d'école supprimé avec succès"
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Accès non autorisé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Propriétaire d'école non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SchoolOwnerError'
+ */
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
