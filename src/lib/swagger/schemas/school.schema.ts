@@ -126,20 +126,18 @@ export const schoolSchemas = {
       },
       domain: {
         type: 'string',
-        description: "Nom de domaine de l'école",
+        description: "Domaine de l'école (ex: epsi.fr)",
       },
       owner: {
         type: 'object',
-        required: ['email'],
+        required: ['firstName', 'lastName', 'email'],
         properties: {
           firstName: {
             type: 'string',
-            nullable: true,
             description: 'Prénom du propriétaire',
           },
           lastName: {
             type: 'string',
-            nullable: true,
             description: 'Nom du propriétaire',
           },
           email: {
@@ -161,6 +159,39 @@ export const schoolSchemas = {
         lastName: 'Doe',
         email: 'john.doe@epsi.fr',
       },
+    },
+  },
+  CreateSchoolWithDomainResponse: {
+    type: 'object',
+    properties: {
+      school: {
+        $ref: '#/components/schemas/SchoolResponseDTO',
+      },
+      domain: {
+        $ref: '#/components/schemas/SchoolDomainResponseDTO',
+      },
+    },
+  },
+  CreateSchoolWithDomainError: {
+    type: 'object',
+    properties: {
+      error: {
+        type: 'string',
+        description: "Code d'erreur",
+        enum: ['USER_EXISTS', 'DOMAIN_EXISTS', 'UNIQUE_CONSTRAINT_FAILED', 'CREATION_FAILED'],
+      },
+      message: {
+        type: 'string',
+        description: "Message d'erreur",
+      },
+      details: {
+        type: 'object',
+        description: "Détails supplémentaires de l'erreur",
+      },
+    },
+    example: {
+      error: 'DOMAIN_EXISTS',
+      message: 'Ce domaine est déjà utilisé',
     },
   },
   UpdateSchoolRequest: {
