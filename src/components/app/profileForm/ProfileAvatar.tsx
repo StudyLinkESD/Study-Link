@@ -40,21 +40,21 @@ const ProfileAvatarComponent = ({
     setImageError(false);
     setImageUrl(photoUrl);
 
-    console.log('ProfileAvatar - URL de la photo:', photoUrl);
-    console.log('ProfileAvatar - Type de la photo:', typeof photoUrl);
-    console.log('ProfileAvatar - URL vide?', !photoUrl);
-
     if (photoUrl) {
       let cleanUrl = photoUrl;
+
       if (cleanUrl.startsWith('/api/files/')) {
         cleanUrl = cleanUrl.substring('/api/files/'.length);
-        console.log('ProfileAvatar - URL nettoyée:', cleanUrl);
         setImageUrl(cleanUrl);
       }
 
+      if (cleanUrl.includes('supabase.co/storage/v1/object/public/')) {
+      }
+
+      setImageUrl(cleanUrl);
+
       const img = new Image();
       img.onload = () => {
-        console.log('Image chargée avec succès:', cleanUrl);
         setImageError(false);
       };
       img.onerror = () => {
