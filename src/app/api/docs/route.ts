@@ -1,3 +1,4 @@
+// TODO: Réactiver Swagger une fois la documentation API prête
 import { NextResponse } from 'next/server';
 
 import { getApiDocs } from '@/lib/swagger';

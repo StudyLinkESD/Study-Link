@@ -1,4 +1,4 @@
-export type UserType = 'student' | 'company-owner';
+import { UserType } from '@/types/user.type';
 
 export interface BaseCreateUserDTO {
   email: string;
@@ -6,26 +6,48 @@ export interface BaseCreateUserDTO {
   lastName?: string | null;
   type: UserType;
   profilePicture?: string | null;
+  profileCompleted?: boolean;
 }
 
 export interface CreateStudentUserDTO extends BaseCreateUserDTO {
-  type: 'student';
+  type: UserType.STUDENT;
   schoolId: string;
   studentEmail: string;
+  status: string;
+  skills: string;
+  apprenticeshipRhythm?: string | null;
+  description: string;
+  curriculumVitae?: string | null;
+  previousCompanies: string;
+  availability: boolean;
 }
 
 export interface CreateCompanyOwnerUserDTO extends BaseCreateUserDTO {
-  type: 'company-owner';
-  companyName: string;
+  type: UserType.COMPANY_OWNER;
+  companyId: string;
 }
 
-export type CreateUserDTO = CreateStudentUserDTO | CreateCompanyOwnerUserDTO;
+export interface CreateSchoolOwnerUserDTO extends BaseCreateUserDTO {
+  type: UserType.SCHOOL_OWNER;
+  schoolId: string;
+}
+
+export interface CreateAdminUserDTO extends BaseCreateUserDTO {
+  type: UserType.ADMIN;
+}
+
+export type CreateUserDTO =
+  | CreateStudentUserDTO
+  | CreateCompanyOwnerUserDTO
+  | CreateSchoolOwnerUserDTO
+  | CreateAdminUserDTO;
 
 export interface UpdateUserDTO {
-  email: string;
-  firstName?: string;
-  lastName?: string;
+  email?: string;
+  firstName?: string | null;
+  lastName?: string | null;
   profilePicture?: string | null;
+  profileCompleted?: boolean;
 }
 
 export interface UserResponseDTO {
@@ -33,7 +55,10 @@ export interface UserResponseDTO {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  profilePicture?: string | null;
+  type: UserType;
+  profilePicture: string | null;
+  profileCompleted: boolean;
+  emailVerified: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

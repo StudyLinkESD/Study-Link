@@ -1,6 +1,9 @@
-import { createSwaggerSpec } from 'next-swagger-doc';
+// TODO: Réactiver Swagger une fois la documentation API prête
+// import { createSwaggerSpec } from 'next-swagger-doc';
 
 export const getApiDocs = () => {
+  return {};
+  /* Configuration Swagger à réactiver ultérieurement
   const spec = createSwaggerSpec({
     apiFolder: 'src/app/api',
     definition: {
@@ -81,4 +84,5 @@ export const getApiDocs = () => {
     },
   });
   return spec;
+  */
 };

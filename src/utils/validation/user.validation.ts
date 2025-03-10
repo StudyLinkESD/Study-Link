@@ -1,5 +1,7 @@
 import { PrismaClient, User } from '@prisma/client';
 
+import { UserType } from '@/types/user.type';
+
 import { CreateUserDTO, UpdateUserDTO } from '@/dto/user.dto';
 
 const prisma = new PrismaClient();
@@ -14,11 +16,11 @@ export interface ValidationResult {
   errors: ValidationError[];
 }
 
-export type UserCheckResult = {
+interface UserCheckResult {
   exists: boolean;
   isDeleted: boolean;
   user: User | null;
-};
+}
 
 export const checkUserExists = async (userId: string): Promise<UserCheckResult> => {
   const user = await prisma.user.findUnique({
@@ -92,25 +94,69 @@ export async function validateUser(
     const createData = data as CreateUserDTO;
     if (!createData.type) {
       errors.push({ field: 'type', message: "Type d'utilisateur requis" });
-    } else if (!['student', 'company-owner'].includes(createData.type)) {
-      errors.push({ field: 'type', message: "Type d'utilisateur invalide" });
     }
 
-    if (createData.type === 'student') {
-      if (!createData.schoolId) {
-        errors.push({ field: 'schoolId', message: "ID de l'école requis pour un étudiant" });
-      } else {
-        const school = await prisma.school.findUnique({
-          where: { id: createData.schoolId },
-        });
-        if (!school) {
-          errors.push({ field: 'schoolId', message: 'École non trouvée' });
+    switch (createData.type) {
+      case UserType.STUDENT:
+        if (!createData.schoolId) {
+          errors.push({ field: 'schoolId', message: "ID de l'école requis pour un étudiant" });
+        } else {
+          const school = await prisma.school.findUnique({
+            where: { id: createData.schoolId },
+          });
+          if (!school) {
+            errors.push({ field: 'schoolId', message: 'École non trouvée' });
+          }
         }
-      }
-    } else if (createData.type === 'company-owner') {
-      if (!createData.companyName) {
-        errors.push({ field: 'companyName', message: "Nom de l'entreprise requis" });
-      }
+        if (!createData.studentEmail) {
+          errors.push({ field: 'studentEmail', message: 'Email étudiant requis' });
+        }
+        if (!createData.status) {
+          errors.push({ field: 'status', message: 'Statut requis' });
+        }
+        if (!createData.skills) {
+          errors.push({ field: 'skills', message: 'Compétences requises' });
+        }
+        if (!createData.description) {
+          errors.push({ field: 'description', message: 'Description requise' });
+        }
+        if (!createData.previousCompanies) {
+          errors.push({ field: 'previousCompanies', message: 'Entreprises précédentes requises' });
+        }
+        break;
+
+      case UserType.COMPANY_OWNER:
+        if (!createData.companyId) {
+          errors.push({ field: 'companyId', message: "ID de l'entreprise requis" });
+        } else {
+          const company = await prisma.company.findUnique({
+            where: { id: createData.companyId },
+          });
+          if (!company) {
+            errors.push({ field: 'companyId', message: 'Entreprise non trouvée' });
+          }
+        }
+        break;
+
+      case UserType.SCHOOL_OWNER:
+        if (!createData.schoolId) {
+          errors.push({ field: 'schoolId', message: "ID de l'école requis" });
+        } else {
+          const school = await prisma.school.findUnique({
+            where: { id: createData.schoolId },
+          });
+          if (!school) {
+            errors.push({ field: 'schoolId', message: 'École non trouvée' });
+          }
+        }
+        break;
+
+      case UserType.ADMIN:
+        // Pas de validation supplémentaire requise pour l'admin
+        break;
+
+      default:
+        errors.push({ field: 'type', message: "Type d'utilisateur invalide" });
     }
   }
 

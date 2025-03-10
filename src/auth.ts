@@ -3,6 +3,8 @@ import NextAuth, { DefaultSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
 
+import { UserType } from '@/types/user.type';
+
 import authConfig from '@/auth.config';
 
 declare module 'next-auth' {
@@ -93,8 +95,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         if (profile.name) {
           const nameParts = profile.name.split(' ');
-          const firstName = nameParts[0] || '';
-          const lastName = nameParts.slice(1).join(' ') || '';
+          const firstName = nameParts[0] || null;
+          const lastName = nameParts.slice(1).join(' ') || null;
 
           try {
             await prisma.user.create({
@@ -102,6 +104,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 email: profile.email,
                 firstName,
                 lastName,
+                type: UserType.STUDENT,
+                profileCompleted: false,
                 Account: {
                   create: {
                     type: account.type,
@@ -134,6 +138,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             await prisma.user.create({
               data: {
                 email: user.email,
+                firstName: null,
+                lastName: null,
+                type: UserType.STUDENT,
+                profileCompleted: false,
               },
             });
           } catch (error) {
