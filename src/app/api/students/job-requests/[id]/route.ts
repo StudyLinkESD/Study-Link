@@ -15,7 +15,6 @@ const prisma = new PrismaClient();
  *   get:
  *     tags:
  *       - Students
- *       - Job Requests
  *     summary: Récupère une demande d'emploi spécifique
  *     description: Retourne les détails d'une demande d'emploi par son ID
  *     parameters:
@@ -88,7 +87,6 @@ export async function GET(
  *   put:
  *     tags:
  *       - Students
- *       - Job Requests
  *     summary: Met à jour une demande d'emploi
  *     description: Modifie les informations d'une demande d'emploi existante
  *     parameters:
@@ -184,7 +182,6 @@ export async function PUT(
  *   delete:
  *     tags:
  *       - Students
- *       - Job Requests
  *     summary: Supprime une demande d'emploi
  *     description: Supprime une demande d'emploi existante
  *     parameters:

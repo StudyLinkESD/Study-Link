@@ -12,7 +12,6 @@ const prisma = new PrismaClient();
  *   get:
  *     tags:
  *       - Students
- *       - Job Requests
  *     summary: Récupère les demandes d'emploi des étudiants
  *     description: Retourne la liste des demandes d'emploi avec pagination
  *     parameters:
@@ -103,7 +102,6 @@ export async function GET() {
  *   post:
  *     tags:
  *       - Students
- *       - Job Requests
  *     summary: Crée une nouvelle demande d'emploi
  *     description: Permet à un étudiant de postuler à une offre d'emploi
  *     requestBody:
