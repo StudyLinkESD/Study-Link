@@ -16,6 +16,44 @@ import {
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Récupère la liste des utilisateurs
+ *     description: Retourne la liste de tous les utilisateurs actifs (non supprimés)
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Numéro de la page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Nombre d'éléments par page
+ *     responses:
+ *       200:
+ *         description: Liste des utilisateurs récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UsersListResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ */
 export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: string }>> {
   try {
     const users = await prisma.user.findMany({
@@ -51,6 +89,46 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
   }
 }
 
+/**
+ * @swagger
+ * /api/users:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Crée un nouvel utilisateur
+ *     description: |
+ *       Crée un nouvel utilisateur avec les informations fournies.
+ *       Le type d'utilisateur détermine les informations supplémentaires requises :
+ *       - Student : schoolId et studentEmail requis
+ *       - Company Owner : companyId requis
+ *       - School Owner : schoolId requis
+ *       - Admin : aucune information supplémentaire requise
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateUserRequest'
+ *     responses:
+ *       200:
+ *         description: Utilisateur créé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {

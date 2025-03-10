@@ -8,6 +8,41 @@ import { CompanyResponseDTO, UpdateCompanyDTO } from '@/dto/company.dto';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   get:
+ *     tags:
+ *       - Companies
+ *     summary: Récupère les détails d'une entreprise spécifique
+ *     description: Retourne les informations détaillées d'une entreprise en fonction de son ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'entreprise
+ *     responses:
+ *       200:
+ *         description: Détails de l'entreprise récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyResponseDTO'
+ *       404:
+ *         description: Entreprise non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -49,6 +84,60 @@ export async function GET(
   }
 }
 
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   put:
+ *     tags:
+ *       - Companies
+ *     summary: Met à jour une entreprise existante
+ *     description: Met à jour les informations d'une entreprise spécifique
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'entreprise à mettre à jour
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateCompanyRequest'
+ *     responses:
+ *       200:
+ *         description: Entreprise mise à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyResponseDTO'
+ *       400:
+ *         description: Données invalides ou aucune donnée fournie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       404:
+ *         description: Entreprise non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -115,6 +204,45 @@ export async function PUT(
   }
 }
 
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   delete:
+ *     tags:
+ *       - Companies
+ *     summary: Supprime une entreprise
+ *     description: Supprime une entreprise spécifique et toutes ses données associées
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'entreprise à supprimer
+ *     responses:
+ *       200:
+ *         description: Entreprise supprimée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Compagnie supprimée avec succès"
+ *       404:
+ *         description: Entreprise non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function DELETE(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },

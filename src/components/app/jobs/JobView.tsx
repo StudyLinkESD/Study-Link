@@ -27,7 +27,7 @@ const JobView = () => {
 
     setIsApplying(true);
     try {
-      await axios.post('/api/student/job-requests', {
+      await axios.post('/api/students/job-requests', {
         jobId: selectedJob.id,
       });
       toast.success('Votre candidature a été envoyée avec succès');

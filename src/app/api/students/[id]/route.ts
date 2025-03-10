@@ -8,6 +8,50 @@ import { StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/students/{id}:
+ *   get:
+ *     tags:
+ *       - Students
+ *     summary: Récupère un étudiant par son ID
+ *     description: Retourne les informations détaillées d'un étudiant spécifique
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de l'étudiant
+ *     responses:
+ *       200:
+ *         description: Étudiant récupéré avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentResponseDTO'
+ *       404:
+ *         description: Étudiant non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Étudiant non trouvé"
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur lors de la récupération de l'étudiant"
+ */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -81,6 +125,62 @@ export async function GET(
   }
 }
 
+/**
+ * @swagger
+ * /api/students/{id}:
+ *   put:
+ *     tags:
+ *       - Students
+ *     summary: Met à jour un étudiant
+ *     description: Met à jour les informations d'un étudiant existant
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de l'étudiant
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateStudentDTO'
+ *     responses:
+ *       200:
+ *         description: Étudiant mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/StudentError'
+ *       404:
+ *         description: Étudiant non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Étudiant non trouvé"
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur lors de la mise à jour de l'étudiant"
+ */
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -183,6 +283,54 @@ export async function PUT(
   }
 }
 
+/**
+ * @swagger
+ * /api/students/{id}:
+ *   delete:
+ *     tags:
+ *       - Students
+ *     summary: Supprime un étudiant
+ *     description: Supprime le profil d'un étudiant tout en conservant son compte utilisateur
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de l'étudiant
+ *     responses:
+ *       200:
+ *         description: Profil étudiant supprimé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profil étudiant supprimé avec succès. Le compte utilisateur reste actif."
+ *       404:
+ *         description: Étudiant non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Étudiant non trouvé"
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur lors de la suppression du profil étudiant"
+ */
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

@@ -8,6 +8,55 @@ import { CreateJobDTO, JobResponseDTO } from '@/dto/job.dto';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/jobs:
+ *   get:
+ *     tags:
+ *       - Jobs
+ *     summary: Récupère la liste des offres d'emploi
+ *     description: Retourne toutes les offres d'emploi actives avec les informations de l'entreprise
+ *     responses:
+ *       200:
+ *         description: Liste des offres d'emploi récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   offerTitle:
+ *                     type: string
+ *                   companyName:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ *                   logoUrl:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                   skills:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                   availability:
+ *                     type: string
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function GET(): Promise<
   NextResponse<
     | {
@@ -65,6 +114,66 @@ export async function GET(): Promise<
   }
 }
 
+/**
+ * @swagger
+ * /api/jobs:
+ *   post:
+ *     tags:
+ *       - Jobs
+ *     summary: Crée une nouvelle offre d'emploi
+ *     description: Permet à une entreprise de créer une nouvelle offre d'emploi
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateJobRequest'
+ *     responses:
+ *       201:
+ *         description: Offre d'emploi créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JobResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *       401:
+ *         description: Non authentifié
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Accès non autorisé (utilisateur non entreprise)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<JobResponseDTO | { error: string; details?: Record<string, string>[] }>> {

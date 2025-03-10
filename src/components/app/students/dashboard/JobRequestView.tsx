@@ -58,7 +58,7 @@ export default function JobRequestView({
 
     try {
       const response = await axios.put(
-        `/api/job-requests/${selectedRequest.id}`,
+        `/api/students/job-requests/${selectedRequest.id}`,
         { status: newStatus },
         {
           headers: {

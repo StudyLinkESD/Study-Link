@@ -165,7 +165,7 @@ export default function JobRequestsList({ requests, setRequests }: JobRequestsLi
     if (!requestToDelete) return;
 
     try {
-      const response = await axios.delete(`/api/job-requests/${requestToDelete}`);
+      const response = await axios.delete(`/api/students/job-requests/${requestToDelete}`);
 
       if (response.status >= 400) throw new Error('Failed to delete request');
 
