@@ -4,6 +4,7 @@ import { companyOwnerSchemas } from './company-owner.schema';
 import { companySchemas } from './company.schema';
 import { jobRequestSchemas } from './job-request.schema';
 import { jobSchemas } from './job.schema';
+import { resendSchemas } from './resend.schema';
 import { userSchemas } from './user.schema';
 
 export const schemas = {
@@ -13,5 +14,6 @@ export const schemas = {
   ...companySchemas,
   ...jobRequestSchemas,
   ...jobSchemas,
+  ...resendSchemas,
   ...userSchemas,
 };
