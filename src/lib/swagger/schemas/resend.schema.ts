@@ -7,7 +7,7 @@ export const resendSchemas = {
         type: 'string',
         format: 'email',
         description: "Adresse email de l'expéditeur",
-        example: 'no-reply@studylink.com',
+        example: 'no-reply@studylink.space',
       },
       to: {
         type: 'string',
