@@ -13,25 +13,22 @@ import { Card, CardContent } from '@/components/ui/card';
 
 import { getStatusLabel, getStatusVariant } from '@/utils/students/dashboard/status-mapping.utils';
 
-import { JobApplicationFull } from '@/types/application_status.type';
+import { JobRequestFull } from '@/types/request_status.type';
 
-import { useJobApplication } from '@/context/job-application.context';
+import { useJobRequest } from '@/context/job-request.context';
 
-type JobApplicationCardProps = {
-  application: JobApplicationFull;
+type JobRequestCardProps = {
+  request: JobRequestFull;
   onDeleteClick: () => void;
 };
 
-export default function JobApplicationCard({
-  application,
-  onDeleteClick,
-}: JobApplicationCardProps) {
-  const { setSelectedApplication, selectedApplication } = useJobApplication();
-  const { student, job, status, createdAt } = application;
+export default function JobRequestCard({ request, onDeleteClick }: JobRequestCardProps) {
+  const { setSelectedRequest, selectedRequest } = useJobRequest();
+  const { student, job, status, createdAt } = request;
   const { firstName, lastName } = student.user;
 
   const handleClick = () => {
-    setSelectedApplication(application);
+    setSelectedRequest(request);
   };
 
   const formattedDate = React.useMemo(() => {
@@ -43,7 +40,7 @@ export default function JobApplicationCard({
   return (
     <Card
       className={`cursor-pointer overflow-hidden transition-all ${
-        selectedApplication?.id === application.id ? 'ring-primary ring-2' : 'hover:border-gray-300'
+        selectedRequest?.id === request.id ? 'ring-primary ring-2' : 'hover:border-gray-300'
       }`}
       onClick={handleClick}
     >
