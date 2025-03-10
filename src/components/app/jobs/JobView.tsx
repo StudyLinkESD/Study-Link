@@ -1,13 +1,47 @@
 'use client';
 
+import axios, { AxiosError } from 'axios';
+import { Loader2 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
+
+import { useState } from 'react';
+
 import StatusBadge from '@/components/app/common/StatusBadge';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 import { useJob } from '@/context/job.context';
 
 const JobView = () => {
   const { selectedJob } = useJob();
+  const { data: session } = useSession();
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApply = async () => {
+    if (!selectedJob || !session?.user?.id) {
+      toast.error('Vous devez être connecté pour postuler');
+      return;
+    }
+
+    setIsApplying(true);
+    try {
+      await axios.post('/api/student/job-applications', {
+        jobId: selectedJob.id,
+      });
+      toast.success('Votre candidature a été envoyée avec succès');
+    } catch (error) {
+      console.error('Error applying for job:', error);
+      const axiosError = error as AxiosError<{ error: string }>;
+      const errorMessage =
+        axiosError.response?.data?.error ||
+        "Une erreur est survenue lors de l'envoi de votre candidature";
+      toast.error(errorMessage);
+    } finally {
+      setIsApplying(false);
+    }
+  };
 
   if (!selectedJob) {
     return (
@@ -51,7 +85,7 @@ const JobView = () => {
             <p className="text-gray-600">{selectedJob.description}</p>
           </div>
 
-          <div>
+          <div className="mb-6">
             <h2 className="mb-2 text-lg font-semibold">Compétences requises</h2>
             <div className="flex flex-wrap gap-2">
               {selectedJob.skills.map((skill) => (
@@ -59,6 +93,17 @@ const JobView = () => {
               ))}
             </div>
           </div>
+
+          <Button className="w-full" onClick={handleApply} disabled={isApplying}>
+            {isApplying ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Envoi en cours...
+              </>
+            ) : (
+              'Postuler à cette offre'
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>

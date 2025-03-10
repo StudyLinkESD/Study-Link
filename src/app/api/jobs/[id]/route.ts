@@ -42,6 +42,8 @@ export async function GET(
       featuredImage: job.featuredImage || undefined,
       description: job.description,
       skills: job.skills || undefined,
+      type: job.type,
+      availability: job.availability || undefined,
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
     };
@@ -97,6 +99,8 @@ export async function PUT(
       featuredImage: updatedJob.featuredImage || undefined,
       description: updatedJob.description,
       skills: updatedJob.skills || undefined,
+      type: updatedJob.type,
+      availability: updatedJob.availability || undefined,
       createdAt: updatedJob.createdAt,
       updatedAt: updatedJob.updatedAt,
     };
