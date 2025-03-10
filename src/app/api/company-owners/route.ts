@@ -9,6 +9,44 @@ import { CompanyOwnerResponseDTO, CreateCompanyOwnerDTO } from '@/dto/company-ow
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/company-owners:
+ *   get:
+ *     tags:
+ *       - Company Owners
+ *     summary: Récupère la liste des propriétaires d'entreprise
+ *     description: Retourne la liste de tous les propriétaires d'entreprise avec leurs informations détaillées
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Numéro de la page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Nombre d'éléments par page
+ *     responses:
+ *       200:
+ *         description: Liste des propriétaires d'entreprise récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyOwnersListResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function GET(): Promise<NextResponse<CompanyOwnerResponseDTO[] | { error: string }>> {
   try {
     const companyOwners = await prisma.companyOwner.findMany({
@@ -34,6 +72,52 @@ export async function GET(): Promise<NextResponse<CompanyOwnerResponseDTO[] | { 
   }
 }
 
+/**
+ * @swagger
+ * /api/company-owners:
+ *   post:
+ *     tags:
+ *       - Company Owners
+ *     summary: Crée un nouveau propriétaire d'entreprise
+ *     description: Associe un utilisateur existant à une entreprise en tant que propriétaire
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCompanyOwnerRequest'
+ *     responses:
+ *       201:
+ *         description: Propriétaire d'entreprise créé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyOwnerResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<CompanyOwnerResponseDTO | { error: string; details?: ValidationError[] }>> {

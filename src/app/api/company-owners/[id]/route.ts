@@ -11,6 +11,42 @@ import { CompanyOwnerResponseDTO, UpdateCompanyOwnerDTO } from '@/dto/company-ow
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/company-owners/{id}:
+ *   get:
+ *     tags:
+ *       - Company Owners
+ *     summary: Récupère les détails d'un propriétaire d'entreprise
+ *     description: Retourne les informations détaillées d'un propriétaire d'entreprise spécifique
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID du propriétaire d'entreprise
+ *     responses:
+ *       200:
+ *         description: Détails du propriétaire d'entreprise récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyOwnerResponseDTO'
+ *       404:
+ *         description: Propriétaire d'entreprise non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -51,6 +87,66 @@ export async function GET(
   }
 }
 
+/**
+ * @swagger
+ * /api/company-owners/{id}:
+ *   put:
+ *     tags:
+ *       - Company Owners
+ *     summary: Met à jour un propriétaire d'entreprise
+ *     description: Met à jour les informations d'un propriétaire d'entreprise spécifique
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID du propriétaire d'entreprise à mettre à jour
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateCompanyOwnerRequest'
+ *     responses:
+ *       200:
+ *         description: Propriétaire d'entreprise mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyOwnerResponseDTO'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *       404:
+ *         description: Propriétaire d'entreprise non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -100,6 +196,47 @@ export async function PUT(
   }
 }
 
+/**
+ * @swagger
+ * /api/company-owners/{id}:
+ *   delete:
+ *     tags:
+ *       - Company Owners
+ *     summary: Supprime un propriétaire d'entreprise
+ *     description: Supprime un propriétaire d'entreprise spécifique et ses associations
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID du propriétaire d'entreprise à supprimer
+ *     responses:
+ *       200:
+ *         description: Propriétaire d'entreprise supprimé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: "Propriétaire d'entreprise supprimé avec succès"
+ *       404:
+ *         description: Propriétaire d'entreprise non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
