@@ -26,7 +26,7 @@ export function JobRequestButton({ jobId, hasApplied, isAuthenticated }: JobRequ
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/student/job-requests', {
+      const response = await fetch('/api/students/job-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

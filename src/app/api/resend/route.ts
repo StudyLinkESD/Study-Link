@@ -6,6 +6,40 @@ import { NextRequest } from 'next/server';
 const resend = new Resend(process.env.AUTH_RESEND_KEY);
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/resend:
+ *   post:
+ *     tags:
+ *       - Email
+ *     summary: Envoie un email via Resend
+ *     description: Permet d'envoyer un email à un utilisateur en utilisant le service Resend
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendEmailRequest'
+ *     responses:
+ *       200:
+ *         description: Email envoyé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SendEmailResponse'
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SendEmailError'
+ *       500:
+ *         description: Erreur serveur ou erreur Resend
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SendEmailError'
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
