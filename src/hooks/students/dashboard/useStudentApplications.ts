@@ -35,7 +35,6 @@ export function useStudentApplications(session: Session | null) {
   const deleteApplication = useCallback(async (applicationId: string) => {
     try {
       await axios.delete(`/api/student/job-applications/${applicationId}`);
-      // Mettre à jour l'état local après la suppression
       setApplications((prevApplications) =>
         prevApplications.filter((app) => app.id !== applicationId),
       );
