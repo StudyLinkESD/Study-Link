@@ -13,8 +13,9 @@ interface IUser extends Timestamps {
   lastName: string | null;
   email: string;
   type: UserType;
-  profile_picture: string;
-  email_verified: string;
+  profilePicture: string | null;
+  emailVerified: Date | null;
+  profileCompleted: boolean;
 }
 
 export type { IUser };
@@ -23,7 +24,7 @@ interface IUserDTO {
   firstName: string | null;
   lastName: string | null;
   email: string;
-  profile_picture: string;
+  profilePicture: string | null;
 }
 
 export type { IUserDTO };

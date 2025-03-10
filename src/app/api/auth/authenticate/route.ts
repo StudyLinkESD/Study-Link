@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 
+import { UserType } from '@/types/user.type';
+
 import { signIn } from '@/auth';
 
 export async function POST(request: Request) {
@@ -26,9 +28,10 @@ export async function POST(request: Request) {
       await prisma.user.create({
         data: {
           email: normalizedEmail,
-          firstName: '',
-          lastName: '',
-          type: 'student',
+          firstName: null,
+          lastName: null,
+          type: UserType.STUDENT,
+          profileCompleted: false,
         },
       });
     }

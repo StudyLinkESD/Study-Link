@@ -4,7 +4,15 @@ import { NextResponse } from 'next/server';
 
 import { validateUserCreation, ValidationError } from '@/utils/validation/user.validation';
 
-import { CreateUserDTO, UserResponseDTO } from '@/dto/user.dto';
+import { UserType } from '@/types/user.type';
+
+import {
+  CreateCompanyOwnerUserDTO,
+  CreateSchoolOwnerUserDTO,
+  CreateStudentUserDTO,
+  CreateUserDTO,
+  UserResponseDTO,
+} from '@/dto/user.dto';
 
 const prisma = new PrismaClient();
 
@@ -14,9 +22,26 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
       where: {
         deletedAt: null,
       },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        type: true,
+        profilePicture: true,
+        profileCompleted: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
-    return NextResponse.json(users);
+    const typedUsers = users.map((user) => ({
+      ...user,
+      type: user.type as UserType,
+    }));
+
+    return NextResponse.json(typedUsers);
   } catch (error) {
     console.error('Erreur lors de la récupération des utilisateurs:', error);
     return NextResponse.json(
@@ -43,38 +68,83 @@ export async function POST(
       );
     }
 
+    const userData = {
+      email: body.email.toLowerCase(),
+      firstName: body.firstName,
+      lastName: body.lastName,
+      type: body.type,
+      profilePicture: body.profilePicture,
+      profileCompleted: body.profileCompleted ?? false,
+    };
+
     const user = await prisma.user.create({
-      data: {
-        email: body.email.toLowerCase() ?? '',
-        firstName: body.firstName,
-        lastName: body.lastName,
-        profilePicture: body.profilePicture,
+      data: userData,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        type: true,
+        profilePicture: true,
+        profileCompleted: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
-    if (body.type === 'company-owner') {
-      await prisma.companyOwner.create({
-        data: {
-          userId: user.id,
-          companyId: body.companyName,
-        },
-      });
-    } else if (body.type === 'student') {
-      await prisma.student.create({
-        data: {
-          userId: user.id,
-          schoolId: body.schoolId,
-          studentEmail: body.studentEmail,
-          status: 'PENDING',
-          skills: '',
-          description: '',
-          previousCompanies: '',
-          availability: false,
-        },
-      });
+    switch (body.type) {
+      case UserType.COMPANY_OWNER:
+        const companyOwnerData = body as CreateCompanyOwnerUserDTO;
+        await prisma.companyOwner.create({
+          data: {
+            userId: user.id,
+            companyId: companyOwnerData.companyId,
+          },
+        });
+        break;
+
+      case UserType.STUDENT:
+        const studentData = body as CreateStudentUserDTO;
+        await prisma.student.create({
+          data: {
+            userId: user.id,
+            schoolId: studentData.schoolId,
+            studentEmail: studentData.studentEmail,
+            status: studentData.status,
+            skills: studentData.skills,
+            apprenticeshipRhythm: studentData.apprenticeshipRhythm,
+            description: studentData.description,
+            curriculumVitae: studentData.curriculumVitae,
+            previousCompanies: studentData.previousCompanies,
+            availability: studentData.availability,
+          },
+        });
+        break;
+
+      case UserType.SCHOOL_OWNER:
+        const schoolOwnerData = body as CreateSchoolOwnerUserDTO;
+        await prisma.schoolOwner.create({
+          data: {
+            userId: user.id,
+            schoolId: schoolOwnerData.schoolId,
+          },
+        });
+        break;
+
+      case UserType.ADMIN:
+        await prisma.admin.create({
+          data: {
+            userId: user.id,
+          },
+        });
+        break;
     }
 
-    return NextResponse.json(user, { status: 201 });
+    return NextResponse.json({
+      ...user,
+      type: user.type as UserType,
+    });
   } catch (error) {
     console.error("Erreur lors de la création de l'utilisateur:", error);
     return NextResponse.json(
