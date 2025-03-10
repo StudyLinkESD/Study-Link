@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { Session } from 'next-auth';
 
 import { useCallback, useEffect, useState } from 'react';
@@ -41,23 +41,7 @@ export function useCompanyId(session: Session | null) {
         setCompany(null);
       }
     } catch (err) {
-      const axiosError = err as AxiosError;
-
-      if (axiosError.response?.status === 404) {
-        try {
-          const userResponse = await axios.get('/api/users/current');
-
-          if (userResponse.data.company) {
-            setCompany(userResponse.data.company);
-          } else {
-            setCompany(null);
-          }
-        } catch (fallbackErr) {
-          setError(fallbackErr as Error);
-        }
-      } else {
-        setError(err as Error);
-      }
+      setError(err as Error);
     } finally {
       setIsLoading(false);
     }
