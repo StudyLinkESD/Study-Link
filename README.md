@@ -85,12 +85,18 @@ npm run dev
 
 ## 🛠️ Scripts disponibles
 
-- `npm run dev` - Lance le serveur de développement
-- `npm run build` - Compile le projet pour la production
+- `npm run dev` - Lance le serveur de développement et le serveur d'emails
+- `npm run build` - Compile le projet pour la production (inclut la génération Prisma)
 - `npm run start` - Lance le serveur de production
 - `npm run lint` - Vérifie le code avec ESLint
+- `npm run lint-fix` - Corrige automatiquement les problèmes de linting
 - `npm run format` - Formate le code avec Prettier
+- `npm run format:check` - Vérifie le formatage du code
 - `npm run db:seed` - Remplit la base de données avec des données de test
+
+## 📚 Documentation API
+
+Une documentation complète de l'API est disponible via Swagger UI. Vous pouvez y accéder en visitant `/api-docs` lorsque le serveur est en cours d'exécution.
 
 ## 🔧 Technologies utilisées
 
@@ -105,4 +111,4 @@ npm run dev
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+Ce projet est sous licence MIT. Voir le fichier [`LICENSE`](./LICENSE) pour plus de détails.
