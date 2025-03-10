@@ -1,67 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
-  try {
-    const session = await auth();
-
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const student = await prisma.student.findFirst({
-      where: {
-        userId: session.user.id,
-      },
-      include: {
-        user: true,
-      },
-    });
-
-    if (!student) {
-      return NextResponse.json(
-        { error: 'Only students can view job applications' },
-        { status: 403 },
-      );
-    }
-
-    const jobRequests = await prisma.jobRequest.findMany({
-      where: {
-        studentId: student.id,
-      },
-      include: {
-        job: {
-          include: {
-            company: true,
-          },
-        },
-        student: {
-          include: {
-            user: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    return NextResponse.json(jobRequests);
-  } catch (error) {
-    console.error('Error fetching job requests:', error);
-    return NextResponse.json(
-      { error: 'An error occurred while processing your request' },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth();
 
@@ -118,6 +63,61 @@ export async function POST(request: Request) {
     return NextResponse.json(jobRequest, { status: 201 });
   } catch (error) {
     console.error('Error creating job request:', error);
+    return NextResponse.json(
+      { error: 'An error occurred while processing your request' },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    const session = await auth();
+
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const student = await prisma.student.findFirst({
+      where: {
+        userId: session.user.id,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!student) {
+      return NextResponse.json(
+        { error: 'Only students can view job applications' },
+        { status: 403 },
+      );
+    }
+
+    const jobRequests = await prisma.jobRequest.findMany({
+      where: {
+        studentId: student.id,
+      },
+      include: {
+        job: {
+          include: {
+            company: true,
+          },
+        },
+        student: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return NextResponse.json(jobRequests);
+  } catch (error) {
+    console.error('Error fetching job requests:', error);
     return NextResponse.json(
       { error: 'An error occurred while processing your request' },
       { status: 500 },
