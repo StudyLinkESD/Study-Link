@@ -2,7 +2,25 @@ export const userSchemas = {
   UserType: {
     type: 'string',
     enum: ['student', 'company-owner', 'school-owner', 'admin'],
+    description: "Type d'utilisateur",
     example: 'student',
+  },
+  ValidationError: {
+    type: 'object',
+    properties: {
+      field: {
+        type: 'string',
+        description: 'Champ en erreur',
+      },
+      message: {
+        type: 'string',
+        description: "Message d'erreur",
+      },
+    },
+    example: {
+      field: 'email',
+      message: 'Email invalide',
+    },
   },
   UserResponseDTO: {
     type: 'object',
@@ -10,39 +28,49 @@ export const userSchemas = {
       id: {
         type: 'string',
         format: 'uuid',
+        description: "Identifiant unique de l'utilisateur",
       },
       email: {
         type: 'string',
         format: 'email',
+        description: "Adresse email de l'utilisateur",
       },
       firstName: {
         type: 'string',
         nullable: true,
+        description: "Prénom de l'utilisateur",
       },
       lastName: {
         type: 'string',
         nullable: true,
+        description: "Nom de l'utilisateur",
       },
       type: {
         $ref: '#/components/schemas/UserType',
+        description: "Type d'utilisateur",
       },
       profilePicture: {
         type: 'string',
         nullable: true,
+        description: "URL de la photo de profil de l'utilisateur",
       },
       profileCompleted: {
         type: 'boolean',
+        description: "Indique si le profil de l'utilisateur est complété",
       },
       emailVerified: {
         type: 'boolean',
+        description: "Indique si l'email de l'utilisateur est vérifié",
       },
       createdAt: {
         type: 'string',
         format: 'date-time',
+        description: "Date de création de l'utilisateur",
       },
       updatedAt: {
         type: 'string',
         format: 'date-time',
+        description: "Date de dernière modification de l'utilisateur",
       },
     },
     example: {
@@ -104,21 +132,27 @@ export const userSchemas = {
     },
     examples: {
       student: {
-        email: 'john.doe@school-domain.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        type: 'student',
-        schoolId: '123e4567-e89b-12d3-a456-426614174000',
-        studentEmail: 'john.doe@student-mail.com',
-        profileCompleted: false,
+        value: {
+          email: 'john.doe@school-domain.com',
+          firstName: 'John',
+          lastName: 'Doe',
+          type: 'student',
+          schoolId: '123e4567-e89b-12d3-a456-426614174000',
+          studentEmail: 'john.doe@student-mail.com',
+          profileCompleted: false,
+        },
+        summary: "Exemple de création d'un étudiant",
       },
       companyOwner: {
-        email: 'jane.smith@company.com',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        type: 'company-owner',
-        companyId: '123e4567-e89b-12d3-a456-426614174001',
-        profileCompleted: false,
+        value: {
+          email: 'jane.smith@company.com',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          type: 'company-owner',
+          companyId: '123e4567-e89b-12d3-a456-426614174001',
+          profileCompleted: false,
+        },
+        summary: "Exemple de création d'un propriétaire d'entreprise",
       },
     },
   },
@@ -157,6 +191,7 @@ export const userSchemas = {
         items: {
           $ref: '#/components/schemas/UserResponseDTO',
         },
+        description: 'Liste des utilisateurs',
       },
       total: {
         type: 'integer',
@@ -179,6 +214,36 @@ export const userSchemas = {
         },
       ],
       total: 1,
+    },
+  },
+  UserError: {
+    type: 'object',
+    properties: {
+      error: {
+        type: 'string',
+        description: "Code d'erreur",
+      },
+      message: {
+        type: 'string',
+        description: "Message d'erreur",
+      },
+      details: {
+        type: 'array',
+        items: {
+          $ref: '#/components/schemas/ValidationError',
+        },
+        description: 'Détails des erreurs de validation',
+      },
+    },
+    example: {
+      error: 'VALIDATION_ERROR',
+      message: 'Données invalides',
+      details: [
+        {
+          field: 'email',
+          message: 'Email invalide',
+        },
+      ],
     },
   },
 };

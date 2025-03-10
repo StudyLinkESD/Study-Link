@@ -52,9 +52,7 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               error: "Erreur lors de la récupération des utilisateurs"
+ *               $ref: '#/components/schemas/UserError'
  */
 export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: string }>> {
   try {
@@ -123,20 +121,13 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 details:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/UserError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/UserError'
  */
 export async function POST(
   request: Request,
