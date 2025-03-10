@@ -8,36 +8,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+
 export default function HomePage() {
+  const { isAuthenticated } = useAuthStatus();
+
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <Link href="/" className="text-2xl font-bold">
-            StudyLink
-          </Link>
-          <nav>
-            <ul className="flex gap-6">
-              <li>
-                <Link href="/students" className="hover:text-primary transition-colors">
-                  Étudiants
-                </Link>
-              </li>
-              <li>
-                <Link href="/jobs" className="hover:text-primary transition-colors">
-                  Offres
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="hover:text-primary transition-colors">
-                  Connexion
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
-
       <section className="relative bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="container mx-auto flex flex-col items-center px-4 py-20 md:flex-row">
           <div className="mb-10 md:mb-0 md:w-1/2 md:pr-10">
@@ -52,8 +29,9 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Button size="lg" asChild>
-                <Link href="/login">
-                  Commencer maintenant <ArrowRight className="ml-2 h-4 w-4" />
+                <Link href={isAuthenticated ? '/jobs' : '/login'}>
+                  {isAuthenticated ? 'Voir les offres' : 'Commencer maintenant'}{' '}
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>

@@ -9,7 +9,10 @@ const LoginPage = () => {
         <div className="container mx-auto flex w-4/5 justify-center px-4 py-8">
           <div className="align-start flex w-[600px] flex-col">
             <div className="container mx-auto flex flex-col gap-4 px-4 py-8">
-              <h1 className="text-3xl font-bold">Study Link</h1>
+              <h1 className="text-3xl font-bold">Connexion</h1>
+              <p className="text-muted-foreground">
+                Connectez-vous pour accéder à votre espace personnel
+              </p>
             </div>
             <AuthForm />
           </div>

@@ -40,7 +40,7 @@ export default function SelectProfilePage() {
           </Card>
 
           <Card className="relative overflow-hidden transition-all hover:shadow-lg">
-            <Link href="/students/profile-info" className="block h-full">
+            <Link href="/src/app/(public)/students/profile-info" className="block h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="h-6 w-6" />
