@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
     }
 
-    // Vérifier si l'utilisateur est un étudiant
     const student = await prisma.student.findFirst({
       where: {
         userId: session.user.id,
@@ -32,7 +31,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only students can apply for jobs' }, { status: 403 });
     }
 
-    // Vérifier si l'offre existe
     const job = await prisma.job.findUnique({
       where: {
         id: jobId,
@@ -43,7 +41,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
-    // Vérifier si l'étudiant a déjà postulé à cette offre
     const existingApplication = await prisma.jobRequest.findFirst({
       where: {
         studentId: student.id,
@@ -55,7 +52,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You have already applied for this job' }, { status: 409 });
     }
 
-    // Créer la candidature
     const jobRequest = await prisma.jobRequest.create({
       data: {
         studentId: student.id,
@@ -82,7 +78,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Vérifier si l'utilisateur est un étudiant
     const student = await prisma.student.findFirst({
       where: {
         userId: session.user.id,
@@ -99,7 +94,6 @@ export async function GET() {
       );
     }
 
-    // Récupérer toutes les candidatures de l'étudiant
     const jobRequests = await prisma.jobRequest.findMany({
       where: {
         studentId: student.id,

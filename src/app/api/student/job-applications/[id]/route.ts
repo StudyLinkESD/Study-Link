@@ -11,19 +11,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   try {
-    // Vérification de l'authentification
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Validation de l'ID
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: 'Job request ID is required' }, { status: 400 });
     }
 
-    // Vérification de l'étudiant
     const student = await prisma.student.findFirst({
       where: { userId: session.user.id },
       select: { id: true },
@@ -36,7 +33,6 @@ export async function DELETE(
       );
     }
 
-    // Vérification et suppression de la candidature
     const jobRequest = await prisma.jobRequest.findUnique({
       where: { id },
       select: { studentId: true },
