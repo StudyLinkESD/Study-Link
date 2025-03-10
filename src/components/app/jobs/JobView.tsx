@@ -1,15 +1,10 @@
 'use client';
 
-import axios, { AxiosError } from 'axios';
-import { Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { toast } from 'sonner';
-
-import { useState } from 'react';
 
 import StatusBadge from '@/components/app/common/StatusBadge';
+import { JobApplicationButton } from '@/components/app/jobs/job-application-button';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 import { useJob } from '@/context/job.context';
@@ -17,31 +12,6 @@ import { useJob } from '@/context/job.context';
 const JobView = () => {
   const { selectedJob } = useJob();
   const { data: session } = useSession();
-  const [isApplying, setIsApplying] = useState(false);
-
-  const handleApply = async () => {
-    if (!selectedJob || !session?.user?.id) {
-      toast.error('Vous devez être connecté pour postuler');
-      return;
-    }
-
-    setIsApplying(true);
-    try {
-      await axios.post('/api/students/job-requests', {
-        jobId: selectedJob.id,
-      });
-      toast.success('Votre candidature a été envoyée avec succès');
-    } catch (error) {
-      console.error('Error applying for job:', error);
-      const axiosError = error as AxiosError<{ error: string }>;
-      const errorMessage =
-        axiosError.response?.data?.error ||
-        "Une erreur est survenue lors de l'envoi de votre candidature";
-      toast.error(errorMessage);
-    } finally {
-      setIsApplying(false);
-    }
-  };
 
   if (!selectedJob) {
     return (
@@ -94,16 +64,13 @@ const JobView = () => {
             </div>
           </div>
 
-          <Button className="w-full" onClick={handleApply} disabled={isApplying}>
-            {isApplying ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Envoi en cours...
-              </>
-            ) : (
-              'Postuler à cette offre'
-            )}
-          </Button>
+          <JobApplicationButton
+            jobId={selectedJob.id}
+            jobTitle={selectedJob.offerTitle}
+            companyName={selectedJob.companyName}
+            hasApplied={false}
+            isAuthenticated={!!session}
+          />
         </CardContent>
       </Card>
     </div>

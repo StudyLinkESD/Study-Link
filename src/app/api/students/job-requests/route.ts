@@ -1,10 +1,14 @@
 import { PrismaClient } from '@prisma/client';
+import { render } from '@react-email/render';
+import { Resend } from 'resend';
 
 import { NextRequest, NextResponse } from 'next/server';
 
 import { auth } from '@/auth';
+import JobApplicationEmail from '@/emails/job-application';
 
 const prisma = new PrismaClient();
+const resend = new Resend(process.env.AUTH_RESEND_KEY);
 
 /**
  * @swagger
@@ -143,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { jobId } = body;
+    const { jobId, subject, message } = body;
 
     if (!jobId) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
@@ -152,6 +156,9 @@ export async function POST(request: NextRequest) {
     const student = await prisma.student.findFirst({
       where: {
         userId: session.user.id,
+      },
+      include: {
+        user: true,
       },
     });
 
@@ -162,6 +169,17 @@ export async function POST(request: NextRequest) {
     const job = await prisma.job.findUnique({
       where: {
         id: jobId,
+      },
+      include: {
+        company: {
+          include: {
+            companyOwners: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -185,8 +203,37 @@ export async function POST(request: NextRequest) {
         studentId: student.id,
         jobId,
         status: 'PENDING',
+        subject,
+        message,
       },
     });
+
+    // Envoyer l'email à tous les propriétaires de l'entreprise
+    const companyOwners = job.company.companyOwners;
+    const baseUrl =
+      process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
+    const applicationUrl = `${baseUrl}/company/applications/${jobRequest.id}`;
+
+    for (const owner of companyOwners) {
+      const emailHtml = await render(
+        JobApplicationEmail({
+          companyName: job.company.name,
+          jobTitle: job.name,
+          studentName: `${student.user.firstName} ${student.user.lastName}`,
+          studentEmail: student.user.email,
+          subject,
+          message,
+          applicationUrl,
+        }),
+      );
+
+      await resend.emails.send({
+        from: 'StudyLink <noreply@studylink.space>',
+        to: owner.user.email,
+        subject: `Nouvelle candidature pour: ${job.name}`,
+        html: emailHtml,
+      });
+    }
 
     return NextResponse.json(jobRequest, { status: 201 });
   } catch (error) {
