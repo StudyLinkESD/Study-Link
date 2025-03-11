@@ -277,8 +277,8 @@ export default function CompanyPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+          <div className="md:col-span-3">
             <SectionCard title="Offres d'emploi" icon={Briefcase}>
               {jobs.length > 0 ? (
                 <div className="space-y-4">
@@ -294,7 +294,7 @@ export default function CompanyPage() {
             </SectionCard>
           </div>
 
-          <div className="sticky top-4 self-start">
+          <div className="sticky top-20 self-start md:col-span-2">
             <JobView className="h-full" />
           </div>
         </div>
