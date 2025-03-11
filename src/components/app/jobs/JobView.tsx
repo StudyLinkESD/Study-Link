@@ -19,18 +19,20 @@ const JobView = ({ className = '' }: JobViewProps) => {
 
   if (!selectedJob) {
     return (
-      <Card className={`${className}`}>
+      <Card className={`${className} shadow-md`}>
         <CardContent className="p-6">
-          <h1 className="text-center text-xl font-semibold text-gray-500">
-            Sélectionnez une offre pour voir les détails
-          </h1>
+          <div className="flex min-h-[200px] items-center justify-center">
+            <h1 className="text-center text-xl font-semibold text-gray-500">
+              Sélectionnez une offre pour voir les détails
+            </h1>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className={`${className}`}>
+    <Card className={`${className} shadow-md`}>
       <CardContent className="p-6">
         <div className="mb-6 flex items-center gap-4">
           <ProfileAvatar
