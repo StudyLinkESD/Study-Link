@@ -1,21 +1,21 @@
-export type ApplicationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+export type RequestStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
 
-export type ApplicationStatusLabels = {
-  [key in ApplicationStatus]: string;
+export type RequestStatusLabels = {
+  [key in RequestStatus]: string;
 };
 
-export const APPLICATION_STATUS_LABELS: ApplicationStatusLabels = {
+export const REQUEST_STATUS_LABELS: RequestStatusLabels = {
   PENDING: 'En attente',
   ACCEPTED: 'Acceptée',
   REJECTED: 'Rejetée',
 };
 
-export const getStatusLabel = (status: ApplicationStatus | string): string => {
-  return APPLICATION_STATUS_LABELS[status as ApplicationStatus] || status;
+export const getStatusLabel = (status: RequestStatus | string): string => {
+  return REQUEST_STATUS_LABELS[status as RequestStatus] || status;
 };
 
 export const getStatusVariant = (
-  status: ApplicationStatus | string,
+  status: RequestStatus | string,
 ): 'success' | 'destructive' | 'default' => {
   switch (status) {
     case 'ACCEPTED':

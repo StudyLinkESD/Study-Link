@@ -1,6 +1,9 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
+
 import StatusBadge from '@/components/app/common/StatusBadge';
+import { JobApplicationButton } from '@/components/app/jobs/job-application-button';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -8,10 +11,11 @@ import { useJob } from '@/context/job.context';
 
 const JobView = () => {
   const { selectedJob } = useJob();
+  const { data: session } = useSession();
 
   if (!selectedJob) {
     return (
-      <div className="sticky top-4 w-3/6">
+      <div className="sticky top-4 mt-20 w-3/6">
         <Card className="p-6">
           <h1 className="text-center text-xl font-semibold text-gray-500">
             Sélectionnez une offre pour voir les détails
@@ -22,7 +26,7 @@ const JobView = () => {
   }
 
   return (
-    <div className="sticky top-4 w-3/6">
+    <div className="sticky top-4 mt-20 w-3/6">
       <Card>
         <CardContent className="p-6">
           <div className="mb-6 flex items-center gap-4">
@@ -51,7 +55,7 @@ const JobView = () => {
             <p className="text-gray-600">{selectedJob.description}</p>
           </div>
 
-          <div>
+          <div className="mb-6">
             <h2 className="mb-2 text-lg font-semibold">Compétences requises</h2>
             <div className="flex flex-wrap gap-2">
               {selectedJob.skills.map((skill) => (
@@ -59,6 +63,14 @@ const JobView = () => {
               ))}
             </div>
           </div>
+
+          <JobApplicationButton
+            jobId={selectedJob.id}
+            jobTitle={selectedJob.offerTitle}
+            companyName={selectedJob.companyName}
+            hasApplied={false}
+            isAuthenticated={!!session}
+          />
         </CardContent>
       </Card>
     </div>

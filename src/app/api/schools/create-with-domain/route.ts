@@ -4,6 +4,58 @@ import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 
+/**
+ * @swagger
+ * /api/schools/create-with-domain:
+ *   post:
+ *     tags:
+ *       - Schools
+ *     summary: Crée une école avec son domaine et son propriétaire
+ *     description: |
+ *       Crée une nouvelle école avec son domaine autorisé et son propriétaire en une seule opération.
+ *       Cette opération est atomique (transaction) et crée :
+ *       - Un domaine autorisé pour l'école
+ *       - L'école associée à ce domaine
+ *       - Un compte utilisateur pour le propriétaire
+ *       - Les rôles admin et propriétaire d'école pour l'utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateSchoolWithDomainRequest'
+ *     responses:
+ *       200:
+ *         description: École créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CreateSchoolWithDomainResponse'
+ *       400:
+ *         description: Erreur de validation ou conflit
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CreateSchoolWithDomainError'
+ *             examples:
+ *               userExists:
+ *                 value:
+ *                   error: 'USER_EXISTS'
+ *                   message: 'Un utilisateur avec cet email existe déjà'
+ *               domainExists:
+ *                 value:
+ *                   error: 'DOMAIN_EXISTS'
+ *                   message: 'Ce domaine est déjà utilisé'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CreateSchoolWithDomainError'
+ *             example:
+ *               error: 'CREATION_FAILED'
+ *               message: "Une erreur est survenue lors de la création de l'école"
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -47,6 +99,7 @@ export async function POST(request: Request) {
           firstName: body.owner.firstName,
           lastName: body.owner.lastName,
           email: body.owner.email.toLowerCase(),
+          type: 'school_owner',
         },
       });
 

@@ -11,7 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { JobApplicationFull } from '@/types/application_status.type';
+import { JobRequestFull } from '@/types/request_status.type';
+
+type JobApplicationFull = JobRequestFull;
 
 type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
   include: {
@@ -33,6 +35,8 @@ const transformToJobApplicationFull = (app: JobRequestWithRelations): JobApplica
   studentId: app.studentId,
   jobId: app.jobId,
   status: app.status,
+  subject: app.subject,
+  message: app.message,
   createdAt: app.createdAt.toISOString(),
   updatedAt: app.updatedAt.toISOString(),
   student: {

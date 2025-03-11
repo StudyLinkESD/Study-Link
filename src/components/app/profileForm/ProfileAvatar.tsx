@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -26,19 +28,60 @@ const textSizeClasses = {
 
 const ProfileAvatarComponent = ({
   photoUrl,
-  firstName: firstName,
-  lastName: lastName,
+  firstName,
+  lastName,
   size = 'md',
   className = '',
 }: ProfileAvatarProps) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(photoUrl);
+
+  useEffect(() => {
+    setImageError(false);
+    setImageUrl(photoUrl);
+
+    if (photoUrl) {
+      let cleanUrl = photoUrl;
+
+      if (cleanUrl.startsWith('/api/files/')) {
+        cleanUrl = cleanUrl.substring('/api/files/'.length);
+        setImageUrl(cleanUrl);
+      }
+
+      if (cleanUrl.includes('supabase.co/storage/v1/object/public/')) {
+      }
+
+      setImageUrl(cleanUrl);
+
+      const img = new Image();
+      img.onload = () => {
+        setImageError(false);
+      };
+      img.onerror = () => {
+        console.error("Erreur de chargement de l'image:", cleanUrl);
+        setImageError(true);
+      };
+      img.src = cleanUrl;
+    }
+  }, [photoUrl]);
+
+  const handleImageError = () => {
+    console.error("Erreur de chargement de l'image:", photoUrl);
+    setImageError(true);
+  };
+
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
-      {photoUrl ? (
-        <AvatarImage src={photoUrl} alt={`${firstName} ${lastName}`} />
+      {imageUrl && !imageError ? (
+        <AvatarImage
+          src={imageUrl}
+          alt={`${firstName || ''} ${lastName || ''}`}
+          onError={handleImageError}
+        />
       ) : (
         <AvatarFallback className={textSizeClasses[size]}>
-          {firstName?.charAt(0)}
-          {lastName?.charAt(0)}
+          {(firstName || '?').charAt(0)}
+          {(lastName || '?').charAt(0)}
         </AvatarFallback>
       )}
     </Avatar>

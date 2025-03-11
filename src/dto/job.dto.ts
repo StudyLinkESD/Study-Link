@@ -5,6 +5,8 @@ export interface JobResponseDTO {
   featuredImage?: string;
   description: string;
   skills?: string;
+  type: string;
+  availability?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +17,8 @@ export interface CreateJobDTO {
   featuredImage?: string;
   description: string;
   skills?: string;
+  type: string;
+  availability?: string;
 }
 
 export interface UpdateJobDTO {
@@ -22,4 +26,6 @@ export interface UpdateJobDTO {
   featuredImage?: string;
   description?: string;
   skills?: string;
+  type?: string;
+  availability?: string;
 }

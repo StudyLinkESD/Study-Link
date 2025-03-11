@@ -1,9 +1,51 @@
-import { User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
+const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Récupère les détails d'un utilisateur
+ *     description: Retourne les informations détaillées d'un utilisateur avec ses relations (étudiant, école, entreprise, etc.)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Détails de l'utilisateur récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponseDTO'
+ *       400:
+ *         description: ID non fourni
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ *       404:
+ *         description: Utilisateur non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const id = request.nextUrl.pathname.split('/').pop();
@@ -71,22 +113,92 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-export async function PUT(request: NextRequest): Promise<NextResponse> {
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   put:
+ *     tags:
+ *       - Users
+ *     summary: Met à jour un utilisateur
+ *     description: Met à jour les informations d'un utilisateur existant
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de l'utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserRequest'
+ *     responses:
+ *       200:
+ *         description: Utilisateur mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponseDTO'
+ *       400:
+ *         description: ID non fourni ou données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ *       404:
+ *         description: Utilisateur non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ */
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
+    const id = (await params).id;
     if (!id) {
       return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
 
-    const body = (await request.json()) as Partial<User>;
+    const data = await request.json();
+
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
 
     const updatedUser = await prisma.user.update({
-      where: { id },
+      where: {
+        id: id,
+      },
       data: {
-        ...(body.email && { email: body.email.toLowerCase() }),
-        ...(body.firstName && { firstName: body.firstName }),
-        ...(body.lastName && { lastName: body.lastName }),
-        ...(body.profilePicture !== undefined && { profilePicture: body.profilePicture }),
+        firstName: data.firstName,
+        lastName: data.lastName,
+        profilePicture: data.profilePicture,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        profilePicture: true,
       },
     });
 
@@ -100,6 +212,52 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   }
 }
 
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     tags:
+ *       - Users
+ *     summary: Supprime un utilisateur
+ *     description: Marque un utilisateur comme supprimé (soft delete)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Utilisateur supprimé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Utilisateur supprimé avec succès"
+ *       400:
+ *         description: ID non fourni
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ *       404:
+ *         description: Utilisateur non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserError'
+ */
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
     const id = request.nextUrl.pathname.split('/').pop();

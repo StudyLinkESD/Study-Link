@@ -2,7 +2,7 @@ import { User } from '@prisma/client';
 
 import { prisma } from '@/lib/prisma';
 
-export type UserType = 'admin' | 'school_owner' | 'company_owner' | 'student';
+import { UserType } from '@/types/user.type';
 
 export interface UserFilters {
   type?: UserType;
@@ -17,10 +17,10 @@ export async function getUsers(filters: UserFilters = {}) {
 
   const where = {
     deletedAt: null,
-    ...(type === 'admin' && { admin: { isNot: null }, schoolOwner: null }),
-    ...(type === 'school_owner' && { schoolOwner: { isNot: null }, admin: null }),
-    ...(type === 'company_owner' && { companyOwner: { isNot: null } }),
-    ...(type === 'student' && {
+    ...(type === UserType.ADMIN && { admin: { isNot: null }, schoolOwner: null }),
+    ...(type === UserType.SCHOOL_OWNER && { schoolOwner: { isNot: null }, admin: null }),
+    ...(type === UserType.COMPANY_OWNER && { companyOwner: { isNot: null } }),
+    ...(type === UserType.STUDENT && {
       student: schoolId ? { schoolId } : { isNot: null },
     }),
   };

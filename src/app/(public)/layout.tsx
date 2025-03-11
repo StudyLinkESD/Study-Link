@@ -7,23 +7,6 @@ export default function PublicLayout({
 }>) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <Link href="/" className="text-2xl font-bold">
-            StudyLink
-          </Link>
-          <nav>
-            <ul className="flex gap-6">
-              <li>
-                <Link href="/login" className="hover:text-primary transition-colors">
-                  Connexion
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
-
       <main className="flex-grow">{children}</main>
 
       <footer className="border-t py-6">

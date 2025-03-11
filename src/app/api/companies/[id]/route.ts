@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { checkCompanyExists, validateCompanyData } from '@/utils/validation/company.validation';
 
@@ -8,26 +8,70 @@ import { CompanyResponseDTO, UpdateCompanyDTO } from '@/dto/company.dto';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   get:
+ *     tags:
+ *       - Companies
+ *     summary: Récupère les détails d'une entreprise spécifique
+ *     description: Retourne les informations détaillées d'une entreprise en fonction de son ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'entreprise
+ *     responses:
+ *       200:
+ *         description: Détails de l'entreprise récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyResponseDTO'
+ *       404:
+ *         description: Entreprise non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<CompanyResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
-    const companyCheck = await checkCompanyExists(id);
+    const { id } = await context.params;
+    const company = await prisma.company.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        companyOwners: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
 
-    if (!companyCheck.exists) {
-      return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
-    }
-
-    if (!companyCheck.company) {
-      return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
+    if (!company) {
+      return NextResponse.json({ error: 'Entreprise non trouvée' }, { status: 404 });
     }
 
     const companyResponse: CompanyResponseDTO = {
-      id: companyCheck.company.id,
-      name: companyCheck.company.name,
-      logo: companyCheck.company.logo,
+      id: company.id,
+      name: company.name,
+      logo: company.logo,
+      companyOwners: company.companyOwners,
     };
 
     return NextResponse.json(companyResponse);
@@ -40,16 +84,70 @@ export async function GET(
   }
 }
 
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   put:
+ *     tags:
+ *       - Companies
+ *     summary: Met à jour une entreprise existante
+ *     description: Met à jour les informations d'une entreprise spécifique
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'entreprise à mettre à jour
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateCompanyRequest'
+ *     responses:
+ *       200:
+ *         description: Entreprise mise à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CompanyResponseDTO'
+ *       400:
+ *         description: Données invalides ou aucune donnée fournie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       404:
+ *         description: Entreprise non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<CompanyResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
+    const { id } = await context.params;
     const companyCheck = await checkCompanyExists(id);
 
     if (!companyCheck.exists) {
-      return NextResponse.json({ error: 'Compagnie non trouvée' }, { status: 404 });
+      return NextResponse.json({ error: 'Entreprise non trouvée' }, { status: 404 });
     }
 
     const body = (await request.json()) as UpdateCompanyDTO;
@@ -81,10 +179,22 @@ export async function PUT(
         id: true,
         name: true,
         logo: true,
+        companyOwners: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json(updatedCompany);
+    const companyResponse: CompanyResponseDTO = {
+      id: updatedCompany.id,
+      name: updatedCompany.name,
+      logo: updatedCompany.logo,
+      companyOwners: updatedCompany.companyOwners,
+    };
+
+    return NextResponse.json(companyResponse);
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la compagnie:', error);
     return NextResponse.json(
@@ -94,12 +204,51 @@ export async function PUT(
   }
 }
 
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   delete:
+ *     tags:
+ *       - Companies
+ *     summary: Supprime une entreprise
+ *     description: Supprime une entreprise spécifique et toutes ses données associées
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'entreprise à supprimer
+ *     responses:
+ *       200:
+ *         description: Entreprise supprimée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Compagnie supprimée avec succès"
+ *       404:
+ *         description: Entreprise non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
-    const id = (await params).id;
+    const { id } = await context.params;
     const companyCheck = await checkCompanyExists(id);
 
     if (!companyCheck.exists) {
