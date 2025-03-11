@@ -65,7 +65,7 @@ export function CompanyProfileForm({ company }: CompanyProfileFormProps) {
       }
 
       toast.success('Profil mis à jour avec succès !');
-      router.push(`/company/${company.id}`);
+      router.push(`/companies/${company.id}`);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       toast.error('Erreur lors de la mise à jour du profil.');

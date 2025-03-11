@@ -18,7 +18,7 @@ export default function SelectProfilePage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="relative overflow-hidden transition-all hover:shadow-lg">
-            <Link href="/company/profile-info" className="block h-full">
+            <Link href="/companies/profile-info" className="block h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-6 w-6" />

@@ -87,7 +87,7 @@ export default function CompanyPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="mb-6">
-        <BackButton href="/company" />
+        <BackButton href="/companies" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -161,7 +161,7 @@ export default function CompanyPage() {
 
                 {isOwner && (
                   <div className="mt-6 w-full">
-                    <Link href="/company/profile-info">
+                    <Link href="/companies/profile-info">
                       <Button className="w-full">Modifier le profil</Button>
                     </Link>
                   </div>

@@ -78,7 +78,7 @@ export default function EditCompanyPage() {
         if (!response.ok) {
           if (response.status === 404) {
             toast.error('Entreprise introuvable');
-            router.push('/company');
+            router.push('/companies');
             return;
           }
           throw new Error("Erreur lors de la récupération des données de l'entreprise");
@@ -125,7 +125,7 @@ export default function EditCompanyPage() {
       }
 
       toast.success('Profil mis à jour avec succès !');
-      router.push(`/company/${companyId}`);
+      router.push(`/companies/${companyId}`);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       toast.error('Erreur lors de la mise à jour du profil.');
@@ -147,7 +147,7 @@ export default function EditCompanyPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="mb-6">
-        <BackButton href={`/company/${companyId}`} />
+        <BackButton href={`/companies/${companyId}`} />
       </div>
 
       <Card>

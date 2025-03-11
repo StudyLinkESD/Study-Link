@@ -51,7 +51,7 @@ export default function CompaniesPage() {
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Entreprises</h1>
         {session && (
-          <Link href="/company/profile-info">
+          <Link href="/companies/profile-info">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Ajouter mon entreprise
@@ -71,7 +71,7 @@ export default function CompaniesPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {companies.map((company) => (
-            <Link key={company.id} href={`/company/${company.id}`}>
+            <Link key={company.id} href={`/companies/${company.id}`}>
               <Card className="h-full transition-shadow hover:shadow-lg">
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center">

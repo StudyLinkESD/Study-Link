@@ -15,7 +15,7 @@ export default function CompanyNotFound() {
         <p className="text-muted-foreground mb-6 max-w-md">
           L&apos;entreprise que vous recherchez n&apos;existe pas ou a été supprimée.
         </p>
-        <Link href="/company">
+        <Link href="/companies">
           <Button>Retour à la liste des entreprises</Button>
         </Link>
       </div>
