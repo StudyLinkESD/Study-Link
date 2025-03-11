@@ -208,7 +208,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Envoyer l'email à tous les propriétaires de l'entreprise
     const companyOwners = job.company.companyOwners;
     const baseUrl =
       process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
