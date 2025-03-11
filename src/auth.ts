@@ -52,6 +52,42 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.id = token.id;
         session.user.isGoogleEmail = token.isGoogleEmail ?? false;
         session.user.studentId = token.studentId ?? null;
+
+        const userData = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: {
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+            type: true,
+            student: {
+              select: {
+                id: true,
+              },
+            },
+            companyOwner: {
+              select: {
+                id: true,
+                companyId: true,
+              },
+            },
+            admin: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        });
+
+        if (userData) {
+          session.user.firstName = userData.firstName;
+          session.user.lastName = userData.lastName;
+          session.user.profilePicture = userData.profilePicture;
+          session.user.type = userData.type;
+          session.user.studentId = userData.student?.id ?? null;
+          session.user.companyId = userData.companyOwner?.companyId ?? null;
+          session.user.isAdmin = !!userData.admin;
+        }
       }
       return session;
     },

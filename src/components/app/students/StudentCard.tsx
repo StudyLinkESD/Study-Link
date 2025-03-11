@@ -118,7 +118,6 @@ function StudentCardComponent({
                   </div>
                 )}
               </div>
-              ${' '}
               <div className="space-y-2">
                 <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
                   <Briefcase className="h-4 w-4" />
