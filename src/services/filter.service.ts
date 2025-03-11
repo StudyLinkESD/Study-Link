@@ -4,6 +4,7 @@ import {
   ExperienceFilters,
   PaginationParams,
   SchoolFilters,
+  SchoolOwnerFilters,
   StudentFilters,
   UserFilters,
 } from '@/types/filters.type';
@@ -274,6 +275,29 @@ export class FilterService {
       where.OR = [
         { name: { contains: filters.search, mode: 'insensitive' } },
         { domain: { domain: { contains: filters.search, mode: 'insensitive' } } },
+      ];
+    }
+
+    return where;
+  }
+
+  static buildSchoolOwnerWhereClause(filters: SchoolOwnerFilters): Prisma.SchoolOwnerWhereInput {
+    const where: Prisma.SchoolOwnerWhereInput = {};
+
+    if (filters.schoolId) {
+      where.schoolId = filters.schoolId;
+    }
+
+    if (filters.userId) {
+      where.userId = filters.userId;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { user: { firstName: { contains: filters.search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: filters.search, mode: 'insensitive' } } },
+        { user: { email: { contains: filters.search, mode: 'insensitive' } } },
+        { school: { name: { contains: filters.search, mode: 'insensitive' } } },
       ];
     }
 

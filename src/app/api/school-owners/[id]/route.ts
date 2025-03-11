@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 import { validateSchoolOwnerData } from '@/utils/validation/school-owner.validation';
 
-import { SchoolOwnerResponseDTO, UpdateSchoolOwnerDTO } from '@/dto/school-owner.dto';
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
 
-const prisma = new PrismaClient();
+import { SchoolOwnerResponseDTO, UpdateSchoolOwnerDTO } from '@/dto/school-owner.dto';
 
 /**
  * @swagger
@@ -16,8 +16,6 @@ const prisma = new PrismaClient();
  *       - School Owners
  *     summary: Récupère les détails d'un propriétaire d'école
  *     description: Retourne les informations détaillées d'un propriétaire d'école spécifique
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -33,44 +31,35 @@ const prisma = new PrismaClient();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/SchoolOwnerResponseDTO'
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Propriétaire d'école non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolOwnerError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolOwnerError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<SchoolOwnerResponseDTO | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<SchoolOwnerResponseDTO | ApiError>> {
   try {
-    const id = (await params).id;
     const schoolOwner = await prisma.schoolOwner.findUnique({
       where: {
-        id: id,
+        id: params.id,
       },
       include: {
         user: true,
-        school: true,
+        school: {
+          include: {
+            domain: true,
+          },
+        },
       },
     });
 
@@ -96,8 +85,6 @@ export async function GET(
  *       - School Owners
  *     summary: Met à jour un propriétaire d'école
  *     description: Modifie les associations utilisateur/école d'un propriétaire d'école
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -111,7 +98,7 @@ export async function GET(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateSchoolOwnerRequest'
+ *             $ref: '#/components/schemas/UpdateSchoolOwnerDTO'
  *     responses:
  *       200:
  *         description: Propriétaire d'école mis à jour avec succès
@@ -124,56 +111,80 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolOwnerError'
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       404:
  *         description: Propriétaire d'école, utilisateur ou école non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolOwnerError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolOwnerError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<
-  NextResponse<SchoolOwnerResponseDTO | { error: string; details?: Record<string, string> }>
-> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<SchoolOwnerResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
-    const id = (await params).id;
     const body = (await request.json()) as UpdateSchoolOwnerDTO;
 
     const validationResult = await validateSchoolOwnerData(body);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation failed',
+          details: Object.entries(validationResult.errors || {}).map(([field, message]) => ({
+            field,
+            message,
+          })),
         },
         { status: 400 },
       );
     }
 
+    const existingSchoolOwner = await prisma.schoolOwner.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingSchoolOwner) {
+      return NextResponse.json({ error: "Propriétaire d'école non trouvé" }, { status: 404 });
+    }
+
+    if (body.userId || body.schoolId) {
+      const existingOwner = await prisma.schoolOwner.findFirst({
+        where: {
+          OR: [
+            { userId: body.userId || existingSchoolOwner.userId },
+            { schoolId: body.schoolId || existingSchoolOwner.schoolId },
+          ],
+          NOT: { id: params.id },
+        },
+      });
+
+      if (existingOwner) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: [
+              {
+                field: 'userId',
+                message:
+                  "Cet utilisateur est déjà propriétaire d'une école ou cette école a déjà un propriétaire",
+              },
+            ],
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const schoolOwner = await prisma.schoolOwner.update({
       where: {
-        id: id,
+        id: params.id,
       },
       data: {
         ...(body.userId && { userId: body.userId }),
@@ -181,7 +192,11 @@ export async function PUT(
       },
       include: {
         user: true,
-        school: true,
+        school: {
+          include: {
+            domain: true,
+          },
+        },
       },
     });
 
@@ -203,8 +218,6 @@ export async function PUT(
  *       - School Owners
  *     summary: Supprime un propriétaire d'école
  *     description: Supprime l'association entre un utilisateur et une école
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -225,44 +238,42 @@ export async function PUT(
  *                   type: string
  *               example:
  *                 message: "Propriétaire d'école supprimé avec succès"
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Propriétaire d'école non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolOwnerError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolOwnerError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<{ message: string } | ApiError>> {
   try {
-    const id = (await params).id;
+    const existingSchoolOwner = await prisma.schoolOwner.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingSchoolOwner) {
+      return NextResponse.json({ error: "Propriétaire d'école non trouvé" }, { status: 404 });
+    }
+
     await prisma.schoolOwner.delete({
       where: {
-        id: id,
+        id: params.id,
       },
     });
 
-    return NextResponse.json({ message: "Propriétaire d'école supprimé avec succès" });
+    return NextResponse.json(
+      { message: "Propriétaire d'école supprimé avec succès" },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Erreur lors de la suppression du propriétaire d'école:", error);
     return NextResponse.json(

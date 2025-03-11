@@ -43,6 +43,11 @@ export interface SchoolFilters extends BaseFilters {
   domainId?: string;
 }
 
+export interface SchoolOwnerFilters extends BaseFilters {
+  schoolId?: string;
+  userId?: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
