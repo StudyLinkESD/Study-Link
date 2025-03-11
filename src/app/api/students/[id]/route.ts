@@ -4,7 +4,10 @@ import { NextResponse } from 'next/server';
 
 import { validateStudentData } from '@/utils/validation/student.validation';
 
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+
 import { StudentResponseDTO, UpdateStudentDTO } from '@/dto/student.dto';
+import { FilterService } from '@/services/filter.service';
 
 const prisma = new PrismaClient();
 
@@ -36,86 +39,30 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Étudiant non trouvé"
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Erreur lors de la récupération de l'étudiant"
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<StudentResponseDTO | { error: string }>> {
+): Promise<NextResponse<StudentResponseDTO | ApiError>> {
   try {
     const id = (await params).id;
     const student = await prisma.student.findUnique({
-      where: {
-        id: id,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            profilePicture: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      where: { id },
+      include: FilterService.getDefaultStudentInclude(),
     });
 
     if (!student) {
       return NextResponse.json({ error: 'Étudiant non trouvé' }, { status: 404 });
     }
 
-    const formattedStudent: StudentResponseDTO = {
-      id: student.id,
-      userId: student.userId,
-      schoolId: student.schoolId,
-      studentEmail: student.studentEmail,
-      primaryRecommendationId: student.primaryRecommendationId,
-      status: student.status as 'Alternant' | 'Stagiaire',
-      skills: student.skills,
-      apprenticeshipRhythm: student.apprenticeshipRhythm,
-      description: student.description,
-      curriculumVitae: student.curriculumVitae,
-      previousCompanies: student.previousCompanies,
-      availability: student.availability,
-      user: {
-        id: student.user.id,
-        email: student.user.email,
-        firstName: student.user.firstName,
-        lastName: student.user.lastName,
-        profilePicture: student.user.profilePicture,
-      },
-      school: student.school
-        ? {
-            id: student.school.id,
-            name: student.school.name,
-          }
-        : null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    return NextResponse.json(formattedStudent);
+    return NextResponse.json(student as unknown as StudentResponseDTO);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'étudiant:", error);
     return NextResponse.json(
@@ -159,53 +106,45 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/StudentError'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       404:
  *         description: Étudiant non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Étudiant non trouvé"
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Erreur lors de la mise à jour de l'étudiant"
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<StudentResponseDTO | { error: string }>> {
+): Promise<NextResponse<StudentResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const id = (await params).id;
-    const body = (await request.json()) as UpdateStudentDTO;
+    const data = (await request.json()) as UpdateStudentDTO;
 
     const existingStudent = await prisma.student.findUnique({
-      where: { id: id },
-      include: {
-        user: true,
-        school: true,
-      },
+      where: { id },
     });
 
     if (!existingStudent) {
       return NextResponse.json({ error: 'Étudiant non trouvé' }, { status: 404 });
     }
 
-    const validationResult = await validateStudentData(body, true);
+    const validationResult = await validateStudentData({
+      ...existingStudent,
+      ...data,
+      status: data.status as 'Alternant' | 'Stagiaire',
+    });
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
+          error: 'Validation failed',
           details: validationResult.errors,
         },
         { status: 400 },
@@ -213,67 +152,20 @@ export async function PUT(
     }
 
     const updatedStudent = await prisma.student.update({
-      where: { id: id },
+      where: { id },
       data: {
-        status: body.status || existingStudent.status,
-        skills: body.skills || existingStudent.skills,
-        apprenticeshipRhythm: body.apprenticeshipRhythm,
-        description: body.description || existingStudent.description,
-        curriculumVitae: body.curriculumVitae,
-        previousCompanies: body.previousCompanies || existingStudent.previousCompanies,
-        availability:
-          body.availability !== undefined ? body.availability : existingStudent.availability,
+        status: data.status,
+        skills: data.skills,
+        apprenticeshipRhythm: data.apprenticeshipRhythm,
+        description: data.description,
+        curriculumVitae: data.curriculumVitae,
+        previousCompanies: data.previousCompanies,
+        availability: data.availability,
       },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            profilePicture: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      include: FilterService.getDefaultStudentInclude(),
     });
 
-    const formattedStudent: StudentResponseDTO = {
-      id: updatedStudent.id,
-      userId: updatedStudent.userId,
-      schoolId: updatedStudent.schoolId,
-      studentEmail: updatedStudent.studentEmail,
-      primaryRecommendationId: updatedStudent.primaryRecommendationId,
-      status: updatedStudent.status as 'Alternant' | 'Stagiaire',
-      skills: updatedStudent.skills,
-      apprenticeshipRhythm: updatedStudent.apprenticeshipRhythm,
-      description: updatedStudent.description,
-      curriculumVitae: updatedStudent.curriculumVitae,
-      previousCompanies: updatedStudent.previousCompanies,
-      availability: updatedStudent.availability,
-      user: {
-        id: updatedStudent.user.id,
-        email: updatedStudent.user.email,
-        firstName: updatedStudent.user.firstName,
-        lastName: updatedStudent.user.lastName,
-        profilePicture: updatedStudent.user.profilePicture,
-      },
-      school: updatedStudent.school
-        ? {
-            id: updatedStudent.school.id,
-            name: updatedStudent.school.name,
-          }
-        : null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    return NextResponse.json(formattedStudent);
+    return NextResponse.json(updatedStudent as unknown as StudentResponseDTO);
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'étudiant:", error);
     return NextResponse.json(
@@ -290,7 +182,7 @@ export async function PUT(
  *     tags:
  *       - Students
  *     summary: Supprime un étudiant
- *     description: Supprime le profil d'un étudiant tout en conservant son compte utilisateur
+ *     description: Supprime un étudiant existant
  *     parameters:
  *       - in: path
  *         name: id
@@ -301,7 +193,7 @@ export async function PUT(
  *         description: ID de l'étudiant
  *     responses:
  *       200:
- *         description: Profil étudiant supprimé avec succès
+ *         description: Étudiant supprimé avec succès
  *         content:
  *           application/json:
  *             schema:
@@ -309,39 +201,28 @@ export async function PUT(
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Profil étudiant supprimé avec succès. Le compte utilisateur reste actif."
  *       404:
  *         description: Étudiant non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Étudiant non trouvé"
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Erreur lors de la suppression du profil étudiant"
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+): Promise<NextResponse<{ message: string } | ApiError>> {
   try {
     const id = (await params).id;
+
     const existingStudent = await prisma.student.findUnique({
-      where: { id: id },
-      include: {
-        user: true,
-      },
+      where: { id },
     });
 
     if (!existingStudent) {
@@ -349,16 +230,14 @@ export async function DELETE(
     }
 
     await prisma.student.delete({
-      where: { id: id },
+      where: { id },
     });
 
-    return NextResponse.json({
-      message: 'Profil étudiant supprimé avec succès. Le compte utilisateur reste actif.',
-    });
+    return NextResponse.json({ message: 'Étudiant supprimé avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la suppression du profil étudiant:', error);
+    console.error("Erreur lors de la suppression de l'étudiant:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression du profil étudiant' },
+      { error: "Erreur lors de la suppression de l'étudiant" },
       { status: 500 },
     );
   }

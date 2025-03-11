@@ -1,22 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { validateStudentData } from '@/utils/validation/student.validation';
 
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+import { PaginatedResponse, StudentFilters } from '@/types/filters.type';
+import { StudentStatus } from '@/types/student.type';
+
 import { CreateStudentDTO, StudentResponseDTO } from '@/dto/student.dto';
+import { FilterService } from '@/services/filter.service';
 
 const prisma = new PrismaClient();
-
-type ValidationErrorResponse = {
-  error: string;
-  details?: ValidationError[];
-};
-
-type ValidationError = {
-  field: string;
-  message: string;
-};
 
 /**
  * @swagger
@@ -25,80 +20,120 @@ type ValidationError = {
  *     tags:
  *       - Students
  *     summary: Récupère la liste des étudiants
- *     description: Retourne la liste complète des étudiants avec leurs informations détaillées
+ *     description: Retourne la liste paginée des étudiants avec possibilité de filtrage
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Numéro de la page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: schoolId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filtrer par école
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           $ref: '#/components/schemas/StudentStatus'
+ *         description: Filtrer par statut
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Rechercher dans les noms, emails et compétences
+ *       - in: query
+ *         name: skills
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filtrer par compétences
+ *       - in: query
+ *         name: availability
+ *         schema:
+ *           type: boolean
+ *         description: Filtrer par disponibilité
+ *       - in: query
+ *         name: apprenticeshipRhythm
+ *         schema:
+ *           type: string
+ *         description: Filtrer par rythme d'alternance
+ *       - in: query
+ *         name: orderBy
+ *         schema:
+ *           type: string
+ *         description: Champ de tri
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Ordre de tri
  *     responses:
  *       200:
  *         description: Liste des étudiants récupérée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/StudentResponseDTO'
+ *               $ref: '#/components/schemas/PaginatedResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Erreur lors de la récupération des étudiants"
+ *               $ref: '#/components/schemas/ApiError'
  */
-export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error: string }>> {
+export async function GET(
+  request: NextRequest,
+): Promise<NextResponse<PaginatedResponse<StudentResponseDTO> | ApiError>> {
   try {
-    const students = await prisma.student.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            profilePicture: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+    const { searchParams } = new URL(request.url);
+    const filters: StudentFilters = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: Math.min(parseInt(searchParams.get('limit') || '10'), 100),
+      schoolId: searchParams.get('schoolId') || undefined,
+      status: searchParams.get('status') as StudentStatus | undefined,
+      search: searchParams.get('search') || undefined,
+      skills: searchParams.get('skills')?.split(',') || undefined,
+      availability: searchParams.get('availability') === 'true',
+      apprenticeshipRhythm: searchParams.get('apprenticeshipRhythm') || undefined,
+      orderBy: searchParams.get('orderBy') || undefined,
+      order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
+    };
+
+    const where = FilterService.buildStudentWhereClause(filters);
+    const pagination = FilterService.buildPaginationOptions(filters);
+    const include = FilterService.getDefaultStudentInclude();
+
+    const [students, total] = await prisma.$transaction([
+      prisma.student.findMany({
+        where,
+        ...pagination,
+        include,
+      }),
+      prisma.student.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      items: students as unknown as StudentResponseDTO[],
+      total,
+      page: filters.page || 1,
+      limit: filters.limit || 10,
+      totalPages: Math.ceil(total / (filters.limit || 10)),
     });
-
-    const formattedStudents: StudentResponseDTO[] = students.map((student) => ({
-      id: student.id,
-      userId: student.userId,
-      schoolId: student.schoolId,
-      studentEmail: student.studentEmail,
-      primaryRecommendationId: student.primaryRecommendationId,
-      status: student.status as 'Alternant' | 'Stagiaire',
-      skills: student.skills,
-      apprenticeshipRhythm: student.apprenticeshipRhythm,
-      description: student.description,
-      curriculumVitae: student.curriculumVitae,
-      previousCompanies: student.previousCompanies,
-      availability: student.availability,
-      user: {
-        id: student.user.id,
-        email: student.user.email,
-        firstName: student.user.firstName,
-        lastName: student.user.lastName,
-        profilePicture: student.user.profilePicture,
-      },
-      school: student.school
-        ? {
-            id: student.school.id,
-            name: student.school.name,
-          }
-        : null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-
-    return NextResponse.json(formattedStudents);
   } catch (error) {
     console.error('Erreur lors de la récupération des étudiants:', error);
     return NextResponse.json(
@@ -134,17 +169,13 @@ export async function GET(): Promise<NextResponse<StudentResponseDTO[] | { error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/StudentError'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Failed to create student"
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function POST(
   request: Request,
@@ -176,58 +207,15 @@ export async function POST(
         previousCompanies: data.previousCompanies,
         availability: data.availability,
       },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            profilePicture: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      include: FilterService.getDefaultStudentInclude(),
     });
 
-    const formattedStudent: StudentResponseDTO = {
-      id: createdStudent.id,
-      userId: createdStudent.userId,
-      schoolId: createdStudent.schoolId,
-      studentEmail: createdStudent.studentEmail,
-      primaryRecommendationId: createdStudent.primaryRecommendationId,
-      status: createdStudent.status as 'Alternant' | 'Stagiaire',
-      skills: createdStudent.skills,
-      apprenticeshipRhythm: createdStudent.apprenticeshipRhythm,
-      description: createdStudent.description,
-      curriculumVitae: createdStudent.curriculumVitae,
-      previousCompanies: createdStudent.previousCompanies,
-      availability: createdStudent.availability,
-      user: {
-        id: createdStudent.user.id,
-        email: createdStudent.user.email,
-        firstName: createdStudent.user.firstName,
-        lastName: createdStudent.user.lastName,
-        profilePicture: createdStudent.user.profilePicture,
-      },
-      school: createdStudent.school
-        ? {
-            id: createdStudent.school.id,
-            name: createdStudent.school.name,
-          }
-        : null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    return NextResponse.json(formattedStudent);
+    return NextResponse.json(createdStudent as unknown as StudentResponseDTO);
   } catch (error) {
-    console.error('Error creating student:', error);
-    return NextResponse.json({ error: 'Failed to create student' }, { status: 500 });
+    console.error("Erreur lors de la création de l'étudiant:", error);
+    return NextResponse.json(
+      { error: "Erreur lors de la création de l'étudiant" },
+      { status: 500 },
+    );
   }
 }

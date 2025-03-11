@@ -1,8 +1,10 @@
+import { ExperienceType, StudentStatus } from '@/types/student.type';
+
 export interface CreateStudentDTO {
   userId: string;
   schoolId: string;
   studentEmail: string;
-  status: 'Alternant' | 'Stagiaire';
+  status: StudentStatus;
   skills: string;
   apprenticeshipRhythm: string | null;
   description: string;
@@ -23,7 +25,7 @@ export interface ExperienceDTO {
   startDate: string;
   endDate?: string;
   description?: string;
-  type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
+  type: ExperienceType;
 }
 
 export interface UpdateStudentDTO
@@ -51,4 +53,10 @@ export interface StudentResponseDTO extends Omit<CreateStudentDTO, 'skills'> {
   updatedAt: Date;
 }
 
-export type CreateStudentData = CreateStudentDTO;
+export interface PaginatedStudentResponseDTO {
+  items: StudentResponseDTO[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

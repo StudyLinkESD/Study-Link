@@ -1,13 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-import { validateUserCreation, ValidationError } from '@/utils/validation/user.validation';
+import { validateUserCreation } from '@/utils/validation/user.validation';
 
-import { UserFilters } from '@/types/filters.type';
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+import { PaginatedResponse, UserFilters } from '@/types/filters.type';
 import { UserType } from '@/types/user.type';
 
-import { CreateUserDTO, EnrichedUserResponseDTO, PaginatedUserResponseDTO } from '@/dto/user.dto';
+import { CreateUserDTO, EnrichedUserResponseDTO } from '@/dto/user.dto';
 import { FilterService } from '@/services/filter.service';
 
 const prisma = new PrismaClient();
@@ -69,6 +70,18 @@ const prisma = new PrismaClient();
  *           type: boolean
  *         description: Filtrer par email vérifié
  *       - in: query
+ *         name: createdAfter
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Filtrer par date de création (après)
+ *       - in: query
+ *         name: createdBefore
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Filtrer par date de création (avant)
+ *       - in: query
  *         name: orderBy
  *         schema:
  *           type: string
@@ -86,31 +99,34 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PaginatedUserResponseDTO'
+ *               $ref: '#/components/schemas/PaginatedResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: NextRequest,
-): Promise<NextResponse<PaginatedUserResponseDTO | { error: string }>> {
+  request: Request,
+): Promise<NextResponse<PaginatedResponse<EnrichedUserResponseDTO> | ApiError>> {
   try {
     const { searchParams } = new URL(request.url);
     const filters: UserFilters = {
       page: parseInt(searchParams.get('page') || '1'),
-      limit: parseInt(searchParams.get('limit') || '10'),
+      limit: Math.min(parseInt(searchParams.get('limit') || '10'), 100),
       type: searchParams.get('type') as UserType,
       schoolId: searchParams.get('schoolId') || undefined,
       companyId: searchParams.get('companyId') || undefined,
       search: searchParams.get('search') || undefined,
       isProfileCompleted: searchParams.get('isProfileCompleted') === 'true',
       isVerified: searchParams.get('isVerified') === 'true',
+      createdAfter: searchParams.get('createdAfter')
+        ? new Date(searchParams.get('createdAfter')!)
+        : undefined,
+      createdBefore: searchParams.get('createdBefore')
+        ? new Date(searchParams.get('createdBefore')!)
+        : undefined,
       orderBy: searchParams.get('orderBy') || undefined,
       order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
     };
@@ -129,13 +145,11 @@ export async function GET(
     ]);
 
     return NextResponse.json({
-      data: users as unknown as EnrichedUserResponseDTO[],
-      pagination: {
-        total,
-        page: filters.page || 1,
-        limit: filters.limit || 10,
-        totalPages: Math.ceil(total / (filters.limit || 10)),
-      },
+      items: users as unknown as EnrichedUserResponseDTO[],
+      total,
+      page: filters.page || 1,
+      limit: filters.limit || 10,
+      totalPages: Math.ceil(total / (filters.limit || 10)),
     });
   } catch (error) {
     console.error('Erreur lors de la récupération des utilisateurs:', error);
@@ -174,27 +188,17 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 details:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<EnrichedUserResponseDTO | { error: string; details?: ValidationError[] }>> {
+): Promise<NextResponse<EnrichedUserResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const body = (await request.json()) as CreateUserDTO;
 
@@ -202,7 +206,7 @@ export async function POST(
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
+          error: 'Validation failed',
           details: validationResult.errors,
         },
         { status: 400 },

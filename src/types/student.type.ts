@@ -14,3 +14,16 @@ interface IStudent extends IUser {
 }
 
 export type { IStudent };
+
+export enum StudentStatus {
+  ALTERNANT = 'Alternant',
+  STAGIAIRE = 'Stagiaire',
+}
+
+export enum ExperienceType {
+  STAGE = 'Stage',
+  ALTERNANCE = 'Alternance',
+  CDI = 'CDI',
+  CDD = 'CDD',
+  AUTRE = 'Autre',
+}

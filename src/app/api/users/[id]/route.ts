@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+
+import { validateUserUpdate } from '@/utils/validation/user.validation';
+
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
 
 import { EnrichedUserResponseDTO, UpdateUserDTO } from '@/dto/user.dto';
 import { FilterService } from '@/services/filter.service';
@@ -35,34 +39,26 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  *       404:
  *         description: Utilisateur non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: NextRequest,
-): Promise<NextResponse<EnrichedUserResponseDTO | { error: string }>> {
+  request: Request,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<EnrichedUserResponseDTO | ApiError>> {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
+    const { id } = params;
     if (!id) {
       return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
@@ -123,33 +119,24 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       404:
  *         description: Utilisateur non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } },
-): Promise<NextResponse<EnrichedUserResponseDTO | { error: string }>> {
+): Promise<NextResponse<EnrichedUserResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const { id } = params;
     if (!id) {
@@ -167,6 +154,17 @@ export async function PUT(
 
     if (!existingUser) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    }
+
+    const validationResult = await validateUserUpdate(data, params.id);
+    if (!validationResult.isValid) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validationResult.errors,
+        },
+        { status: 400 },
+      );
     }
 
     const updatedUser = await prisma.user.update({
@@ -223,42 +221,39 @@ export async function PUT(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  *       404:
  *         description: Utilisateur non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiError'
  */
-export async function DELETE(request: NextRequest): Promise<NextResponse> {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<{ message: string } | ApiError>> {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
+    const { id } = params;
     if (!id) {
       return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { id },
+      where: {
+        id: id,
+        deletedAt: null,
+      },
       include: {
         student: true,
-        schoolOwner: true,
         companyOwner: true,
+        schoolOwner: true,
         admin: true,
       },
     });
@@ -269,27 +264,21 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     await prisma.$transaction(async (tx) => {
       if (existingUser.student) {
-        await tx.recommendation.deleteMany({
-          where: {
-            OR: [
-              { studentId: existingUser.student.id },
-              { primaryForStudent: { id: existingUser.student.id } },
-            ],
-          },
+        await tx.jobRequest.updateMany({
+          where: { studentId: existingUser.student.id },
+          data: { deletedAt: new Date() },
         });
 
-        await tx.jobRequest.deleteMany({
+        await tx.recommendation.deleteMany({
+          where: { studentId: existingUser.student.id },
+        });
+
+        await tx.experience.deleteMany({
           where: { studentId: existingUser.student.id },
         });
 
         await tx.student.delete({
           where: { id: existingUser.student.id },
-        });
-      }
-
-      if (existingUser.schoolOwner) {
-        await tx.schoolOwner.delete({
-          where: { id: existingUser.schoolOwner.id },
         });
       }
 
@@ -299,33 +288,33 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         });
       }
 
+      if (existingUser.schoolOwner) {
+        await tx.schoolOwner.delete({
+          where: { id: existingUser.schoolOwner.id },
+        });
+      }
+
       if (existingUser.admin) {
         await tx.admin.delete({
           where: { id: existingUser.admin.id },
         });
       }
 
-      if (existingUser.email) {
-        await tx.verificationToken.deleteMany({
-          where: { identifier: existingUser.email },
-        });
-      }
+      await tx.verificationToken.deleteMany({
+        where: { identifier: existingUser.email },
+      });
 
       await tx.user.update({
         where: { id },
-        data: {
-          deletedAt: new Date(),
-        },
+        data: { deletedAt: new Date() },
       });
     });
 
-    return NextResponse.json({
-      message: 'Compte utilisateur et toutes les données associées supprimés avec succès',
-    });
+    return NextResponse.json({ message: 'Utilisateur et données associées supprimés avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la suppression du compte utilisateur:', error);
+    console.error("Erreur lors de la suppression de l'utilisateur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression du compte utilisateur' },
+      { error: "Erreur lors de la suppression de l'utilisateur" },
       { status: 500 },
     );
   }

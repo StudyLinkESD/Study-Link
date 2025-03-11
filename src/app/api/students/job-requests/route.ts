@@ -4,8 +4,13 @@ import { Resend } from 'resend';
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+import { PaginatedResponse } from '@/types/filters.type';
+
 import { auth } from '@/auth';
+import { CreateJobRequestDTO, JobRequestResponseDTO } from '@/dto/job-request.dto';
 import JobApplicationEmail from '@/emails/job-application';
+import { FilterService } from '@/services/filter.service';
 
 const prisma = new PrismaClient();
 const resend = new Resend(process.env.AUTH_RESEND_KEY);
@@ -48,53 +53,92 @@ const resend = new Resend(process.env.AUTH_RESEND_KEY);
  *       500:
  *         description: Erreur serveur
  */
-export async function GET() {
+export async function GET(
+  request: NextRequest,
+): Promise<NextResponse<PaginatedResponse<JobRequestResponseDTO> | ApiError>> {
   try {
     const session = await auth();
 
     if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
 
     const student = await prisma.student.findFirst({
       where: {
         userId: session.user.id,
       },
-      include: {
-        user: true,
-      },
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Only students can view job requests' }, { status: 403 });
+      return NextResponse.json(
+        { error: "Seuls les étudiants peuvent voir les demandes d'emploi" },
+        { status: 403 },
+      );
     }
 
-    const jobRequests = await prisma.jobRequest.findMany({
-      where: {
-        studentId: student.id,
-      },
-      include: {
-        job: {
-          include: {
-            company: true,
-          },
-        },
-        student: {
-          include: {
-            user: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100);
+    const orderBy = searchParams.get('orderBy') || 'createdAt';
+    const order = (searchParams.get('order') as 'asc' | 'desc') || 'desc';
+
+    const pagination = FilterService.buildPaginationOptions({
+      page,
+      limit,
+      orderBy,
+      order,
     });
 
-    return NextResponse.json(jobRequests);
+    const where = {
+      studentId: student.id,
+      deletedAt: null,
+    };
+
+    const [jobRequests, total] = await prisma.$transaction([
+      prisma.jobRequest.findMany({
+        where,
+        ...pagination,
+        include: {
+          job: {
+            include: {
+              company: {
+                select: {
+                  id: true,
+                  name: true,
+                  logo: true,
+                },
+              },
+            },
+          },
+          student: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  profilePicture: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.jobRequest.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      items: jobRequests as unknown as JobRequestResponseDTO[],
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
-    console.error('Error fetching job requests:', error);
+    console.error("Erreur lors de la récupération des demandes d'emploi:", error);
     return NextResponse.json(
-      { error: 'An error occurred while processing your request' },
+      { error: 'Une erreur est survenue lors du traitement de votre demande' },
       { status: 500 },
     );
   }
@@ -138,19 +182,26 @@ export async function GET() {
  *       500:
  *         description: Erreur serveur
  */
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+): Promise<NextResponse<JobRequestResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const session = await auth();
 
     if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { jobId, subject, message } = body;
+    const data = (await request.json()) as CreateJobRequestDTO;
 
-    if (!jobId) {
-      return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
+    if (!data.jobId) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: [{ field: 'jobId', message: "L'ID de l'offre est requis" }],
+        },
+        { status: 400 },
+      );
     }
 
     const student = await prisma.student.findFirst({
@@ -163,12 +214,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Only students can apply for jobs' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Seuls les étudiants peuvent postuler aux offres' },
+        { status: 403 },
+      );
     }
 
     const job = await prisma.job.findUnique({
       where: {
-        id: jobId,
+        id: data.jobId,
+        deletedAt: null,
       },
       include: {
         company: {
@@ -184,27 +239,40 @@ export async function POST(request: NextRequest) {
     });
 
     if (!job) {
-      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Offre non trouvée' }, { status: 404 });
     }
 
     const existingRequest = await prisma.jobRequest.findFirst({
       where: {
         studentId: student.id,
-        jobId,
+        jobId: data.jobId,
+        deletedAt: null,
       },
     });
 
     if (existingRequest) {
-      return NextResponse.json({ error: 'You have already applied for this job' }, { status: 409 });
+      return NextResponse.json({ error: 'Vous avez déjà postulé à cette offre' }, { status: 409 });
     }
 
     const jobRequest = await prisma.jobRequest.create({
       data: {
         studentId: student.id,
-        jobId,
+        jobId: data.jobId,
         status: 'PENDING',
-        subject,
-        message,
+        subject: data.subject || null,
+        message: data.message || null,
+      },
+      include: {
+        job: {
+          include: {
+            company: true,
+          },
+        },
+        student: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -220,8 +288,8 @@ export async function POST(request: NextRequest) {
           jobTitle: job.name,
           studentName: `${student.user.firstName} ${student.user.lastName}`,
           studentEmail: student.user.email,
-          subject,
-          message,
+          subject: data.subject || '',
+          message: data.message || '',
           applicationUrl,
         }),
       );
@@ -234,11 +302,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(jobRequest, { status: 201 });
+    return NextResponse.json(jobRequest as unknown as JobRequestResponseDTO, { status: 201 });
   } catch (error) {
-    console.error('Error creating job request:', error);
+    console.error("Erreur lors de la création de la demande d'emploi:", error);
     return NextResponse.json(
-      { error: 'An error occurred while processing your request' },
+      { error: 'Une erreur est survenue lors du traitement de votre demande' },
       { status: 500 },
     );
   }

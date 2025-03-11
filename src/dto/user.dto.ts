@@ -133,11 +133,9 @@ export interface EnrichedUserResponseDTO extends BaseUserResponseDTO {
 }
 
 export interface PaginatedUserResponseDTO {
-  data: EnrichedUserResponseDTO[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  items: EnrichedUserResponseDTO[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

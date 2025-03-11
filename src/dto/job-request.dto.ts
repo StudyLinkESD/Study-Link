@@ -1,41 +1,43 @@
-export interface CreateJobRequestDTO {
-  studentId: string;
-  jobId: string;
-  status: string;
-}
+import { JobRequestStatus } from '@/types/job-request.type';
 
-export interface UpdateJobRequestDTO {
-  status?: string;
+export interface CreateJobRequestDTO {
+  jobId: string;
+  subject?: string;
+  message?: string;
 }
 
 export interface JobRequestResponseDTO {
   id: string;
-  studentId: string;
-  jobId: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface EnrichedJobRequestResponseDTO {
-  id: string;
-  studentId: string;
-  jobId: string;
-  status: string;
+  status: JobRequestStatus;
+  subject: string | null;
+  message: string | null;
   createdAt: Date;
   updatedAt: Date;
   job: {
+    id: string;
     name: string;
-    description: string;
-    skills: string | null;
-    createdAt: Date;
-    updatedAt: Date;
     company: {
+      id: string;
       name: string;
-      createdAt: Date;
-      updatedAt: Date;
       logo: string | null;
     };
-    featuredImage: string | null;
   };
+  student: {
+    id: string;
+    user: {
+      id: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+      profilePicture: string | null;
+    };
+  };
+}
+
+export interface PaginatedJobRequestResponseDTO {
+  items: JobRequestResponseDTO[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
