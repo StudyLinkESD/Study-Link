@@ -1,28 +1,38 @@
+import { School } from '@prisma/client';
+
+export interface SchoolResponseDTO extends School {
+  domain: {
+    id: string;
+    domain: string;
+  };
+}
+
 export interface CreateSchoolDTO {
   name: string;
-  domainId: string;
   logo?: string | null;
+  domainId: string;
   owner: {
-    firstName: string | null;
-    lastName: string | null;
+    firstName: string;
+    lastName: string;
     email: string;
   };
 }
 
 export interface UpdateSchoolDTO {
   name?: string;
-  domainId?: string;
   logo?: string | null;
+  domainId?: string;
+  isActive?: boolean;
 }
 
-export interface SchoolResponseDTO {
-  id: string;
-  name: string;
-  domainId: string;
-  logo?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date | null;
+export interface SchoolFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+  domainId?: string;
+  orderBy?: string;
+  order?: 'asc' | 'desc';
 }
 
 export interface CreateSchoolWithDomainDTO {

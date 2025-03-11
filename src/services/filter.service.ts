@@ -261,6 +261,12 @@ export class FilterService {
     };
   }
 
+  static getDefaultSchoolInclude() {
+    return {
+      domain: true,
+    };
+  }
+
   static buildSchoolWhereClause(filters: SchoolFilters): Prisma.SchoolWhereInput {
     const where: Prisma.SchoolWhereInput = {
       deletedAt: null,

@@ -5,7 +5,8 @@ export type ValidationError = {
 
 export type ValidationErrorResponse = {
   error: string;
-  details?: ValidationError[];
+  details: ValidationError[];
+  isValid: boolean;
 };
 
 export type ApiError = {

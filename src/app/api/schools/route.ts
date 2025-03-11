@@ -17,7 +17,7 @@ import { FilterService } from '@/services/filter.service';
  *     tags:
  *       - Schools
  *     summary: Récupère la liste des écoles
- *     description: Retourne toutes les écoles actives avec leurs informations de domaine
+ *     description: Retourne la liste paginée des écoles avec possibilité de filtrage
  *     parameters:
  *       - in: query
  *         name: page
@@ -38,7 +38,7 @@ import { FilterService } from '@/services/filter.service';
  *         name: search
  *         schema:
  *           type: string
- *         description: Recherche sur le nom de l'école ou le domaine
+ *         description: Recherche sur le nom de l'école
  *       - in: query
  *         name: isActive
  *         schema:
@@ -70,7 +70,7 @@ import { FilterService } from '@/services/filter.service';
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/PaginatedSchoolResponse'
+ *               $ref: '#/components/schemas/PaginatedResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
@@ -95,20 +95,19 @@ export async function GET(
 
     const where = FilterService.buildSchoolWhereClause(filters);
     const pagination = FilterService.buildPaginationOptions(filters);
+    const include = FilterService.getDefaultSchoolInclude();
 
     const [schools, total] = await prisma.$transaction([
       prisma.school.findMany({
         where,
-        include: {
-          domain: true,
-        },
+        include,
         ...pagination,
       }),
       prisma.school.count({ where }),
     ]);
 
     return NextResponse.json({
-      items: schools,
+      items: schools as unknown as SchoolResponseDTO[],
       total,
       page: filters.page,
       limit: filters.limit,
@@ -131,28 +130,21 @@ export async function GET(
  *       - Schools
  *     summary: Crée une nouvelle école
  *     description: Crée une nouvelle école avec son propriétaire
- *     security:
- *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateSchoolRequest'
+ *             $ref: '#/components/schemas/CreateSchoolDTO'
  *     responses:
- *       200:
+ *       201:
  *         description: École créée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                   format: uuid
- *                   description: "ID de l'école créée"
+ *               $ref: '#/components/schemas/SchoolResponseDTO'
  *       400:
- *         description: Données invalides ou domaine non trouvé
+ *         description: Données invalides
  *         content:
  *           application/json:
  *             schema:
@@ -166,47 +158,19 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-): Promise<NextResponse<{ id: string } | ValidationErrorResponse | ApiError>> {
+): Promise<NextResponse<SchoolResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const body = (await request.json()) as CreateSchoolDTO;
 
     const validationResult = await validateSchoolData(body);
     if (!validationResult.isValid) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validationResult.errors.map((error) => ({
-            field: error.field,
-            message: error.message,
-          })),
-        },
-        { status: 400 },
-      );
-    }
-
-    const existingDomain = await prisma.authorizedSchoolDomain.findUnique({
-      where: { id: body.domainId },
-    });
-
-    if (!existingDomain) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: [
-            {
-              field: 'domainId',
-              message: "Le domaine spécifié n'existe pas",
-            },
-          ],
-        },
-        { status: 400 },
-      );
+      return NextResponse.json(validationResult, { status: 400 });
     }
 
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
-          email: body.owner.email,
+          email: body.owner.email.toLowerCase(),
           firstName: body.owner.firstName,
           lastName: body.owner.lastName,
           type: 'school_owner',
@@ -218,6 +182,10 @@ export async function POST(
           name: body.name,
           logo: body.logo,
           domainId: body.domainId,
+          isActive: true,
+        },
+        include: {
+          domain: true,
         },
       });
 
@@ -231,7 +199,7 @@ export async function POST(
       return school;
     });
 
-    return NextResponse.json({ id: result.id });
+    return NextResponse.json(result as SchoolResponseDTO, { status: 201 });
   } catch (error) {
     console.error("Erreur lors de la création de l'école:", error);
     return NextResponse.json({ error: "Erreur lors de la création de l'école" }, { status: 500 });
