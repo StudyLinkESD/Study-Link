@@ -224,7 +224,7 @@ export default function StudentsJobsRequestsList() {
 
     setIsLoading(true);
     try {
-      const response = await axios.get('/api/job-requests');
+      const response = await axios.get('/api/students/job-requests');
 
       const jobsResponse = await axios.get('/api/jobs');
       const companyJobs = jobsResponse.data.filter((job: Job) => job.companyId === companyId);
@@ -250,7 +250,7 @@ export default function StudentsJobsRequestsList() {
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
     try {
-      await axios.put(`/api/job-requests/${requestId}`, { status: newStatus });
+      await axios.put(`/api/students/job-requests/${requestId}`, { status: newStatus });
 
       setRequests(
         requests.map((req) => (req.id === requestId ? { ...req, status: newStatus } : req)),
