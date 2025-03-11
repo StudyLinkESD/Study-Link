@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useCompanyId } from '@/hooks/useCompanyId';
 
-// Type pour les demandes d'emploi avec relations
 export type JobRequestWithRelations = {
   id: string;
   jobId: string;
@@ -34,7 +33,6 @@ export type JobRequestWithRelations = {
   };
 };
 
-// Type pour les offres d'emploi
 export type Job = {
   id: string;
   companyId: string;
@@ -56,7 +54,6 @@ export function useCompanyJobRequests(session: Session | null) {
 
     setIsLoading(true);
     try {
-      // Utiliser l'API spécifique pour les entreprises
       const response = await axios.get(`/api/companies/${companyId}/job-requests`);
       setRequests(response.data);
     } catch (err) {
@@ -78,7 +75,6 @@ export function useCompanyJobRequests(session: Session | null) {
     try {
       await axios.put(`/api/students/job-requests/${requestId}`, { status: newStatus });
 
-      // Mettre à jour l'état local
       setRequests((prev) =>
         prev.map((req) => (req.id === requestId ? { ...req, status: newStatus } : req)),
       );

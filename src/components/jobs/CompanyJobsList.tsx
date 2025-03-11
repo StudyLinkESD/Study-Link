@@ -72,7 +72,6 @@ export default function CompanyJobsList() {
     }
   }, [companyId, fetchCompanyJobs]);
 
-  // Écouter l'événement pour réinitialiser l'offre sélectionnée
   useEffect(() => {
     const handleResetSelectedJob = () => {
       setSelectedJobId(null);
@@ -180,10 +179,8 @@ export default function CompanyJobsList() {
   };
 
   const handleJobClick = (job: FormattedJob) => {
-    // Mettre à jour l'état local pour suivre l'offre sélectionnée
     setSelectedJobId(job.id);
 
-    // Émettre un événement personnalisé pour informer StudentsJobsRequestsList de l'offre sélectionnée
     const jobSelectedEvent = new CustomEvent('job-selected', {
       detail: {
         jobId: job.id,
@@ -192,7 +189,6 @@ export default function CompanyJobsList() {
     });
     window.dispatchEvent(jobSelectedEvent);
 
-    // Faire défiler jusqu'à la section des candidatures si nécessaire
     const requestsSection = document.getElementById('students-jobs-requests');
     if (requestsSection) {
       requestsSection.scrollIntoView({ behavior: 'smooth' });

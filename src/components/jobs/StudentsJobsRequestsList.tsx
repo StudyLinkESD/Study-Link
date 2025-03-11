@@ -198,13 +198,11 @@ export default function StudentsJobsRequestsList() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedJobTitle, setSelectedJobTitle] = useState<string | null>(null);
 
-  // Écouter l'événement job-selected
   useEffect(() => {
     const handleJobSelected = (event: CustomEvent<{ jobId: string; jobTitle: string }>) => {
       setSelectedJobId(event.detail.jobId);
       setSelectedJobTitle(event.detail.jobTitle);
 
-      // Réinitialiser les filtres mais conserver le filtre de statut actuel
       const currentStatus = state.statusFilter;
       dispatch({ type: 'RESET_FILTERS' });
       dispatch({ type: 'SET_STATUS_FILTER', payload: currentStatus });
@@ -226,7 +224,6 @@ export default function StudentsJobsRequestsList() {
   };
 
   const filteredRequests = requests.filter((request) => {
-    // Filtrer par offre d'emploi sélectionnée si une offre est sélectionnée
     if (selectedJobId && request.jobId !== selectedJobId) {
       return false;
     }
@@ -292,7 +289,6 @@ export default function StudentsJobsRequestsList() {
             onClick={() => {
               setSelectedJobId(null);
               setSelectedJobTitle(null);
-              // Émettre un événement pour informer CompanyJobsList de réinitialiser l'offre sélectionnée
               window.dispatchEvent(new CustomEvent('reset-selected-job'));
             }}
           >
