@@ -1,9 +1,13 @@
+import { render } from '@react-email/render';
 import { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
 import { Resend as ResendClient } from 'resend';
 
 import { prisma } from '@/lib/prisma';
+
+import AuthenticateEmail from '@/emails/authenticate';
+import SchoolOwnerAuthenticateEmail from '@/emails/school-owner-authenticate';
 
 const RESEND_API_KEY = process.env.AUTH_RESEND_KEY || '';
 const DEFAULT_FROM = 'StudyLink <noreply@studylink.space>';
@@ -83,18 +87,20 @@ export default {
             }
           }
 
-          const emailHtml = `
-            <div>
-              <h1>Connexion à Study Link</h1>
-              <p>Bonjour ${user.firstName || ''},</p>
-              <p>Cliquez sur le lien ci-dessous pour vous connecter :</p>
-              <a href="${finalUrl}">Se connecter</a>
-              <p>Si vous n'avez pas demandé cette connexion, ignorez cet email.</p>
-            </div>
-          `;
+          const emailHtml = await render(
+            isSchoolOwner
+              ? SchoolOwnerAuthenticateEmail({
+                  url: finalUrl,
+                  firstName: user.firstName || undefined,
+                })
+              : AuthenticateEmail({
+                  url: finalUrl,
+                  firstName: user.firstName || undefined,
+                }),
+          );
 
           const { error } = await resend.emails.send({
-            from: 'Study Link <no-reply@studylink.fr>',
+            from: DEFAULT_FROM,
             to: identifier,
             subject: isSchoolOwner
               ? 'Connexion à votre espace école Study Link'

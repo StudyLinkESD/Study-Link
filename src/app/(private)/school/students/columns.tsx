@@ -2,11 +2,15 @@
 
 import { Student, User } from '@prisma/client';
 import { ColumnDef } from '@tanstack/react-table';
+import { Eye } from 'lucide-react';
+
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
-type StudentWithUser = Student & {
+export type StudentWithUser = Student & {
   user: User;
 };
 
@@ -76,6 +80,22 @@ export const columns: ColumnDef<StudentWithUser>[] = [
         <Badge variant={availability ? 'success' : 'destructive'}>
           {availability ? 'Disponible' : 'Non disponible'}
         </Badge>
+      );
+    },
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => {
+      const student = row.original;
+      return (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/school/students/${student.id}`} className="flex items-center">
+              <Eye className="mr-2 h-4 w-4" />
+              Voir détails
+            </Link>
+          </Button>
+        </div>
       );
     },
   },

@@ -94,8 +94,6 @@ export async function POST(request: Request) {
       process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
     const callbackUrl = `${baseUrl}/school/students`;
 
-    console.log('Sending magic link with callbackUrl:', callbackUrl);
-
     const signInResult = await signIn('email', {
       email: user.email,
       callbackUrl,

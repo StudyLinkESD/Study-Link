@@ -558,7 +558,6 @@ function StudentProfileContent() {
         throw new Error('Session ou ID étudiant manquant');
       }
 
-      // Mise à jour du profil utilisateur
       const userResponse = await fetch(`/api/users/${session.user.id}`, {
         method: 'PUT',
         headers: {
@@ -575,7 +574,6 @@ function StudentProfileContent() {
         throw new Error('Erreur lors de la mise à jour du profil utilisateur');
       }
 
-      // Mise à jour du profil étudiant
       const studentResponse = await updateStudent(studentId, {
         userId: session.user.id,
         schoolId: formValues.school,

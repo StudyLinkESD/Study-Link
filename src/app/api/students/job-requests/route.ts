@@ -66,7 +66,7 @@ export async function GET() {
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Only students can view job requests' }, { status: 403 });
+      return NextResponse.json({ error: 'Seul les étudients peuvent postuler' }, { status: 403 });
     }
 
     const jobRequests = await prisma.jobRequest.findMany({
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Only students can apply for jobs' }, { status: 403 });
+      return NextResponse.json({ error: 'Seul les étudients peuvent postuler' }, { status: 403 });
     }
 
     const job = await prisma.job.findUnique({
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
     const applicationUrl = `${baseUrl}/company/applications/${jobRequest.id}`;
 
-    for (const owner of companyOwners) {
+    for (const companyOwner of companyOwners) {
       const emailHtml = await render(
         JobApplicationEmail({
           companyName: job.company.name,
@@ -226,12 +226,16 @@ export async function POST(request: NextRequest) {
         }),
       );
 
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: 'StudyLink <noreply@studylink.space>',
-        to: owner.user.email,
-        subject: `Nouvelle candidature pour: ${job.name}`,
+        to: [companyOwner.user.email],
+        subject: `Nouvelle candidature pour : ${job.name}`,
         html: emailHtml,
       });
+
+      if (error) {
+        console.error('Error sending email:', error);
+      }
     }
 
     return NextResponse.json(jobRequest, { status: 201 });
