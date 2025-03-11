@@ -45,7 +45,7 @@ const JobView = () => {
 
   if (!selectedJob) {
     return (
-      <div className="sticky top-4 w-3/6">
+      <div className="sticky top-4 mt-20 w-3/6">
         <Card className="p-6">
           <h1 className="text-center text-xl font-semibold text-gray-500">
             Sélectionnez une offre pour voir les détails
@@ -56,7 +56,7 @@ const JobView = () => {
   }
 
   return (
-    <div className="sticky top-4 w-3/6">
+    <div className="sticky top-4 mt-20 w-3/6">
       <Card>
         <CardContent className="p-6">
           <div className="mb-6 flex items-center gap-4">

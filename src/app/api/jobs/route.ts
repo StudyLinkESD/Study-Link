@@ -61,6 +61,7 @@ export async function GET(): Promise<
   NextResponse<
     | {
         id: string;
+        companyId: string;
         offerTitle: string;
         companyName: string;
         description: string;
@@ -92,6 +93,7 @@ export async function GET(): Promise<
 
     const formattedJobs = jobs.map((job) => ({
       id: job.id,
+      companyId: job.companyId,
       offerTitle: job.name,
       companyName: job.company.name,
       description: job.description,
@@ -107,8 +109,7 @@ export async function GET(): Promise<
     }));
 
     return NextResponse.json(formattedJobs);
-  } catch (error) {
-    console.error('Error fetching jobs:', error);
+  } catch {
     return NextResponse.json({ error: 'An error occurred while fetching jobs' }, { status: 500 });
   }
 }
@@ -211,8 +212,7 @@ export async function POST(
     };
 
     return NextResponse.json(formattedJob, { status: 201 });
-  } catch (error) {
-    console.error('Erreur lors de la création du job:', error);
+  } catch {
     return NextResponse.json({ error: 'Erreur lors de la création du job' }, { status: 500 });
   }
 }
