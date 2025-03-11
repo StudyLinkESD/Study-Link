@@ -210,7 +210,7 @@ export default function JobsList({
   }
 
   return (
-    <div className="max-w-3/6 container mx-auto space-y-6 px-4 py-4">
+    <div className="w-full space-y-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground" aria-live="polite">
@@ -220,7 +220,7 @@ export default function JobsList({
         </p>
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardContent>
           <Tabs
             ref={tabsRef}
