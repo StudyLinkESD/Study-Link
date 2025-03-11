@@ -1,8 +1,12 @@
 import { Prisma } from '@prisma/client';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
+
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+
+import { CreateSchoolWithDomainDTO, SchoolWithDomainResponseDTO } from '@/dto/school.dto';
 
 /**
  * @swagger
@@ -23,42 +27,32 @@ import { prisma } from '@/lib/prisma';
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateSchoolWithDomainRequest'
+ *             $ref: '#/components/schemas/CreateSchoolWithDomainDTO'
  *     responses:
  *       200:
  *         description: École créée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/CreateSchoolWithDomainResponse'
+ *               $ref: '#/components/schemas/SchoolWithDomainResponseDTO'
  *       400:
  *         description: Erreur de validation ou conflit
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/CreateSchoolWithDomainError'
- *             examples:
- *               userExists:
- *                 value:
- *                   error: 'USER_EXISTS'
- *                   message: 'Un utilisateur avec cet email existe déjà'
- *               domainExists:
- *                 value:
- *                   error: 'DOMAIN_EXISTS'
- *                   message: 'Ce domaine est déjà utilisé'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/CreateSchoolWithDomainError'
- *             example:
- *               error: 'CREATION_FAILED'
- *               message: "Une erreur est survenue lors de la création de l'école"
+ *               $ref: '#/components/schemas/ApiError'
  */
-export async function POST(request: Request) {
+export async function POST(
+  request: NextRequest,
+): Promise<NextResponse<SchoolWithDomainResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as CreateSchoolWithDomainDTO;
 
     const existingUser = await prisma.user.findUnique({
       where: { email: body.owner.email.toLowerCase() },
@@ -66,7 +60,15 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'USER_EXISTS', message: 'Un utilisateur avec cet email existe déjà' },
+        {
+          error: 'Validation failed',
+          details: [
+            {
+              field: 'owner.email',
+              message: 'Un utilisateur avec cet email existe déjà',
+            },
+          ],
+        },
         { status: 400 },
       );
     }
@@ -92,6 +94,9 @@ export async function POST(request: Request) {
           logo: body.school.logo || null,
           domainId: domain.id,
         },
+        include: {
+          domain: true,
+        },
       });
 
       const user = await tx.user.create({
@@ -116,7 +121,16 @@ export async function POST(request: Request) {
         },
       });
 
-      return { school, domain };
+      return {
+        school,
+        domain,
+        owner: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+        },
+      };
     });
 
     return NextResponse.json(result);
@@ -125,7 +139,15 @@ export async function POST(request: Request) {
 
     if (error instanceof Error && error.message === 'DOMAIN_EXISTS') {
       return NextResponse.json(
-        { error: 'DOMAIN_EXISTS', message: 'Ce domaine est déjà utilisé' },
+        {
+          error: 'Validation failed',
+          details: [
+            {
+              field: 'domain',
+              message: 'Ce domaine est déjà utilisé',
+            },
+          ],
+        },
         { status: 400 },
       );
     }
@@ -134,9 +156,13 @@ export async function POST(request: Request) {
       if (error.code === 'P2002') {
         return NextResponse.json(
           {
-            error: 'UNIQUE_CONSTRAINT_FAILED',
-            message: 'Une contrainte unique a été violée',
-            details: error.meta,
+            error: 'Validation failed',
+            details: [
+              {
+                field: (error.meta?.target as string) || 'unknown',
+                message: 'Une contrainte unique a été violée',
+              },
+            ],
           },
           { status: 400 },
         );
@@ -144,11 +170,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      {
-        error: 'CREATION_FAILED',
-        message: "Une erreur est survenue lors de la création de l'école",
-        details: error instanceof Error ? error.message : 'Erreur inconnue',
-      },
+      { error: "Une erreur est survenue lors de la création de l'école" },
       { status: 500 },
     );
   }

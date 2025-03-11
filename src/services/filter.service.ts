@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import {
   ExperienceFilters,
   PaginationParams,
+  SchoolFilters,
   StudentFilters,
   UserFilters,
 } from '@/types/filters.type';
@@ -254,5 +255,28 @@ export class FilterService {
         },
       },
     };
+  }
+
+  static buildSchoolWhereClause(filters: SchoolFilters): Prisma.SchoolWhereInput {
+    const where: Prisma.SchoolWhereInput = {
+      deletedAt: null,
+    };
+
+    if (filters.isActive !== undefined) {
+      where.isActive = filters.isActive;
+    }
+
+    if (filters.domainId) {
+      where.domainId = filters.domainId;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { domain: { domain: { contains: filters.search, mode: 'insensitive' } } },
+      ];
+    }
+
+    return where;
   }
 }

@@ -38,6 +38,11 @@ export interface ExperienceFilters extends BaseFilters {
   startDateBefore?: Date;
 }
 
+export interface SchoolFilters extends BaseFilters {
+  isActive?: boolean;
+  domainId?: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;

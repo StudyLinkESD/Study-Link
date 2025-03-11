@@ -1,12 +1,14 @@
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 import { validateSchoolData } from '@/utils/validation/school.validation';
 
-import { SchoolResponseDTO } from '@/dto/school.dto';
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+import { PaginatedResponse } from '@/types/filters.type';
 
-const prisma = new PrismaClient();
+import { CreateSchoolDTO, SchoolResponseDTO } from '@/dto/school.dto';
+import { FilterService } from '@/services/filter.service';
 
 /**
  * @swagger
@@ -18,46 +20,100 @@ const prisma = new PrismaClient();
  *     description: Retourne toutes les écoles actives avec leurs informations de domaine
  *     parameters:
  *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Numéro de la page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Recherche sur le nom de l'école ou le domaine
+ *       - in: query
  *         name: isActive
  *         schema:
  *           type: boolean
  *         description: Filtre les écoles par leur état d'activation
+ *       - in: query
+ *         name: domainId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filtre les écoles par domaine
+ *       - in: query
+ *         name: orderBy
+ *         schema:
+ *           type: string
+ *           enum: [name, createdAt]
+ *           default: name
+ *         description: Champ de tri
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
+ *         description: Ordre de tri
  *     responses:
  *       200:
  *         description: Liste des écoles récupérée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/SchoolResponseDTO'
+ *               $ref: '#/components/schemas/PaginatedSchoolResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: Request,
-): Promise<NextResponse<SchoolResponseDTO[] | { error: string }>> {
+  request: NextRequest,
+): Promise<NextResponse<PaginatedResponse<SchoolResponseDTO> | ApiError>> {
   try {
     const { searchParams } = new URL(request.url);
-    const isActive = searchParams.get('isActive');
-
-    const where = {
-      deletedAt: null,
-      ...(isActive !== null ? { isActive: isActive === 'true' } : {}),
+    const filters = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: Math.min(parseInt(searchParams.get('limit') || '10'), 100),
+      orderBy: searchParams.get('orderBy') || 'name',
+      order: (searchParams.get('order') as 'asc' | 'desc') || 'asc',
+      search: searchParams.get('search') || undefined,
+      isActive: searchParams.get('isActive') ? searchParams.get('isActive') === 'true' : undefined,
+      domainId: searchParams.get('domainId') || undefined,
     };
 
-    const schools = await prisma.school.findMany({
-      where,
-      include: {
-        domain: true,
-      },
-    });
+    const where = FilterService.buildSchoolWhereClause(filters);
+    const pagination = FilterService.buildPaginationOptions(filters);
 
-    return NextResponse.json(schools);
+    const [schools, total] = await prisma.$transaction([
+      prisma.school.findMany({
+        where,
+        include: {
+          domain: true,
+        },
+        ...pagination,
+      }),
+      prisma.school.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      items: schools,
+      total,
+      page: filters.page,
+      limit: filters.limit,
+      totalPages: Math.ceil(total / filters.limit),
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des écoles:', error);
     return NextResponse.json(
@@ -65,17 +121,6 @@ export async function GET(
       { status: 500 },
     );
   }
-}
-
-interface CreateSchoolDTO {
-  name: string;
-  domainId: string;
-  logo?: string | null;
-  owner: {
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-  };
 }
 
 /**
@@ -111,29 +156,17 @@ interface CreateSchoolDTO {
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function POST(
-  request: Request,
-): Promise<NextResponse<{ id: string } | { error: string; details?: Record<string, string> }>> {
+  request: NextRequest,
+): Promise<NextResponse<{ id: string } | ValidationErrorResponse | ApiError>> {
   try {
     const body = (await request.json()) as CreateSchoolDTO;
 
@@ -141,8 +174,11 @@ export async function POST(
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation failed',
+          details: validationResult.errors.map((error) => ({
+            field: error.field,
+            message: error.message,
+          })),
         },
         { status: 400 },
       );
@@ -153,7 +189,18 @@ export async function POST(
     });
 
     if (!existingDomain) {
-      return NextResponse.json({ error: "Le domaine spécifié n'existe pas" }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: [
+            {
+              field: 'domainId',
+              message: "Le domaine spécifié n'existe pas",
+            },
+          ],
+        },
+        { status: 400 },
+      );
     }
 
     const result = await prisma.$transaction(async (tx) => {

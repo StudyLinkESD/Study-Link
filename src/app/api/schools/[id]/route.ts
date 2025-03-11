@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-import { validateSchoolData } from '@/utils/validation/school.validation';
+import { validateSchoolUpdateData } from '@/utils/validation/school.validation';
+
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
 
 import { SchoolResponseDTO, UpdateSchoolDTO } from '@/dto/school.dto';
-
-const prisma = new PrismaClient();
 
 /**
  * @swagger
@@ -36,18 +36,18 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<SchoolResponseDTO | { error: string }>> {
+): Promise<NextResponse<SchoolResponseDTO | ApiError>> {
   try {
     const id = (await params).id;
     const school = await prisma.school.findUnique({
@@ -110,46 +110,45 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       404:
  *         description: École non trouvée
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<SchoolResponseDTO | { error: string; details?: Record<string, string> }>> {
+): Promise<NextResponse<SchoolResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const id = (await params).id;
     const body = (await request.json()) as UpdateSchoolDTO;
 
-    const validationResult = await validateSchoolData(body);
+    const existingSchool = await prisma.school.findUnique({
+      where: { id, deletedAt: null },
+    });
+
+    if (!existingSchool) {
+      return NextResponse.json({ error: 'École non trouvée' }, { status: 404 });
+    }
+
+    const validationResult = await validateSchoolUpdateData(body);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation failed',
+          details: validationResult.errors?.map((error) => ({
+            field: error.field,
+            message: error.message,
+          })),
         },
         { status: 400 },
       );
@@ -206,43 +205,29 @@ export async function PUT(
  *             schema:
  *               type: object
  *               properties:
- *                 success:
- *                   type: boolean
- *               example:
- *                 success: true
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *                 message:
+ *                   type: string
  *       404:
  *         description: École non trouvée
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ success: boolean } | { error: string }>> {
+): Promise<NextResponse<{ message: string } | ApiError>> {
   try {
     const id = (await params).id;
     const existingSchool = await prisma.school.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
     });
 
     if (!existingSchool) {
@@ -251,12 +236,10 @@ export async function DELETE(
 
     await prisma.school.update({
       where: { id },
-      data: {
-        deletedAt: new Date(),
-      },
+      data: { deletedAt: new Date() },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ message: 'École supprimée avec succès' });
   } catch (error) {
     console.error("Erreur lors de la suppression de l'école:", error);
     return NextResponse.json(
