@@ -92,6 +92,20 @@ interface ErrorDetail {
   message: string;
 }
 
+interface StudentProfileData {
+  firstName: string;
+  lastName: string;
+  studentEmail: string;
+  school: string;
+  status: string;
+  skills: string;
+  description: string;
+  previousCompanies?: string;
+  availability: boolean;
+  apprenticeshipRhythm?: string | null;
+  curriculumVitae?: string | null;
+}
+
 export const dynamic = 'force-dynamic';
 
 export default function StudentProfileForm() {
@@ -191,9 +205,9 @@ function StudentProfileContent() {
     }
   };
 
-  const getStudentByUserId = async (userId: string) => {
+  const getStudentByUserId = async () => {
     try {
-      const response = await fetch(`/api/students/user/${userId}`);
+      const response = await fetch(`/api/students/profile`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -203,21 +217,49 @@ function StudentProfileContent() {
       }
 
       const data = await response.json();
-      return data;
+      return data.student;
     } catch (error) {
       console.error("Erreur lors de la récupération de l'étudiant:", error);
       return null;
     }
   };
 
-  const createStudent = async (data: CreateStudentData) => {
+  const updateStudent = async (id: string, data: CreateStudentData) => {
     try {
-      const response = await fetch(`/api/students`, {
-        method: 'POST',
+      console.log('Données reçues dans updateStudent:', JSON.stringify(data, null, 2));
+
+      // On s'assure que les noms et prénoms sont définis et de longueur suffisante
+      // firstName et lastName sont dans data.user dans le DTO
+      if (!data.user || !data.user.firstName || data.user.firstName.length < 2) {
+        console.error('Prénom manquant ou trop court:', data.user?.firstName);
+        throw new Error('Le prénom doit contenir au moins 2 caractères');
+      }
+
+      if (!data.user || !data.user.lastName || data.user.lastName.length < 2) {
+        console.error('Nom manquant ou trop court:', data.user?.lastName);
+        throw new Error('Le nom doit contenir au moins 2 caractères');
+      }
+
+      const updateData: StudentProfileData = {
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        studentEmail: data.studentEmail,
+        school: data.schoolId,
+        status: data.status,
+        skills: data.skills,
+        description: data.description,
+        previousCompanies: data.previousCompanies,
+        availability: data.availability,
+        apprenticeshipRhythm: data.apprenticeshipRhythm,
+        curriculumVitae: data.curriculumVitae,
+      };
+
+      const response = await fetch(`/api/students/profile`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(updateData),
       });
 
       const responseData = await response.json();
@@ -228,48 +270,15 @@ function StudentProfileContent() {
           console.error('Détails des erreurs:', responseData.details);
           throw new Error(responseData.details.map((d: ErrorDetail) => d.message).join(', '));
         }
-        throw new Error(responseData.error || 'Erreur lors de la création du profil étudiant');
+        throw new Error(responseData.message || 'Erreur lors de la mise à jour du profil étudiant');
       }
 
-      return responseData;
+      return responseData.student;
     } catch (error) {
-      console.error('Erreur détaillée dans createStudent:', error);
+      console.error('Erreur détaillée dans updateStudent:', error);
       if (error instanceof Error) {
-        throw new Error(`Erreur lors de la création de l'étudiant: ${error.message}`);
+        throw new Error(`Erreur lors de la mise à jour de l'étudiant: ${error.message}`);
       }
-      throw error;
-    }
-  };
-
-  const updateStudent = async (id: string, data: CreateStudentData) => {
-    try {
-      const updateData = {
-        status: data.status,
-        skills: data.skills,
-        apprenticeshipRhythm: data.apprenticeshipRhythm,
-        description: data.description,
-        curriculumVitae: data.curriculumVitae,
-        previousCompanies: data.previousCompanies,
-        availability: data.availability,
-      };
-
-      const response = await fetch(`/api/students/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Réponse d'erreur du serveur:", errorData);
-        throw new Error(errorData.error || 'Erreur lors de la mise à jour du profil étudiant');
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('Erreur dans updateStudent:', error);
       throw error;
     }
   };
@@ -288,8 +297,13 @@ function StudentProfileContent() {
 
   const loadStudentProfile = useCallback(async () => {
     const studentIdFromUrl = searchParams.get('studentId');
-
     const studentIdFromSession = session?.user?.studentId;
+
+    console.log('Loading student profile:', {
+      studentIdFromUrl,
+      studentIdFromSession,
+      sessionUserId: session?.user?.id,
+    });
 
     const id = studentIdFromUrl || studentIdFromSession;
 
@@ -299,6 +313,8 @@ function StudentProfileContent() {
         const studentData = await getStudentById(id);
 
         if (studentData) {
+          console.log('Student data loaded successfully:', studentData.id);
+          setStudentId(studentData.id);
           setPhotoUrl(studentData.user?.profilePicture || '');
           setCvUrl(studentData.curriculumVitae || '');
 
@@ -361,11 +377,11 @@ function StudentProfileContent() {
       }
     } else if (session?.user?.id) {
       try {
-        const studentData = await getStudentByUserId(session.user.id);
+        const studentData = await getStudentByUserId();
 
         if (studentData) {
+          console.log('Student data found by user ID:', studentData.id);
           setStudentId(studentData.id);
-
           setPhotoUrl(studentData.user?.profilePicture || '');
           setCvUrl(studentData.curriculumVitae || '');
 
@@ -437,9 +453,28 @@ function StudentProfileContent() {
       return;
     }
 
-    fetchSchools();
-    loadStudentProfile();
-  }, [status, router, fetchSchools, loadStudentProfile]);
+    // Vérifier d'abord si l'utilisateur a déjà un profil étudiant
+    const checkExistingStudent = async () => {
+      if (session?.user?.id) {
+        try {
+          const existingStudent = await getStudentByUserId();
+          if (existingStudent) {
+            console.log('Profil étudiant existant trouvé:', existingStudent.id);
+            setStudentId(existingStudent.id);
+          } else {
+            console.log('Aucun profil étudiant existant trouvé pour cet utilisateur');
+          }
+        } catch (error) {
+          console.error('Erreur lors de la vérification du profil étudiant existant:', error);
+        }
+      }
+      // Ensuite, charger le profil complet et les écoles
+      fetchSchools();
+      loadStudentProfile();
+    };
+
+    checkExistingStudent();
+  }, [status, router, fetchSchools, loadStudentProfile, session?.user?.id]);
 
   useEffect(() => {
     if (experiences.length > 0) {
@@ -554,136 +589,189 @@ function StudentProfileContent() {
     return null;
   };
 
-  const onSubmit = async (data: ProfileFormData) => {
-    if (isSubmitting) return;
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const isValidSchoolEmail = await validateSchoolEmail(data.schoolEmail);
-      if (!isValidSchoolEmail) {
-        toast.error("L'email scolaire n'est pas valide pour l'école sélectionnée");
-        setIsSubmitting(false);
-        return;
+      if (!session) {
+        toast.error('Vous devez être connecté pour enregistrer vos informations');
+        throw new Error('Session manquante - utilisateur non connecté');
       }
-      const studentData: CreateStudentData = {
-        userId: session?.user?.id || '',
-        schoolId: data.school,
-        studentEmail: data.schoolEmail,
-        status: data.status,
-        skills: data.skills.join(', '),
-        apprenticeshipRhythm: data.alternanceRhythm || null,
-        description: data.description || '',
-        previousCompanies: experiences.map((exp) => exp.company).join(', '),
-        availability: data.availability || true,
+
+      if (!session.user?.id) {
+        toast.error('Identifiant utilisateur manquant, veuillez vous reconnecter');
+        throw new Error('ID utilisateur manquant dans la session');
+      }
+
+      // Mettre à jour les informations de l'utilisateur
+      const userResponse = await fetch(`/api/users/${session.user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formValues.firstName,
+          lastName: formValues.lastName,
+          profilePicture: photoUrl || null,
+        }),
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Erreur lors de la mise à jour du profil utilisateur');
+      }
+
+      // Préparer les données de l'étudiant
+      const studentDataForUpdate: CreateStudentData = {
+        userId: session.user.id,
+        schoolId: formValues.school,
+        studentEmail: formValues.schoolEmail,
+        status: formValues.status as 'Alternant' | 'Stagiaire',
+        skills: formValues.skills.length > 0 ? formValues.skills.join(', ') : 'Aucune compétence',
+        description: formValues.description || 'Aucune description fournie',
+        previousCompanies: formValues.previousCompanies || '',
+        availability: formValues.availability,
+        apprenticeshipRhythm: formValues.alternanceRhythm || null,
+        curriculumVitae: cvUrl || null,
+        user: {
+          firstName: formValues.firstName,
+          lastName: formValues.lastName,
+        },
       };
 
-      if (
-        !studentData.userId ||
-        !studentData.schoolId ||
-        !studentData.status ||
-        !studentData.skills ||
-        studentData.availability === undefined
-      ) {
-        console.error('Données manquantes:', {
-          userId: !studentData.userId,
-          schoolId: !studentData.schoolId,
-          status: !studentData.status,
-          skills: !studentData.skills,
-          availability: studentData.availability === undefined,
-        });
-        throw new Error('Toutes les données requises ne sont pas présentes');
-      }
-
-      if (uploadedCv) {
-        try {
-          const cvUrl = await handleCvUpload(uploadedCv);
-          if (cvUrl) {
-            studentData.curriculumVitae = cvUrl;
-          }
-        } catch (error) {
-          console.error('Erreur lors du téléchargement du CV:', error);
-          toast.error('Erreur lors du téléchargement du CV');
-        }
-      }
-
-      let result;
-
-      try {
-        const userResponse = await fetch(`/api/users/${session?.user?.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            firstName: data.firstName,
-            lastName: data.lastName,
-            profilePicture: photoUrl || null,
-          }),
-        });
-
-        if (!userResponse.ok) {
-          throw new Error('Erreur lors de la mise à jour des informations utilisateur');
-        }
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
-        toast.error('Erreur lors de la mise à jour des informations utilisateur');
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (studentId) {
-        result = await updateStudent(studentId, studentData);
-        toast.success('Profil mis à jour avec succès');
+      console.log('Données pour mise à jour:', JSON.stringify(studentDataForUpdate, null, 2));
+      let studentResponse;
+      if (!studentId) {
+        console.log("Création d'un nouveau profil étudiant pour l'utilisateur:", session.user.id);
+        console.log('Données envoyées:', JSON.stringify(studentDataForUpdate, null, 2));
 
         try {
-          const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
-            id: exp.id,
-            company: exp.company,
-            position: exp.position,
-            type: exp.type,
-            startDate: exp.startDate ? exp.startDate.toISOString() : '',
-            endDate: exp.endDate ? exp.endDate.toISOString() : '',
-            description: '',
-          }));
+          // Appel API pour créer un nouvel étudiant
+          const createResponse = await fetch('/api/students/profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(studentDataForUpdate),
+          });
 
-          await updateStudentExperiences(studentId, experiencesDTO);
-        } catch (error) {
-          console.error('Erreur lors de la mise à jour des expériences:', error);
-          toast.error('Erreur lors de la mise à jour des expériences');
-        }
-      } else {
-        result = await createStudent(studentData);
-        if (result && result.id) {
-          setStudentId(result.id);
+          console.log('Statut de la réponse:', createResponse.status);
+          console.log(
+            'Headers de la réponse:',
+            Object.fromEntries(createResponse.headers.entries()),
+          );
+
+          let responseText;
+          let responseData;
 
           try {
-            const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
-              id: exp.id,
-              company: exp.company,
-              position: exp.position,
-              type: exp.type,
-              startDate: exp.startDate ? exp.startDate.toISOString() : '',
-              endDate: exp.endDate ? exp.endDate.toISOString() : '',
-              description: '',
-            }));
+            responseText = await createResponse.text();
+            console.log('Réponse brute:', responseText);
 
-            await updateStudentExperiences(result.id, experiencesDTO);
-          } catch (error) {
-            console.error('Erreur lors de la création des expériences:', error);
-            toast.error('Erreur lors de la création des expériences');
+            try {
+              responseData = JSON.parse(responseText);
+              console.log('Réponse parsée:', responseData);
+            } catch (parseError) {
+              console.error('Erreur de parsing JSON:', parseError);
+              responseData = { message: 'Impossible de parser la réponse du serveur' };
+            }
+          } catch (textError) {
+            console.error('Erreur lors de la lecture de la réponse:', textError);
+            responseData = { message: 'Impossible de lire la réponse du serveur' };
           }
+
+          if (!createResponse.ok) {
+            console.error('Erreur détaillée lors de la création du profil étudiant:', responseData);
+
+            if (responseData.message === 'Vous avez déjà un profil étudiant.') {
+              // Cas spécial: l'utilisateur a déjà un profil étudiant, essayons de le récupérer
+              console.log('Tentative de récupération du profil étudiant existant...');
+              const existingProfile = await getStudentByUserId();
+              if (existingProfile && existingProfile.id) {
+                setStudentId(existingProfile.id);
+                toast.info('Votre profil étudiant existant a été récupéré');
+                // Mise à jour du profil existant
+                studentResponse = await updateStudent(existingProfile.id, studentDataForUpdate);
+                return; // Sortir du bloc if pour continuer l'exécution
+              }
+            }
+
+            if (responseData.details && responseData.details.length > 0) {
+              // Afficher les erreurs spécifiques à l'utilisateur
+              const errorMessages = responseData.details
+                .map((detail: ErrorDetail) => detail.message)
+                .join('\n- ');
+              toast.error(`Erreurs de validation:\n- ${errorMessages}`);
+            } else {
+              toast.error(responseData.message || 'Erreur lors de la création du profil étudiant');
+            }
+
+            throw new Error(
+              responseData.message || 'Erreur lors de la création du profil étudiant',
+            );
+          }
+
+          // Si tout s'est bien passé, on utilise la réponse
+          studentResponse = responseData;
+          // Mettre à jour studentId avec le nouvel ID créé
+          if (studentResponse && studentResponse.student && studentResponse.student.id) {
+            setStudentId(studentResponse.student.id);
+          } else {
+            console.error('Réponse reçue mais ID étudiant manquant:', studentResponse);
+            throw new Error('ID étudiant non retourné après création');
+          }
+        } catch (error) {
+          console.error('Erreur complète lors de la création du profil:', error);
+          throw error;
         }
-        toast.success('Profil créé avec succès');
+      } else {
+        // Mise à jour d'un étudiant existant
+        studentResponse = await updateStudent(studentId, studentDataForUpdate);
       }
 
-      router.push(`/students/profile?studentId=${result.id}`);
+      if (!studentResponse) {
+        throw new Error('Erreur lors de la mise à jour du profil étudiant');
+      }
+
+      // Utiliser l'ID étudiant obtenu soit de la création, soit de la mise à jour
+      const studentIdToUse = studentId || (studentResponse.student && studentResponse.student.id);
+
+      if (!studentIdToUse) {
+        throw new Error("Impossible de déterminer l'ID étudiant");
+      }
+
+      // Ne mettre à jour les expériences que s'il y en a
+      if (experiences.length > 0) {
+        // Préparation des données d'expérience avec tous les champs requis
+        const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
+          id: exp.id,
+          company: exp.company,
+          position: exp.position || 'Non spécifié', // S'assurer que position n'est jamais vide
+          type: exp.type,
+          startDate: exp.startDate ? exp.startDate.toISOString() : new Date().toISOString(), // Valeur par défaut pour startDate
+          endDate: exp.endDate ? exp.endDate.toISOString() : undefined,
+          description: 'Expérience professionnelle', // Valeur par défaut pour description
+        }));
+
+        // Vérifier et loguer les données d'expérience avant de les envoyer
+        console.log('Expériences à mettre à jour:', JSON.stringify(experiencesDTO, null, 2));
+
+        try {
+          await updateStudentExperiences(studentIdToUse, experiencesDTO);
+        } catch (expError) {
+          console.error('Erreur lors de la mise à jour des expériences:', expError);
+          // Ne pas remonter cette erreur pour permettre la navigation
+          toast.warning('Profil créé, mais erreur lors de la mise à jour des expériences');
+        }
+      } else {
+        console.log('Aucune expérience à mettre à jour');
+      }
+
+      toast.success('Profil mis à jour avec succès');
+      router.push('/students/dashboard');
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire:', error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Une erreur est survenue lors de la création du profil',
-      );
+      toast.error('Une erreur est survenue lors de la mise à jour du profil');
     } finally {
       setIsSubmitting(false);
     }
@@ -779,18 +867,7 @@ function StudentProfileContent() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
           <div className="md:col-span-8">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (form.formState.isValid) {
-                  onSubmit(form.getValues());
-                } else {
-                  form.trigger();
-                }
-              }}
-            >
+            <form onSubmit={handleSubmit}>
               <Tabs value={selectedTab} onValueChange={setSelectedTab}>
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
@@ -1118,20 +1195,7 @@ function StudentProfileContent() {
                     >
                       Précédent
                     </Button>
-                    <Button
-                      type="button"
-                      disabled={isSubmitting}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        if (form.formState.isValid) {
-                          onSubmit(form.getValues());
-                        } else {
-                          form.trigger();
-                        }
-                      }}
-                    >
+                    <Button type="submit" disabled={isSubmitting}>
                       {isSubmitting ? (
                         'Enregistrement...'
                       ) : (

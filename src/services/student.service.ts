@@ -105,28 +105,20 @@ export async function getStudents(): Promise<StudentResponseDTO[]> {
   }
 }
 
-export async function getStudentById(id: string): Promise<StudentResponseDTO | null> {
+export async function getStudentById(id: string) {
   try {
-    console.log('Fetching student with ID:', id);
-    const student = await serverFetch(`/students/${id}`);
-
-    const [userData, schoolData] = await Promise.all([
-      serverFetch(`/users/${student.userId}`),
-      serverFetch(`/schools/${student.schoolId}`),
-    ]);
-
-    return {
-      ...student,
-      user: userData,
-      school: schoolData,
-    };
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('404')) {
-      console.log('Student not found');
-      return null;
+    const response = await fetch(`/api/students/${id}`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error("Erreur lors de la récupération de l'étudiant");
     }
+    const data = await response.json();
+    return data.student;
+  } catch (error) {
     console.error("Erreur lors de la récupération de l'étudiant:", error);
-    return null;
+    throw error;
   }
 }
 

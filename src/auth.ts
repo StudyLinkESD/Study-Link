@@ -1,5 +1,5 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import { Prisma } from '@prisma/client';
+import { Admin, CompanyOwner, SchoolOwner, Student } from '@prisma/client';
 import NextAuth, { DefaultSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
@@ -19,25 +19,15 @@ declare module 'next-auth' {
       image?: string | null;
       studentId?: string | null;
       type: UserType;
+      firstName?: string | null;
+      lastName?: string | null;
+      student?: Student | null;
+      schoolOwner?: SchoolOwner | null;
+      companyOwner?: CompanyOwner | null;
+      admin?: Admin | null;
     } & DefaultSession['user'];
   }
 }
-
-const toPrismaUserType = (type: UserType): Prisma.UserCreateInput['type'] => type;
-const fromPrismaUserType = (type: Prisma.UserCreateInput['type']): UserType => {
-  switch (type) {
-    case 'student':
-      return UserType.STUDENT;
-    case 'company_owner':
-      return UserType.COMPANY_OWNER;
-    case 'school_owner':
-      return UserType.SCHOOL_OWNER;
-    case 'admin':
-      return UserType.ADMIN;
-    default:
-      return UserType.STUDENT;
-  }
-};
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   // @ts-expect-error - Known issue with different @auth/core versions
@@ -49,163 +39,124 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     error: '/auth/error',
   },
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        token.accessToken = account.access_token;
-        if (user.id) {
-          token.id = user.id;
-          token.isGoogleEmail = account.provider === 'google';
-
-          const student = await prisma.student.findUnique({
-            where: { userId: user.id },
-            select: { id: true },
-          });
-          token.studentId = student?.id ?? null;
-        }
+    async signIn({ user, account }) {
+      if (account?.provider === 'email') {
+        return true;
       }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.accessToken = token.accessToken;
-        session.user.id = token.id;
-        session.user.isGoogleEmail = token.isGoogleEmail ?? false;
-        session.user.studentId = token.studentId ?? null;
 
-        const userData = await prisma.user.findUnique({
-          where: { id: token.id },
-          select: {
-            firstName: true,
-            lastName: true,
-            profilePicture: true,
-            type: true,
-            student: {
-              select: {
-                id: true,
-              },
-            },
-            companyOwner: {
-              select: {
-                id: true,
-                companyId: true,
-              },
-            },
-            admin: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        });
-
-        if (userData) {
-          session.user.firstName = userData.firstName;
-          session.user.lastName = userData.lastName;
-          session.user.profilePicture = userData.profilePicture;
-          session.user.type = fromPrismaUserType(userData.type);
-          session.user.studentId = userData.student?.id ?? null;
-          session.user.companyId = userData.companyOwner?.companyId ?? null;
-          session.user.isAdmin = !!userData.admin;
-        }
-      }
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith('http')) return url;
-      if (url.startsWith('/')) return `${baseUrl}${url}`;
-
-      return `${baseUrl}/select-profile`;
-    },
-    async signIn({ account, profile, user }) {
-      if (account?.provider === 'google' && profile?.email) {
-        const existingUser = await prisma.user.findFirst({
-          where: {
-            email: profile.email,
-          },
-          include: {
-            Account: true,
-          },
-        });
-
-        if (existingUser) {
-          const hasGoogleAccount = existingUser.Account.some((acc) => acc.provider === 'google');
-
-          if (!hasGoogleAccount) {
-            await prisma.account.create({
-              data: {
-                userId: existingUser.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-              },
-            });
-          }
-          return true;
-        }
-
-        if (profile.name) {
-          const nameParts = profile.name.split(' ');
-          const firstName = nameParts[0] || null;
-          const lastName = nameParts.slice(1).join(' ') || null;
-
-          try {
-            await prisma.user.create({
-              data: {
-                email: profile.email,
-                firstName,
-                lastName,
-                type: toPrismaUserType(UserType.STUDENT),
-                profileCompleted: false,
-                Account: {
-                  create: {
-                    type: account.type,
-                    provider: account.provider,
-                    providerAccountId: account.providerAccountId,
-                    access_token: account.access_token,
-                    expires_at: account.expires_at,
-                    token_type: account.token_type,
-                    scope: account.scope,
-                    id_token: account.id_token,
-                  },
-                },
-              },
-            });
-            return true;
-          } catch (error) {
-            console.error("Erreur lors de la création de l'utilisateur:", error);
-            return false;
-          }
-        }
-      } else if (user?.email) {
-        const existingUser = await prisma.user.findFirst({
-          where: {
-            email: user.email,
-          },
+      try {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
         });
 
         if (!existingUser) {
-          try {
-            await prisma.user.create({
-              data: {
-                email: user.email,
-                firstName: null,
-                lastName: null,
-                type: toPrismaUserType(UserType.STUDENT),
-                profileCompleted: false,
-              },
-            });
-          } catch (error) {
-            console.error("Erreur lors de la création de l'utilisateur:", error);
-            return false;
-          }
+          await prisma.user.create({
+            data: {
+              email: user.email!,
+              firstName: user.name?.split(' ')[0] || null,
+              lastName: user.name?.split(' ').slice(1).join(' ') || null,
+              profilePicture: user.image,
+              type: UserType.STUDENT,
+            },
+          });
         }
+
+        return true;
+      } catch (error) {
+        console.error("Erreur lors de la création de l'utilisateur:", error);
+        return false;
       }
-      return true;
+    },
+
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === 'update' && session) {
+        return { ...token, ...session.user };
+      }
+
+      if (!user) {
+        return token;
+      }
+
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email! },
+          include: {
+            student: true,
+            schoolOwner: true,
+            companyOwner: true,
+            admin: true,
+          },
+        });
+
+        if (!dbUser) {
+          await prisma.user.create({
+            data: {
+              email: token.email!,
+              firstName: token.name?.split(' ')[0] || null,
+              lastName: token.name?.split(' ').slice(1).join(' ') || null,
+              profilePicture: token.picture,
+              type: UserType.STUDENT,
+            },
+          });
+          return token;
+        }
+
+        return {
+          ...token,
+          id: dbUser.id,
+          firstName: dbUser.firstName,
+          lastName: dbUser.lastName,
+          type: dbUser.type as UserType,
+          student: dbUser.student,
+          schoolOwner: dbUser.schoolOwner,
+          companyOwner: dbUser.companyOwner,
+          admin: dbUser.admin,
+        };
+      } catch (error) {
+        console.error("Erreur lors de la création de l'utilisateur:", error);
+        return token;
+      }
+    },
+
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id as string,
+          firstName: token.firstName as string | null,
+          lastName: token.lastName as string | null,
+          type: token.type as UserType,
+          student: token.student as Student | null,
+          schoolOwner: token.schoolOwner as SchoolOwner | null,
+          companyOwner: token.companyOwner as CompanyOwner | null,
+          admin: token.admin as Admin | null,
+        },
+      };
+    },
+
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) {
+        url = new URL(url, baseUrl).toString();
+      }
+
+      if (url.includes('/school/students')) {
+        return url;
+      }
+
+      if (url.includes('/select-profile')) {
+        return url;
+      }
+
+      if (url === baseUrl + '/login') {
+        return baseUrl + '/select-profile';
+      }
+
+      if (url === baseUrl + '/signout') {
+        return baseUrl + '/select-profile';
+      }
+
+      return baseUrl + '/select-profile';
     },
   },
   events: {

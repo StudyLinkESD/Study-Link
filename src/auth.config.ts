@@ -1,12 +1,17 @@
 import { render } from '@react-email/render';
-import axios from 'axios';
 import { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
+import { Resend as ResendClient } from 'resend';
 
 import { prisma } from '@/lib/prisma';
 
-import AuthenticateEmail from './emails/authenticate';
+import AuthenticateEmail from '@/emails/authenticate';
+import SchoolOwnerAuthenticateEmail from '@/emails/school-owner-authenticate';
+
+const RESEND_API_KEY = process.env.AUTH_RESEND_KEY || '';
+const DEFAULT_FROM = 'StudyLink <noreply@studylink.space>';
+const resend = new ResendClient(RESEND_API_KEY);
 
 export default {
   providers: [
@@ -22,58 +27,93 @@ export default {
       },
     }),
     Resend({
-      apiKey: process.env.AUTH_RESEND_KEY,
-      from: 'StudyLink <noreply@studylink.space>',
-      async sendVerificationRequest({ identifier, url, provider }) {
+      apiKey: RESEND_API_KEY,
+      from: DEFAULT_FROM,
+      async sendVerificationRequest({ identifier, url }) {
         try {
+          const callbackUrl = new URL(url).searchParams.get('callbackUrl') || '';
+
           const user = await prisma.user.findUnique({
             where: { email: identifier },
-            select: { firstName: true },
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              profilePicture: true,
+              type: true,
+              schoolOwner: true,
+            },
           });
 
-          const baseUrl =
-            process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
-          const modifiedUrl = url.replace(
-            /callbackUrl=([^&]*)/,
-            `callbackUrl=${encodeURIComponent(`${baseUrl}/select-profile`)}`,
-          );
+          if (!user) {
+            throw new Error('User not found');
+          }
+
+          const isSchoolOwner =
+            user.type === 'school_owner' ||
+            (await prisma.schoolOwner.findFirst({
+              where: { userId: user.id },
+            }));
+
+          let finalUrl = url;
+
+          if (isSchoolOwner) {
+            if (user.type !== 'school_owner') {
+              try {
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: { type: 'school_owner' },
+                });
+              } catch (error) {
+                console.error('Erreur lors de la mise à jour du type utilisateur:', error);
+              }
+            }
+
+            if (callbackUrl) {
+              const callback = new URL(callbackUrl);
+              callback.pathname = '/school/students';
+              const newUrl = new URL(url);
+              newUrl.searchParams.set('callbackUrl', callback.toString());
+              finalUrl = newUrl.toString();
+            }
+          } else {
+            if (callbackUrl) {
+              const callback = new URL(callbackUrl);
+              callback.pathname = '/select-profile';
+              const newUrl = new URL(url);
+              newUrl.searchParams.set('callbackUrl', callback.toString());
+              finalUrl = newUrl.toString();
+            }
+          }
 
           const emailHtml = await render(
-            AuthenticateEmail({
-              url: modifiedUrl,
-              firstName: user?.firstName || undefined,
-            }),
+            isSchoolOwner
+              ? SchoolOwnerAuthenticateEmail({
+                  url: finalUrl,
+                  firstName: user.firstName || undefined,
+                })
+              : AuthenticateEmail({
+                  url: finalUrl,
+                  firstName: user.firstName || undefined,
+                }),
           );
 
-          if (!emailHtml) {
-            console.error("Erreur lors de la génération du HTML de l'email");
-          }
+          const { error } = await resend.emails.send({
+            from: DEFAULT_FROM,
+            to: identifier,
+            subject: isSchoolOwner
+              ? 'Connexion à votre espace école Study Link'
+              : 'Connexion à Study Link',
+            html: emailHtml,
+          });
 
-          try {
-            const response = await axios.post(
-              `${process.env.NEXT_PUBLIC_API_URL}/resend`,
-              {
-                from: provider.from,
-                to: identifier,
-                subject: 'Bienvenue sur StudyLink - Votre lien de connexion',
-                html: emailHtml,
-                url: modifiedUrl,
-              },
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${provider.apiKey}`,
-                },
-              },
-            );
-
-            if (response.status >= 400) {
-              console.error(response.data.error || "Erreur lors de l'envoi de l'email");
-            }
-          } catch (error) {
+          if (error) {
             console.error("Erreur lors de l'envoi de l'email:", error);
+            throw error;
           }
         } catch (error) {
+          console.error('Erreur dans sendVerificationRequest:', error);
           throw error;
         }
       },

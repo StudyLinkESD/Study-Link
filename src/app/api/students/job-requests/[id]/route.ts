@@ -233,7 +233,10 @@ export async function DELETE(
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Only students can delete job requests' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Seul les étudients peuvent supprimer leurs demandes' },
+        { status: 403 },
+      );
     }
 
     const jobRequest = await prisma.jobRequest.findUnique({

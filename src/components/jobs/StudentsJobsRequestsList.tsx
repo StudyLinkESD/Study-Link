@@ -215,10 +215,6 @@ export default function StudentsJobsRequestsList() {
     };
   }, [state.statusFilter]);
 
-  const handleRequestClick = (request: JobRequestWithRelations) => {
-    console.log('Request clicked:', request);
-  };
-
   const handleStatusChange = async (requestId: string, newStatus: string) => {
     await updateRequestStatus(requestId, newStatus);
   };
@@ -316,11 +312,7 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard
-                    request={req}
-                    onStatusChange={handleStatusChange}
-                    onClick={handleRequestClick}
-                  />
+                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{
@@ -334,11 +326,7 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard
-                    request={req}
-                    onStatusChange={handleStatusChange}
-                    onClick={handleRequestClick}
-                  />
+                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{
@@ -352,11 +340,7 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard
-                    request={req}
-                    onStatusChange={handleStatusChange}
-                    onClick={handleRequestClick}
-                  />
+                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{
@@ -370,11 +354,7 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard
-                    request={req}
-                    onStatusChange={handleStatusChange}
-                    onClick={handleRequestClick}
-                  />
+                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{
