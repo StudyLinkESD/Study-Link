@@ -1,15 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 
+import { ValidationError, ValidationErrorResponse } from '@/types/error.type';
+
 import { CreateJobDTO, UpdateJobDTO } from '@/dto/job.dto';
 
 const prisma = new PrismaClient();
-
-export type ValidationError = Record<string, string>;
-
-export interface ValidationResult {
-  isValid: boolean;
-  errors: ValidationError[];
-}
 
 export interface JobExistsResult {
   exists: boolean;
@@ -30,19 +25,28 @@ export interface JobExistsResult {
 export async function validateJobData(
   data: CreateJobDTO | UpdateJobDTO,
   isUpdate = false,
-): Promise<ValidationResult> {
+): Promise<ValidationErrorResponse> {
   const errors: ValidationError[] = [];
 
   if (!isUpdate && 'companyId' in data && !data.companyId) {
-    errors.push({ companyId: "L'ID de la compagnie est requis" });
+    errors.push({
+      field: 'companyId',
+      message: "L'ID de la compagnie est requis",
+    });
   }
 
   if (!isUpdate && !data.name) {
-    errors.push({ name: 'Le nom du poste est requis' });
+    errors.push({
+      field: 'name',
+      message: 'Le nom du poste est requis',
+    });
   }
 
   if (!isUpdate && !data.description) {
-    errors.push({ description: 'La description du poste est requise' });
+    errors.push({
+      field: 'description',
+      message: 'La description du poste est requise',
+    });
   }
 
   if ('companyId' in data && data.companyId) {
@@ -50,13 +54,17 @@ export async function validateJobData(
       where: { id: data.companyId },
     });
     if (!company) {
-      errors.push({ companyId: "La compagnie spécifiée n'existe pas" });
+      errors.push({
+        field: 'companyId',
+        message: "La compagnie spécifiée n'existe pas",
+      });
     }
   }
 
   return {
     isValid: errors.length === 0,
-    errors,
+    error: 'Validation failed',
+    details: errors,
   };
 }
 

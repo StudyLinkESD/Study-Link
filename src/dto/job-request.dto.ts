@@ -2,6 +2,14 @@ import { JobRequestStatus } from '@/types/job-request.type';
 
 export interface CreateJobRequestDTO {
   jobId: string;
+  studentId: string;
+  status: JobRequestStatus;
+  subject?: string;
+  message?: string;
+}
+
+export interface UpdateJobRequestDTO {
+  status?: JobRequestStatus;
   subject?: string;
   message?: string;
 }
