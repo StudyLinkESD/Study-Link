@@ -42,7 +42,7 @@ export async function getSchoolByEmailDomain(email: string) {
 
 export async function validateSchoolEmail(email: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/schools-domains/validate-school-email', {
+    const response = await fetch('/api/school-domains/validate-school-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

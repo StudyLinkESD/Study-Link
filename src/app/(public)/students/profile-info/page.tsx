@@ -448,6 +448,25 @@ function StudentProfileContent() {
     }
   }, [experiences, form]);
 
+  useEffect(() => {
+    const subscription = form.watch((formValues, { name }) => {
+      if (name === 'school' && formValues.schoolEmail) {
+        validateSchoolEmail(formValues.schoolEmail).then((isValid) => {
+          if (!isValid) {
+            form.setError('schoolEmail', {
+              type: 'manual',
+              message: "L'email scolaire ne correspond pas à l'école sélectionnée",
+            });
+          } else {
+            form.clearErrors('schoolEmail');
+          }
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const formValues = form.watch();
 
   const handlePhotoUpload = async (file: File | null, url?: string) => {
@@ -951,7 +970,23 @@ function StudentProfileContent() {
                           id="schoolEmail"
                           placeholder="prenom.nom@ecole.fr"
                           type="email"
-                          {...form.register('schoolEmail')}
+                          {...form.register('schoolEmail', {
+                            onBlur: async (e) => {
+                              const email = e.target.value;
+                              if (email) {
+                                const isValid = await validateSchoolEmail(email);
+                                if (!isValid) {
+                                  form.setError('schoolEmail', {
+                                    type: 'manual',
+                                    message:
+                                      "L'email scolaire ne correspond pas à l'école sélectionnée",
+                                  });
+                                } else {
+                                  form.clearErrors('schoolEmail');
+                                }
+                              }
+                            },
+                          })}
                           className={cn(
                             form.formState.errors.schoolEmail && 'border-destructive',
                             !form.formState.errors.schoolEmail &&
