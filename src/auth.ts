@@ -1,4 +1,5 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import { Prisma } from '@prisma/client';
 import NextAuth, { DefaultSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
@@ -17,11 +18,29 @@ declare module 'next-auth' {
       name?: string | null;
       image?: string | null;
       studentId?: string | null;
+      type: UserType;
     } & DefaultSession['user'];
   }
 }
 
+const toPrismaUserType = (type: UserType): Prisma.UserCreateInput['type'] => type;
+const fromPrismaUserType = (type: Prisma.UserCreateInput['type']): UserType => {
+  switch (type) {
+    case 'student':
+      return UserType.STUDENT;
+    case 'company_owner':
+      return UserType.COMPANY_OWNER;
+    case 'school_owner':
+      return UserType.SCHOOL_OWNER;
+    case 'admin':
+      return UserType.ADMIN;
+    default:
+      return UserType.STUDENT;
+  }
+};
+
 export const { auth, handlers, signIn, signOut } = NextAuth({
+  // @ts-expect-error - Known issue with different @auth/core versions
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   pages: {
@@ -83,7 +102,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           session.user.firstName = userData.firstName;
           session.user.lastName = userData.lastName;
           session.user.profilePicture = userData.profilePicture;
-          session.user.type = userData.type;
+          session.user.type = fromPrismaUserType(userData.type);
           session.user.studentId = userData.student?.id ?? null;
           session.user.companyId = userData.companyOwner?.companyId ?? null;
           session.user.isAdmin = !!userData.admin;
@@ -140,7 +159,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 email: profile.email,
                 firstName,
                 lastName,
-                type: UserType.STUDENT,
+                type: toPrismaUserType(UserType.STUDENT),
                 profileCompleted: false,
                 Account: {
                   create: {
@@ -176,7 +195,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 email: user.email,
                 firstName: null,
                 lastName: null,
-                type: UserType.STUDENT,
+                type: toPrismaUserType(UserType.STUDENT),
                 profileCompleted: false,
               },
             });

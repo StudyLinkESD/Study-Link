@@ -5,7 +5,7 @@ import { UserType } from './user.type';
 
 declare module 'next-auth' {
   interface Session {
-    user?: {
+    user: {
       id: string;
       email: string;
       name?: string | null;
@@ -16,7 +16,7 @@ declare module 'next-auth' {
       firstName?: string | null;
       lastName?: string | null;
       profilePicture?: string | null;
-      type?: UserType;
+      type: UserType;
       isAdmin?: boolean;
     } & DefaultSession['user'];
   }
@@ -32,7 +32,7 @@ declare module 'next-auth' {
     firstName?: string | null;
     lastName?: string | null;
     profilePicture?: string | null;
-    type?: UserType;
+    type: UserType;
     isAdmin?: boolean;
   }
 }
