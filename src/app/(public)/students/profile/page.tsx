@@ -133,39 +133,48 @@ function StudentProfileContent() {
         }
 
         if (studentData.experiences && studentData.experiences.length > 0) {
-          const structuredExperiences = studentData.experiences.map((exp) => {
-            const startDate = exp.startDate ? new Date(exp.startDate) : undefined;
-            const endDate = exp.endDate ? new Date(exp.endDate) : undefined;
+          const structuredExperiences = studentData.experiences.map(
+            (exp: {
+              id?: string;
+              company: string;
+              position: string;
+              startDate?: string;
+              endDate?: string;
+              type: string;
+            }) => {
+              const startDate = exp.startDate ? new Date(exp.startDate) : undefined;
+              const endDate = exp.endDate ? new Date(exp.endDate) : undefined;
 
-            const startDateStr = startDate ? format(startDate, 'MMM yyyy', { locale: fr }) : '';
-            const endDateStr = endDate ? format(endDate, 'MMM yyyy', { locale: fr }) : 'Présent';
-            const period =
-              startDateStr && (endDateStr || 'Présent') ? `${startDateStr} - ${endDateStr}` : '';
+              const startDateStr = startDate ? format(startDate, 'MMM yyyy', { locale: fr }) : '';
+              const endDateStr = endDate ? format(endDate, 'MMM yyyy', { locale: fr }) : 'Présent';
+              const period =
+                startDateStr && (endDateStr || 'Présent') ? `${startDateStr} - ${endDateStr}` : '';
 
-            return {
-              id: exp.id || `exp-${Math.random().toString(36).substr(2, 9)}`,
-              company: exp.company,
-              position: exp.position,
-              period: period,
-              type: exp.type as 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre',
-              startDate,
-              endDate,
-            };
-          });
+              return {
+                id: exp.id || `exp-${Math.random().toString(36).substr(2, 9)}`,
+                company: exp.company,
+                position: exp.position,
+                period: period,
+                type: exp.type as 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre',
+                startDate,
+                endDate,
+              };
+            },
+          );
 
           setExperiences(structuredExperiences);
         } else {
           const oldExperiences = studentData.previousCompanies
             ? studentData.previousCompanies
                 .split(',')
-                .map((company, index) => ({
+                .map((company: string, index: number) => ({
                   id: `exp-${index}`,
                   company: company.trim(),
                   position: 'Stage/Alternance',
                   period: 'Non spécifié',
                   type: 'Stage' as const,
                 }))
-                .filter((exp) => exp.company)
+                .filter((exp: SimpleExperience) => exp.company)
             : [];
 
           setExperiences(oldExperiences);

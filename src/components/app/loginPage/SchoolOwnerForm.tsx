@@ -1,11 +1,10 @@
 'use client';
 
+import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import axios from 'axios';
 import { signIn } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -38,61 +37,36 @@ const SchoolOwnerAuthForm = () => {
     try {
       setIsLoading(true);
 
-      console.log("Tentative d'authentification pour:", data.email);
-
-      // Vérifier si l'email appartient à un school owner
-      const checkResponse = await axios.post(
-        '/api/auth/check-school-owner',
-        { email: data.email },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      const checkResponse = await fetch('/api/auth/check-school-owner', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({ email: data.email }),
+      });
 
-      console.log('Réponse de check-school-owner:', checkResponse.data);
+      const checkData = await checkResponse.json();
 
-      if (checkResponse.status >= 400 || !checkResponse.data.isSchoolOwner) {
-        toast.error("Vous n'êtes pas autorisé à accéder à cette interface. Redirection...");
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+      if (!checkResponse.ok) {
+        form.setError('email', {
+          type: 'manual',
+          message: checkData.error || "Une erreur s'est produite",
+        });
         return;
       }
 
-      // Si c'est un school owner, envoyer le magic link
-      console.log('Envoi du magic link pour school owner:', data.email);
-      const response = await axios.post(
-        '/api/auth/authenticate-school-owner',
-        { email: data.email },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
+      const result = await signIn('resend', {
+        email: data.email,
+        redirect: false,
+      });
 
-      console.log('Réponse de authenticate-school-owner:', response.data);
-
-      if (response.status >= 400) {
-        toast.error(response.data.error || 'Une erreur est survenue');
-        return;
-      }
-
-      toast.success('Un email de connexion vous a été envoyé');
-      router.push('/verify-request');
-    } catch (error: unknown) {
-      console.error("Erreur lors de l'authentification:", error);
-      if (axios.isAxiosError(error) && error.response?.data?.error === 'NOT_SCHOOL_OWNER') {
-        toast.error("Vous n'êtes pas autorisé à accéder à cette interface. Redirection...");
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+      if (result?.ok) {
+        router.push('/verify-request');
       } else {
-        toast.error("Une erreur est survenue lors de l'authentification");
-        console.error("Erreur d'authentification:", error);
+        toast.error('Une erreur est survenue lors de la connexion');
       }
+    } catch {
+      toast.error('Une erreur est survenue lors de la connexion');
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,3 @@
-import { render } from '@react-email/render';
 import { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
@@ -6,12 +5,9 @@ import { Resend as ResendClient } from 'resend';
 
 import { prisma } from '@/lib/prisma';
 
-import AuthenticateEmail from './emails/authenticate';
-import SchoolOwnerAuthenticateEmail from './emails/school-owner-authenticate';
-
-// Définir une clé API par défaut pour Resend
 const RESEND_API_KEY = process.env.AUTH_RESEND_KEY || '';
 const DEFAULT_FROM = 'StudyLink <noreply@studylink.space>';
+const resend = new ResendClient(RESEND_API_KEY);
 
 export default {
   providers: [
@@ -31,84 +27,85 @@ export default {
       from: DEFAULT_FROM,
       async sendVerificationRequest({ identifier, url }) {
         try {
-          // Extraire l'URL de callback de l'URL du lien de vérification
-          const callbackUrlMatch = url.match(/callbackUrl=([^&]*)/);
-          const callbackUrl = callbackUrlMatch ? decodeURIComponent(callbackUrlMatch[1]) : '';
-
-          console.log('URL de vérification:', url);
-          console.log('URL de callback extraite:', callbackUrl);
+          const callbackUrl = new URL(url).searchParams.get('callbackUrl') || '';
 
           const user = await prisma.user.findUnique({
             where: { email: identifier },
             select: {
+              id: true,
+              email: true,
               firstName: true,
+              lastName: true,
+              profilePicture: true,
               type: true,
               schoolOwner: true,
             },
           });
 
-          // Déterminer si c'est un school owner
-          const isSchoolOwner = user && user.type === 'school_owner' && user.schoolOwner;
+          if (!user) {
+            throw new Error('User not found');
+          }
 
-          // Choisir le template d'email en fonction du type d'utilisateur
-          let emailHtml;
-          let emailSubject;
+          const isSchoolOwner =
+            user.type === 'school_owner' ||
+            (await prisma.schoolOwner.findFirst({
+              where: { userId: user.id },
+            }));
+
           let finalUrl = url;
 
           if (isSchoolOwner) {
-            // Si c'est un school owner, modifier l'URL de callback
-            if (callbackUrl) {
-              const baseUrl =
-                process.env.NEXTAUTH_URL ||
-                process.env.NEXT_PUBLIC_MAIN_URL ||
-                'http://localhost:3000';
-              const newCallbackUrl = `${baseUrl}/school/students`;
-              finalUrl = url.replace(
-                /callbackUrl=([^&]*)/,
-                `callbackUrl=${encodeURIComponent(newCallbackUrl)}`,
-              );
-              console.log('URL modifiée pour school owner:', finalUrl);
+            if (user.type !== 'school_owner') {
+              try {
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: { type: 'school_owner' },
+                });
+              } catch (error) {
+                console.error('Erreur lors de la mise à jour du type utilisateur:', error);
+              }
             }
 
-            // Template pour les school owners
-            emailHtml = await render(
-              SchoolOwnerAuthenticateEmail({
-                url: finalUrl,
-                firstName: user?.firstName || undefined,
-              }),
-            );
-            emailSubject = 'Connexion à votre espace administrateur StudyLink';
+            if (callbackUrl) {
+              const callback = new URL(callbackUrl);
+              callback.pathname = '/school/students';
+              const newUrl = new URL(url);
+              newUrl.searchParams.set('callbackUrl', callback.toString());
+              finalUrl = newUrl.toString();
+            }
           } else {
-            // Template standard pour les autres utilisateurs
-            emailHtml = await render(
-              AuthenticateEmail({
-                url: finalUrl,
-                firstName: user?.firstName || undefined,
-              }),
-            );
-            emailSubject = 'Bienvenue sur StudyLink - Votre lien de connexion';
+            if (callbackUrl) {
+              const callback = new URL(callbackUrl);
+              callback.pathname = '/select-profile';
+              const newUrl = new URL(url);
+              newUrl.searchParams.set('callbackUrl', callback.toString());
+              finalUrl = newUrl.toString();
+            }
           }
 
-          if (!emailHtml) {
-            console.error("Erreur lors de la génération du HTML de l'email");
-            throw new Error("Erreur lors de la génération du HTML de l'email");
-          }
+          const emailHtml = `
+            <div>
+              <h1>Connexion à Study Link</h1>
+              <p>Bonjour ${user.firstName || ''},</p>
+              <p>Cliquez sur le lien ci-dessous pour vous connecter :</p>
+              <a href="${finalUrl}">Se connecter</a>
+              <p>Si vous n'avez pas demandé cette connexion, ignorez cet email.</p>
+            </div>
+          `;
 
-          // Utiliser directement l'API Resend au lieu de passer par notre API
-          const resendClient = new ResendClient(RESEND_API_KEY);
-          const { data, error } = await resendClient.emails.send({
-            from: DEFAULT_FROM,
+          const { error } = await resend.emails.send({
+            from: 'Study Link <no-reply@studylink.fr>',
             to: identifier,
-            subject: emailSubject,
+            subject: isSchoolOwner
+              ? 'Connexion à votre espace école Study Link'
+              : 'Connexion à Study Link',
             html: emailHtml,
           });
 
           if (error) {
             console.error("Erreur lors de l'envoi de l'email:", error);
-            throw new Error(error.message);
+            throw error;
           }
-
-          console.log('Email envoyé avec succès:', data);
         } catch (error) {
           console.error('Erreur dans sendVerificationRequest:', error);
           throw error;

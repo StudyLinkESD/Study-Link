@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     const signInResult = await signIn('resend', {
       email: normalizedEmail,
       redirect: false,
-      callbackUrl: '/students/profile-info',
+      callbackUrl: '/select-profile',
     });
 
     if (signInResult?.error) {

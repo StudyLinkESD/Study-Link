@@ -22,10 +22,8 @@ const GoogleCallbackPage = () => {
           });
 
           if (response.data.isSchoolOwner) {
-            // Si c'est un school owner, rediriger vers la page des étudiants
             router.push('/school/student');
           } else {
-            // Si ce n'est pas un school owner, afficher un message et rediriger vers la page de login normale
             toast.error("Vous n'êtes pas autorisé à accéder à cette interface. Redirection...");
             setTimeout(() => {
               router.push('/login');
@@ -41,7 +39,6 @@ const GoogleCallbackPage = () => {
           setIsChecking(false);
         }
       } else if (status === 'unauthenticated') {
-        // Si l'utilisateur n'est pas authentifié, rediriger vers la page de login
         router.push('/admin/login');
         setIsChecking(false);
       }

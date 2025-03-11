@@ -65,7 +65,6 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase();
 
-    // Vérifier si l'utilisateur existe et est un school owner
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
@@ -80,18 +79,27 @@ export async function POST(request: Request) {
       );
     }
 
-    // Utiliser signIn pour envoyer le magic link
-    // Utiliser une URL absolue pour le callbackUrl
+    if (user && user.type !== 'school_owner') {
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { type: 'school_owner' },
+        });
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du type utilisateur:', error);
+      }
+    }
+
     const baseUrl =
       process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_MAIN_URL || 'http://localhost:3000';
     const callbackUrl = `${baseUrl}/school/students`;
 
     console.log('Sending magic link with callbackUrl:', callbackUrl);
 
-    const signInResult = await signIn('resend', {
-      email: normalizedEmail,
-      redirect: false,
+    const signInResult = await signIn('email', {
+      email: user.email,
       callbackUrl,
+      redirect: false,
     });
 
     if (signInResult?.error) {
@@ -99,9 +107,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Erreur lors de l'envoi de l'email" }, { status: 500 });
     }
 
-    return NextResponse.json({
-      message: 'Un email de connexion a été envoyé',
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erreur lors de l'authentification:", error);
     return NextResponse.json(

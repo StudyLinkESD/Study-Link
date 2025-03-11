@@ -62,7 +62,6 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase();
 
-    // Vérifier si l'utilisateur existe et a une relation schoolOwner
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
@@ -70,7 +69,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Un utilisateur est un school owner s'il existe et a une relation schoolOwner
     const isSchoolOwner = !!(user && user.schoolOwner);
 
     return NextResponse.json({ isSchoolOwner });

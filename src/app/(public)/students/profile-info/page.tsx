@@ -92,6 +92,20 @@ interface ErrorDetail {
   message: string;
 }
 
+interface StudentProfileData {
+  firstName: string;
+  lastName: string;
+  studentEmail: string;
+  school: string;
+  status: string;
+  skills: string;
+  description: string;
+  previousCompanies?: string;
+  availability: boolean;
+  apprenticeshipRhythm?: string | null;
+  curriculumVitae?: string | null;
+}
+
 export const dynamic = 'force-dynamic';
 
 export default function StudentProfileForm() {
@@ -191,9 +205,9 @@ function StudentProfileContent() {
     }
   };
 
-  const getStudentByUserId = async (userId: string) => {
+  const getStudentByUserId = async () => {
     try {
-      const response = await fetch(`/api/students/user/${userId}`);
+      const response = await fetch(`/api/students/profile`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -203,21 +217,35 @@ function StudentProfileContent() {
       }
 
       const data = await response.json();
-      return data;
+      return data.student;
     } catch (error) {
       console.error("Erreur lors de la récupération de l'étudiant:", error);
       return null;
     }
   };
 
-  const createStudent = async (data: CreateStudentData) => {
+  const updateStudent = async (id: string, data: CreateStudentData) => {
     try {
-      const response = await fetch(`/api/students`, {
-        method: 'POST',
+      const updateData: StudentProfileData = {
+        firstName: data.user?.firstName || '',
+        lastName: data.user?.lastName || '',
+        studentEmail: data.studentEmail,
+        school: data.schoolId,
+        status: data.status,
+        skills: data.skills,
+        description: data.description,
+        previousCompanies: data.previousCompanies,
+        availability: data.availability,
+        apprenticeshipRhythm: data.apprenticeshipRhythm,
+        curriculumVitae: data.curriculumVitae,
+      };
+
+      const response = await fetch(`/api/students/profile`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(updateData),
       });
 
       const responseData = await response.json();
@@ -228,48 +256,15 @@ function StudentProfileContent() {
           console.error('Détails des erreurs:', responseData.details);
           throw new Error(responseData.details.map((d: ErrorDetail) => d.message).join(', '));
         }
-        throw new Error(responseData.error || 'Erreur lors de la création du profil étudiant');
+        throw new Error(responseData.message || 'Erreur lors de la mise à jour du profil étudiant');
       }
 
-      return responseData;
+      return responseData.student;
     } catch (error) {
-      console.error('Erreur détaillée dans createStudent:', error);
+      console.error('Erreur détaillée dans updateStudent:', error);
       if (error instanceof Error) {
-        throw new Error(`Erreur lors de la création de l'étudiant: ${error.message}`);
+        throw new Error(`Erreur lors de la mise à jour de l'étudiant: ${error.message}`);
       }
-      throw error;
-    }
-  };
-
-  const updateStudent = async (id: string, data: CreateStudentData) => {
-    try {
-      const updateData = {
-        status: data.status,
-        skills: data.skills,
-        apprenticeshipRhythm: data.apprenticeshipRhythm,
-        description: data.description,
-        curriculumVitae: data.curriculumVitae,
-        previousCompanies: data.previousCompanies,
-        availability: data.availability,
-      };
-
-      const response = await fetch(`/api/students/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Réponse d'erreur du serveur:", errorData);
-        throw new Error(errorData.error || 'Erreur lors de la mise à jour du profil étudiant');
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('Erreur dans updateStudent:', error);
       throw error;
     }
   };
@@ -361,7 +356,7 @@ function StudentProfileContent() {
       }
     } else if (session?.user?.id) {
       try {
-        const studentData = await getStudentByUserId(session.user.id);
+        const studentData = await getStudentByUserId();
 
         if (studentData) {
           setStudentId(studentData.id);
@@ -554,136 +549,67 @@ function StudentProfileContent() {
     return null;
   };
 
-  const onSubmit = async (data: ProfileFormData) => {
-    if (isSubmitting) return;
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const isValidSchoolEmail = await validateSchoolEmail(data.schoolEmail);
-      if (!isValidSchoolEmail) {
-        toast.error("L'email scolaire n'est pas valide pour l'école sélectionnée");
-        setIsSubmitting(false);
-        return;
-      }
-      const studentData: CreateStudentData = {
-        userId: session?.user?.id || '',
-        schoolId: data.school,
-        studentEmail: data.schoolEmail,
-        status: data.status,
-        skills: data.skills.join(', '),
-        apprenticeshipRhythm: data.alternanceRhythm || null,
-        description: data.description || '',
-        previousCompanies: experiences.map((exp) => exp.company).join(', '),
-        availability: data.availability || true,
-      };
-
-      if (
-        !studentData.userId ||
-        !studentData.schoolId ||
-        !studentData.status ||
-        !studentData.skills ||
-        studentData.availability === undefined
-      ) {
-        console.error('Données manquantes:', {
-          userId: !studentData.userId,
-          schoolId: !studentData.schoolId,
-          status: !studentData.status,
-          skills: !studentData.skills,
-          availability: studentData.availability === undefined,
-        });
-        throw new Error('Toutes les données requises ne sont pas présentes');
+      if (!session?.user?.id || !studentId) {
+        throw new Error('Session ou ID étudiant manquant');
       }
 
-      if (uploadedCv) {
-        try {
-          const cvUrl = await handleCvUpload(uploadedCv);
-          if (cvUrl) {
-            studentData.curriculumVitae = cvUrl;
-          }
-        } catch (error) {
-          console.error('Erreur lors du téléchargement du CV:', error);
-          toast.error('Erreur lors du téléchargement du CV');
-        }
+      // Mise à jour du profil utilisateur
+      const userResponse = await fetch(`/api/users/${session.user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formValues.firstName,
+          lastName: formValues.lastName,
+          profilePicture: photoUrl || null,
+        }),
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Erreur lors de la mise à jour du profil utilisateur');
       }
 
-      let result;
+      // Mise à jour du profil étudiant
+      const studentResponse = await updateStudent(studentId, {
+        userId: session.user.id,
+        schoolId: formValues.school,
+        studentEmail: formValues.schoolEmail,
+        status: formValues.status,
+        skills: formValues.skills.join(', '),
+        apprenticeshipRhythm: formValues.alternanceRhythm || null,
+        description: formValues.description || '',
+        previousCompanies: formValues.previousCompanies || '',
+        availability: formValues.availability,
+        curriculumVitae: cvUrl || null,
+      });
 
-      try {
-        const userResponse = await fetch(`/api/users/${session?.user?.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            firstName: data.firstName,
-            lastName: data.lastName,
-            profilePicture: photoUrl || null,
-          }),
-        });
-
-        if (!userResponse.ok) {
-          throw new Error('Erreur lors de la mise à jour des informations utilisateur');
-        }
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
-        toast.error('Erreur lors de la mise à jour des informations utilisateur');
-        setIsSubmitting(false);
-        return;
+      if (!studentResponse) {
+        throw new Error('Erreur lors de la mise à jour du profil étudiant');
       }
 
-      if (studentId) {
-        result = await updateStudent(studentId, studentData);
-        toast.success('Profil mis à jour avec succès');
+      const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
+        id: exp.id,
+        company: exp.company,
+        position: exp.position,
+        type: exp.type,
+        startDate: exp.startDate ? exp.startDate.toISOString() : '',
+        endDate: exp.endDate ? exp.endDate.toISOString() : '',
+        description: '',
+      }));
 
-        try {
-          const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
-            id: exp.id,
-            company: exp.company,
-            position: exp.position,
-            type: exp.type,
-            startDate: exp.startDate ? exp.startDate.toISOString() : '',
-            endDate: exp.endDate ? exp.endDate.toISOString() : '',
-            description: '',
-          }));
+      await updateStudentExperiences(studentId, experiencesDTO);
 
-          await updateStudentExperiences(studentId, experiencesDTO);
-        } catch (error) {
-          console.error('Erreur lors de la mise à jour des expériences:', error);
-          toast.error('Erreur lors de la mise à jour des expériences');
-        }
-      } else {
-        result = await createStudent(studentData);
-        if (result && result.id) {
-          setStudentId(result.id);
-
-          try {
-            const experiencesDTO: ExperienceDTO[] = experiences.map((exp) => ({
-              id: exp.id,
-              company: exp.company,
-              position: exp.position,
-              type: exp.type,
-              startDate: exp.startDate ? exp.startDate.toISOString() : '',
-              endDate: exp.endDate ? exp.endDate.toISOString() : '',
-              description: '',
-            }));
-
-            await updateStudentExperiences(result.id, experiencesDTO);
-          } catch (error) {
-            console.error('Erreur lors de la création des expériences:', error);
-            toast.error('Erreur lors de la création des expériences');
-          }
-        }
-        toast.success('Profil créé avec succès');
-      }
-
-      router.push(`/students/profile?studentId=${result.id}`);
+      toast.success('Profil mis à jour avec succès');
+      router.push('/students/dashboard');
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire:', error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Une erreur est survenue lors de la création du profil',
-      );
+      toast.error('Une erreur est survenue lors de la mise à jour du profil');
     } finally {
       setIsSubmitting(false);
     }
@@ -779,18 +705,7 @@ function StudentProfileContent() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
           <div className="md:col-span-8">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (form.formState.isValid) {
-                  onSubmit(form.getValues());
-                } else {
-                  form.trigger();
-                }
-              }}
-            >
+            <form onSubmit={handleSubmit}>
               <Tabs value={selectedTab} onValueChange={setSelectedTab}>
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
@@ -1118,20 +1033,7 @@ function StudentProfileContent() {
                     >
                       Précédent
                     </Button>
-                    <Button
-                      type="button"
-                      disabled={isSubmitting}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        if (form.formState.isValid) {
-                          onSubmit(form.getValues());
-                        } else {
-                          form.trigger();
-                        }
-                      }}
-                    >
+                    <Button type="submit" disabled={isSubmitting}>
                       {isSubmitting ? (
                         'Enregistrement...'
                       ) : (

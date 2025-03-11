@@ -215,8 +215,8 @@ export default function StudentsJobsRequestsList() {
     };
   }, [state.statusFilter]);
 
-  const handleRequestClick = (request: JobRequestWithRelations) => {
-    console.log('Request clicked:', request);
+  const handleRequestClick = () => {
+    // Handle request click if needed
   };
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
