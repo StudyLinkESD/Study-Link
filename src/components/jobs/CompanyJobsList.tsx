@@ -517,7 +517,6 @@ export default function CompanyJobsList() {
         />
       )}
 
-      {/* Dialog de création d'offre */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
