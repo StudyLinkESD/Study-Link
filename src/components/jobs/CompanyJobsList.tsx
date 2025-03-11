@@ -594,7 +594,6 @@ export default function CompanyJobsList() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de modification d'offre */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -668,7 +667,6 @@ export default function CompanyJobsList() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de confirmation de suppression */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
