@@ -111,9 +111,29 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return session;
     },
     async redirect({ url, baseUrl }) {
-      if (url.startsWith('http')) return url;
-      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      console.log('Redirection URL:', url);
 
+      // Si l'URL commence par http, on la retourne telle quelle
+      if (url.startsWith('http')) {
+        // Si l'URL contient /school/students, on s'assure qu'elle est correctement formée
+        if (url.includes('/school/students')) {
+          console.log('Redirection vers URL absolue contenant /school/students:', url);
+          return url;
+        }
+        return url;
+      }
+
+      // Si l'URL commence par /, on la retourne avec le baseUrl
+      if (url.startsWith('/')) {
+        // Si l'URL est /school/students, on s'assure que l'utilisateur est un school owner
+        if (url.includes('/school/students')) {
+          console.log('Redirection vers /school/students');
+          return `${baseUrl}/school/students`;
+        }
+        return `${baseUrl}${url}`;
+      }
+
+      // Par défaut, rediriger vers la page de sélection de profil
       return `${baseUrl}/select-profile`;
     },
     async signIn({ account, profile, user }) {
@@ -124,6 +144,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           },
           include: {
             Account: true,
+            schoolOwner: true,
           },
         });
 
@@ -185,6 +206,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         const existingUser = await prisma.user.findFirst({
           where: {
             email: user.email,
+          },
+          include: {
+            schoolOwner: true,
           },
         });
 
