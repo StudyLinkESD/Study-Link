@@ -53,9 +53,18 @@ export default function JobsPage() {
 
   return (
     <JobProvider>
-      <main className="flex w-full flex-1 flex-row items-start justify-start px-20">
-        <JobsList jobs={jobs} title="Découvrez nos offres" />
-        <JobView />
+      <main className="container mx-auto py-6">
+        <h1 className="mb-6 text-2xl font-bold">Offres d&apos;emploi</h1>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+          <div className="md:col-span-3">
+            <JobsList jobs={jobs} title="Découvrez nos offres" />
+          </div>
+
+          <div className="sticky top-20 self-start md:col-span-2">
+            <JobView className="h-full" />
+          </div>
+        </div>
       </main>
     </JobProvider>
   );
