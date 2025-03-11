@@ -26,7 +26,7 @@ export function JobApplicationButton({
 
   const handleApplyClick = () => {
     if (!isAuthenticated) {
-      router.push('/auth/login');
+      router.push('/login');
       return;
     }
 
