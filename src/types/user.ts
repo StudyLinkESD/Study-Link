@@ -6,6 +6,9 @@ interface IUser {
   profilePicture?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  studentId?: string | null;
+  companyId?: string | null;
+  isAdmin?: boolean;
 }
 
 export type { IUser };

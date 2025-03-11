@@ -15,6 +15,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
 
 import { cn } from '@/lib/utils';
 
@@ -34,11 +42,18 @@ export const Navbar = () => {
   const getProfileLink = () => {
     if (userRole === 'student' && user?.studentId) {
       return `/students/profile-info/${user.studentId}`;
+    } else if (userRole === 'company' && user?.companyId) {
+      return `/companies/profile/${user.companyId}`;
     }
     return null;
   };
 
   const profileLink = getProfileLink();
+
+  const publicLinks = links.filter((link) => !link.requireAuth);
+  const authenticatedLinks = links.filter(
+    (link) => link.requireAuth && link.roles?.includes(userRole || 'student'),
+  );
 
   return (
     <nav className="bg-background/80 fixed left-0 right-0 top-0 z-50 border-b backdrop-blur-sm">
@@ -57,13 +72,63 @@ export const Navbar = () => {
           </NavLink>
 
           <div className="hidden flex-1 items-center justify-center md:flex">
-            <div className="flex items-center space-x-8">
-              {links.map((link) => (
-                <NavLink key={link.href} href={link.href}>
-                  {link.label}
-                </NavLink>
-              ))}
-            </div>
+            <NavigationMenu>
+              <NavigationMenuList>
+                {publicLinks.map((link) => (
+                  <NavigationMenuItem key={link.href}>
+                    <NavigationMenuLink asChild>
+                      <NavLink
+                        href={link.href}
+                        className="hover:bg-accent rounded-md px-4 py-2 transition-colors"
+                      >
+                        {link.label}
+                      </NavLink>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                ))}
+
+                {isAuthenticated && authenticatedLinks.length > 0 && (
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="h-9">
+                      Espace{' '}
+                      {userRole === 'student'
+                        ? 'Étudiant'
+                        : userRole === 'company'
+                          ? 'Entreprise'
+                          : 'Admin'}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul
+                        className={cn(
+                          'gap-3 p-4',
+                          authenticatedLinks.length > 1
+                            ? 'grid w-[400px] md:w-[500px] md:grid-cols-2'
+                            : 'w-[350px] md:w-[500px]',
+                        )}
+                      >
+                        {authenticatedLinks.map((link) => (
+                          <li key={link.href}>
+                            <NavigationMenuLink asChild>
+                              <NavLink
+                                href={link.href}
+                                className="hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors"
+                              >
+                                <div className="text-sm font-medium leading-none">{link.label}</div>
+                                {link.description && (
+                                  <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
+                                    {link.description}
+                                  </p>
+                                )}
+                              </NavLink>
+                            </NavigationMenuLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                )}
+              </NavigationMenuList>
+            </NavigationMenu>
           </div>
 
           <div className="hidden items-center space-x-4 md:flex">
@@ -74,9 +139,9 @@ export const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <ProfileAvatar
-                      photoUrl={user.image || undefined}
-                      firstName={user.name?.split(' ')[0] || '?'}
-                      lastName={user.name?.split(' ').slice(1).join(' ') || '?'}
+                      photoUrl={user.profilePicture || user.image || undefined}
+                      firstName={user.firstName || user.name?.split(' ')[0] || ''}
+                      lastName={user.lastName || user.name?.split(' ').slice(-1)[0] || ''}
                       size="sm"
                     />
                   </Button>
@@ -98,6 +163,20 @@ export const Navbar = () => {
                       <NavLink href={profileLink}>Voir mon profil</NavLink>
                     </DropdownMenuItem>
                   )}
+                  {(userRole === 'student' || userRole === 'company') && (
+                    <DropdownMenuItem asChild>
+                      <NavLink
+                        href={
+                          userRole === 'student'
+                            ? `/students/profile-info`
+                            : `/companies/profile-info`
+                        }
+                      >
+                        Gérer mon profil
+                      </NavLink>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="cursor-pointer text-red-600"
                     onClick={() => signOut()}
@@ -107,7 +186,7 @@ export const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild>
+              <Button asChild variant={'default'} className="hover:bg-white">
                 <NavLink href="/login">Se connecter</NavLink>
               </Button>
             )}
@@ -134,13 +213,40 @@ export const Navbar = () => {
           )}
         >
           <div className="container mx-auto flex flex-col space-y-4 px-4 py-4">
-            {links.map((link) => (
-              <NavLink key={link.href} href={link.href} onClick={closeMenu}>
+            {publicLinks.map((link) => (
+              <NavLink key={link.href} href={link.href} onClick={closeMenu} className="px-4 py-2">
                 {link.label}
               </NavLink>
             ))}
+
+            {isAuthenticated && authenticatedLinks.length > 0 && (
+              <>
+                <div className="text-muted-foreground px-4 text-sm font-medium">
+                  Espace{' '}
+                  {userRole === 'student'
+                    ? 'Étudiant'
+                    : userRole === 'company'
+                      ? 'Entreprise'
+                      : 'Admin'}
+                </div>
+                {authenticatedLinks.map((link) => (
+                  <NavLink
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeMenu}
+                    className="px-4 py-2"
+                  >
+                    <div className="text-sm font-medium">{link.label}</div>
+                    {link.description && (
+                      <p className="text-muted-foreground mt-1 text-xs">{link.description}</p>
+                    )}
+                  </NavLink>
+                ))}
+              </>
+            )}
+
             {!isAuthenticated && (
-              <Button asChild className="w-full">
+              <Button asChild variant={'default'} className="w-full hover:bg-white">
                 <NavLink href="/login" onClick={closeMenu}>
                   Se connecter
                 </NavLink>
