@@ -1,3 +1,37 @@
+/**
+ * @swagger
+ * /api/school-domains/validate-school-email:
+ *   post:
+ *     tags:
+ *       - School Domains
+ *     summary: Valider un email scolaire
+ *     description: Vérifie si l'email fourni correspond à une école enregistrée dans le système
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ValidateSchoolEmailRequest'
+ *     responses:
+ *       200:
+ *         description: Email validé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidateSchoolEmailResponse'
+ *       400:
+ *         description: Erreur de validation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidateSchoolEmailError'
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidateSchoolEmailError'
+ */
 import { NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';

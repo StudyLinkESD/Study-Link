@@ -99,4 +99,35 @@ export const schoolDomainSchemas = {
       code: 'DOMAIN_EXISTS',
     },
   },
+  ValidateSchoolEmailRequest: {
+    type: 'object',
+    required: ['email'],
+    properties: {
+      email: {
+        type: 'string',
+        description: 'Email scolaire à valider',
+        example: 'etudiant@epsi.fr',
+      },
+    },
+  },
+  ValidateSchoolEmailResponse: {
+    type: 'object',
+    properties: {
+      isValid: {
+        type: 'boolean',
+        description: "Indique si l'email correspond à une école enregistrée",
+        example: true,
+      },
+    },
+  },
+  ValidateSchoolEmailError: {
+    type: 'object',
+    properties: {
+      error: {
+        type: 'string',
+        description: "Message d'erreur",
+        example: "L'email scolaire doit correspondre à une école enregistrée",
+      },
+    },
+  },
 };
