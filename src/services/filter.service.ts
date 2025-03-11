@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import {
   ExperienceFilters,
   PaginationParams,
+  SchoolDomainFilters,
   SchoolFilters,
   SchoolOwnerFilters,
   StudentFilters,
@@ -299,6 +300,35 @@ export class FilterService {
         { user: { email: { contains: filters.search, mode: 'insensitive' } } },
         { school: { name: { contains: filters.search, mode: 'insensitive' } } },
       ];
+    }
+
+    return where;
+  }
+
+  static buildSchoolDomainWhereClause(
+    filters: SchoolDomainFilters,
+  ): Prisma.AuthorizedSchoolDomainWhereInput {
+    const where: Prisma.AuthorizedSchoolDomainWhereInput = {};
+
+    if (filters.search) {
+      where.domain = {
+        contains: filters.search,
+        mode: Prisma.QueryMode.insensitive,
+      };
+    }
+
+    if (filters.hasSchools !== undefined) {
+      where.schools = filters.hasSchools
+        ? {
+            some: {
+              deletedAt: null,
+            },
+          }
+        : {
+            none: {
+              deletedAt: null,
+            },
+          };
     }
 
     return where;

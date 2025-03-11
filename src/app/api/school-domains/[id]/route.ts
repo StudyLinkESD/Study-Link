@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 import { validateSchoolDomainData } from '@/utils/validation/school-domain.validation';
 
-import { SchoolDomainResponseDTO, UpdateSchoolDomainDTO } from '@/dto/school-domain.dto';
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
 
-const prisma = new PrismaClient();
+import { SchoolDomainResponseDTO, UpdateSchoolDomainDTO } from '@/dto/school-domain.dto';
 
 /**
  * @swagger
@@ -36,23 +36,22 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<SchoolDomainResponseDTO | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<SchoolDomainResponseDTO | ApiError>> {
   try {
-    const id = (await params).id;
     const domain = await prisma.authorizedSchoolDomain.findUnique({
       where: {
-        id: id,
+        id: params.id,
       },
     });
 
@@ -78,8 +77,6 @@ export async function GET(
  *       - School Domains
  *     summary: Met à jour un domaine d'école
  *     description: Permet de modifier le nom de domaine d'une école
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -93,7 +90,7 @@ export async function GET(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateSchoolDomainRequest'
+ *             $ref: '#/components/schemas/UpdateSchoolDomainDTO'
  *     responses:
  *       200:
  *         description: Domaine mis à jour avec succès
@@ -106,48 +103,44 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       404:
  *         description: Domaine non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<
-  NextResponse<SchoolDomainResponseDTO | { error: string; details?: Record<string, string> }>
-> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<SchoolDomainResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
-    const id = (await params).id;
+    const existingDomain = await prisma.authorizedSchoolDomain.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingDomain) {
+      return NextResponse.json({ error: 'Domaine non trouvé' }, { status: 404 });
+    }
+
     const body = (await request.json()) as UpdateSchoolDomainDTO;
 
-    const validationResult = await validateSchoolDomainData(body, id);
+    const validationResult = await validateSchoolDomainData(body, params.id);
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation failed',
+          details: Object.entries(validationResult.errors || {}).map(([field, message]) => ({
+            field,
+            message,
+          })),
         },
         { status: 400 },
       );
@@ -155,7 +148,7 @@ export async function PUT(
 
     const domain = await prisma.authorizedSchoolDomain.update({
       where: {
-        id: id,
+        id: params.id,
       },
       data: {
         domain: body.domain,
@@ -180,8 +173,6 @@ export async function PUT(
  *       - School Domains
  *     summary: Supprime un domaine d'école
  *     description: Supprime un domaine d'école s'il n'est pas utilisé par une école
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -207,57 +198,50 @@ export async function PUT(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
- *       401:
- *         description: Non authentifié
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Accès non autorisé
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       404:
  *         description: Domaine non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchoolDomainError'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<{ message: string } | ApiError>> {
   try {
-    const id = (await params).id;
+    const existingDomain = await prisma.authorizedSchoolDomain.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingDomain) {
+      return NextResponse.json({ error: 'Domaine non trouvé' }, { status: 404 });
+    }
+
     const schoolsUsingDomain = await prisma.school.count({
       where: {
-        domainId: id,
+        domainId: params.id,
         deletedAt: null,
       },
     });
 
     if (schoolsUsingDomain > 0) {
       return NextResponse.json(
-        {
-          error: 'Ce domaine est utilisé par une ou plusieurs écoles et ne peut pas être supprimé',
-        },
+        { error: 'Ce domaine est actuellement utilisé par une ou plusieurs écoles' },
         { status: 400 },
       );
     }
 
     await prisma.authorizedSchoolDomain.delete({
       where: {
-        id: id,
+        id: params.id,
       },
     });
 

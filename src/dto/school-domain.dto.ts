@@ -9,4 +9,9 @@ export interface UpdateSchoolDomainDTO {
 export interface SchoolDomainResponseDTO {
   id: string;
   domain: string;
+  schoolCount?: number;
+}
+
+export interface ValidateSchoolEmailDTO {
+  email: string;
 }

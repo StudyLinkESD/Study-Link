@@ -48,6 +48,10 @@ export interface SchoolOwnerFilters extends BaseFilters {
   userId?: string;
 }
 
+export interface SchoolDomainFilters extends BaseFilters {
+  hasSchools?: boolean;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;

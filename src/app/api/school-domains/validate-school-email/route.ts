@@ -11,40 +11,57 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ValidateSchoolEmailRequest'
+ *             $ref: '#/components/schemas/ValidateSchoolEmailDTO'
  *     responses:
  *       200:
  *         description: Email validé avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidateSchoolEmailResponse'
+ *               type: object
+ *               properties:
+ *                 isValid:
+ *                   type: boolean
+ *                   description: Indique si l'email est valide
+ *                 schoolId:
+ *                   type: string
+ *                   format: uuid
+ *                   description: ID de l'école correspondante
+ *                 schoolName:
+ *                   type: string
+ *                   description: Nom de l'école correspondante
  *       400:
  *         description: Erreur de validation
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidateSchoolEmailError'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidateSchoolEmailError'
+ *               $ref: '#/components/schemas/ApiError'
  */
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 
-export async function POST(request: Request) {
-  try {
-    const { email } = await request.json();
+import { ApiError } from '@/types/error.type';
 
-    if (!email) {
+import { ValidateSchoolEmailDTO } from '@/dto/school-domain.dto';
+
+export async function POST(
+  request: NextRequest,
+): Promise<NextResponse<{ isValid: boolean; schoolId?: string; schoolName?: string } | ApiError>> {
+  try {
+    const body = (await request.json()) as ValidateSchoolEmailDTO;
+
+    if (!body.email) {
       return NextResponse.json({ error: "L'email est requis" }, { status: 400 });
     }
 
-    const domain = email.split('@')[1];
+    const [, domain] = body.email.split('@');
 
     if (!domain) {
       return NextResponse.json({ error: "Format d'email invalide" }, { status: 400 });
@@ -55,6 +72,11 @@ export async function POST(request: Request) {
         domain: {
           domain: domain,
         },
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
       },
     });
 
@@ -65,7 +87,11 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ isValid: true });
+    return NextResponse.json({
+      isValid: true,
+      schoolId: school.id,
+      schoolName: school.name,
+    });
   } catch (error) {
     console.error("Erreur lors de la validation de l'email:", error);
     return NextResponse.json({ error: "Erreur lors de la validation de l'email" }, { status: 500 });
