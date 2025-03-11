@@ -1,13 +1,14 @@
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 import { validateCompanyOwnerData } from '@/utils/validation/company-owner.validation';
-import { ValidationError } from '@/utils/validation/company-owner.validation';
+
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+import { PaginatedResponse } from '@/types/filters.type';
 
 import { CompanyOwnerResponseDTO, CreateCompanyOwnerDTO } from '@/dto/company-owner.dto';
-
-const prisma = new PrismaClient();
+import { FilterService } from '@/services/filter.service';
 
 /**
  * @swagger
@@ -33,36 +34,100 @@ const prisma = new PrismaClient();
  *           maximum: 100
  *           default: 10
  *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Recherche sur le nom, prénom, email ou nom de l'entreprise
+ *       - in: query
+ *         name: companyId
+ *         schema:
+ *           type: string
+ *         description: Filtrer par entreprise
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: Filtrer par utilisateur
+ *       - in: query
+ *         name: orderBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, id]
+ *           default: createdAt
+ *         description: Champ de tri
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Ordre de tri
  *     responses:
  *       200:
  *         description: Liste des propriétaires d'entreprise récupérée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/CompanyOwnersListResponse'
+ *               $ref: '#/components/schemas/PaginatedCompanyOwnerResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
-export async function GET(): Promise<NextResponse<CompanyOwnerResponseDTO[] | { error: string }>> {
+export async function GET(
+  request: NextRequest,
+): Promise<NextResponse<PaginatedResponse<CompanyOwnerResponseDTO> | ApiError>> {
   try {
-    const companyOwners = await prisma.companyOwner.findMany({
-      include: {
-        user: true,
-        company: true,
-      },
+    const { searchParams } = new URL(request.url);
+    const filters = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: Math.min(parseInt(searchParams.get('limit') || '10'), 100),
+      orderBy: searchParams.get('orderBy') || 'createdAt',
+      order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
+      search: searchParams.get('search') || undefined,
+      companyId: searchParams.get('companyId') || undefined,
+      userId: searchParams.get('userId') || undefined,
+    };
+
+    const where = FilterService.buildCompanyOwnerWhereClause(filters);
+    const pagination = FilterService.buildPaginationOptions(filters);
+
+    const [companyOwners, total] = await prisma.$transaction([
+      prisma.companyOwner.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              profilePicture: true,
+            },
+          },
+          company: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+            },
+          },
+        },
+        ...pagination,
+      }),
+      prisma.companyOwner.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      items: companyOwners as CompanyOwnerResponseDTO[],
+      total,
+      page: filters.page,
+      limit: filters.limit,
+      totalPages: Math.ceil(total / filters.limit),
     });
-
-    const response: CompanyOwnerResponseDTO[] = companyOwners.map((owner) => ({
-      id: owner.id,
-      userId: owner.userId,
-      companyId: owner.companyId,
-    }));
-
-    return NextResponse.json(response);
   } catch (error) {
     console.error("Erreur lors de la récupération des propriétaires d'entreprise:", error);
     return NextResponse.json(
@@ -85,7 +150,7 @@ export async function GET(): Promise<NextResponse<CompanyOwnerResponseDTO[] | { 
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateCompanyOwnerRequest'
+ *             $ref: '#/components/schemas/CreateCompanyOwnerDTO'
  *     responses:
  *       201:
  *         description: Propriétaire d'entreprise créé avec succès
@@ -98,29 +163,17 @@ export async function GET(): Promise<NextResponse<CompanyOwnerResponseDTO[] | { 
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 details:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       field:
- *                         type: string
- *                       message:
- *                         type: string
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function POST(
-  request: Request,
-): Promise<NextResponse<CompanyOwnerResponseDTO | { error: string; details?: ValidationError[] }>> {
+  request: NextRequest,
+): Promise<NextResponse<CompanyOwnerResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const body = (await request.json()) as CreateCompanyOwnerDTO;
 
@@ -128,8 +181,11 @@ export async function POST(
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation échouée',
+          details: Object.entries(validationResult.errors || {}).map(([field, message]) => ({
+            field,
+            message,
+          })),
         },
         { status: 400 },
       );
@@ -138,18 +194,26 @@ export async function POST(
     const companyOwner = await prisma.companyOwner.create({
       data: body,
       include: {
-        user: true,
-        company: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+          },
+        },
+        company: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          },
+        },
       },
     });
 
-    const response: CompanyOwnerResponseDTO = {
-      id: companyOwner.id,
-      userId: companyOwner.userId,
-      companyId: companyOwner.companyId,
-    };
-
-    return NextResponse.json(response, { status: 201 });
+    return NextResponse.json(companyOwner as CompanyOwnerResponseDTO, { status: 201 });
   } catch (error) {
     console.error("Erreur lors de la création du propriétaire d'entreprise:", error);
     return NextResponse.json(

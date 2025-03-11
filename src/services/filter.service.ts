@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 
 import {
+  CompanyOwnerFilters,
   ExperienceFilters,
   JobFilters,
   PaginationParams,
@@ -381,6 +382,29 @@ export class FilterService {
 
     if (Object.keys(dateFilters).length > 0) {
       where.createdAt = dateFilters;
+    }
+
+    return where;
+  }
+
+  static buildCompanyOwnerWhereClause(filters: CompanyOwnerFilters): Prisma.CompanyOwnerWhereInput {
+    const where: Prisma.CompanyOwnerWhereInput = {};
+
+    if (filters.companyId) {
+      where.companyId = filters.companyId;
+    }
+
+    if (filters.userId) {
+      where.userId = filters.userId;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { user: { firstName: { contains: filters.search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: filters.search, mode: 'insensitive' } } },
+        { user: { email: { contains: filters.search, mode: 'insensitive' } } },
+        { company: { name: { contains: filters.search, mode: 'insensitive' } } },
+      ];
     }
 
     return where;

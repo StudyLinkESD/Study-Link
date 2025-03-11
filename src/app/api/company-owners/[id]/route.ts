@@ -1,15 +1,15 @@
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 import {
   checkCompanyOwnerExists,
   validateCompanyOwnerData,
 } from '@/utils/validation/company-owner.validation';
 
-import { CompanyOwnerResponseDTO, UpdateCompanyOwnerDTO } from '@/dto/company-owner.dto';
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
 
-const prisma = new PrismaClient();
+import { CompanyOwnerResponseDTO, UpdateCompanyOwnerDTO } from '@/dto/company-owner.dto';
 
 /**
  * @swagger
@@ -39,20 +39,20 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<CompanyOwnerResponseDTO | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<CompanyOwnerResponseDTO | ApiError>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     const companyOwnerCheck = await checkCompanyOwnerExists(id);
 
     if (!companyOwnerCheck.exists) {
@@ -62,8 +62,22 @@ export async function GET(
     const companyOwner = await prisma.companyOwner.findUnique({
       where: { id },
       include: {
-        user: true,
-        company: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+          },
+        },
+        company: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          },
+        },
       },
     });
 
@@ -71,13 +85,7 @@ export async function GET(
       return NextResponse.json({ error: "Propriétaire d'entreprise non trouvé" }, { status: 404 });
     }
 
-    const response: CompanyOwnerResponseDTO = {
-      id: companyOwner.id,
-      userId: companyOwner.userId,
-      companyId: companyOwner.companyId,
-    };
-
-    return NextResponse.json(response);
+    return NextResponse.json(companyOwner as CompanyOwnerResponseDTO);
   } catch (error) {
     console.error("Erreur lors de la récupération du propriétaire d'entreprise:", error);
     return NextResponse.json(
@@ -108,7 +116,7 @@ export async function GET(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateCompanyOwnerRequest'
+ *             $ref: '#/components/schemas/UpdateCompanyOwnerDTO'
  *     responses:
  *       200:
  *         description: Propriétaire d'entreprise mis à jour avec succès
@@ -121,38 +129,26 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 details:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       field:
- *                         type: string
- *                       message:
- *                         type: string
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       404:
  *         description: Propriétaire d'entreprise non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<CompanyOwnerResponseDTO | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<CompanyOwnerResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     const body = (await request.json()) as UpdateCompanyOwnerDTO;
 
     const companyOwnerCheck = await checkCompanyOwnerExists(id);
@@ -164,8 +160,11 @@ export async function PUT(
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation échouée',
+          details: Object.entries(validationResult.errors || {}).map(([field, message]) => ({
+            field,
+            message,
+          })),
         },
         { status: 400 },
       );
@@ -175,18 +174,26 @@ export async function PUT(
       where: { id },
       data: body,
       include: {
-        user: true,
-        company: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            profilePicture: true,
+          },
+        },
+        company: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          },
+        },
       },
     });
 
-    const response: CompanyOwnerResponseDTO = {
-      id: companyOwner.id,
-      userId: companyOwner.userId,
-      companyId: companyOwner.companyId,
-    };
-
-    return NextResponse.json(response);
+    return NextResponse.json(companyOwner as CompanyOwnerResponseDTO);
   } catch (error) {
     console.error("Erreur lors de la mise à jour du propriétaire d'entreprise:", error);
     return NextResponse.json(
@@ -222,27 +229,25 @@ export async function PUT(
  *               properties:
  *                 message:
  *                   type: string
- *             example:
- *               message: "Propriétaire d'entreprise supprimé avec succès"
  *       404:
  *         description: Propriétaire d'entreprise non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<{ message: string } | ApiError>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     const companyOwnerCheck = await checkCompanyOwnerExists(id);
 
     if (!companyOwnerCheck.exists) {

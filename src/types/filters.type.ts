@@ -61,6 +61,11 @@ export interface JobFilters extends BaseFilters {
   createdBefore?: Date;
 }
 
+export interface CompanyOwnerFilters extends BaseFilters {
+  companyId?: string;
+  userId?: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
