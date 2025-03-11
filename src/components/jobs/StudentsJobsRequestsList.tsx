@@ -1,15 +1,12 @@
 'use client';
 
-import { Prisma } from '@prisma/client';
-import axios from 'axios';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Eye, Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { toast } from 'sonner';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 
 import ItemGrid from '@/components/app/common/ItemGrid';
 import Pagination from '@/components/app/common/Pagination';
@@ -27,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { useCompanyId } from '@/hooks/useCompanyId';
+import { JobRequestWithRelations, useCompanyJobRequests } from '@/hooks/useCompanyJobRequests';
 
 const REQUESTS_PER_PAGE = 6;
 const STATUS_OPTIONS = {
@@ -36,21 +33,6 @@ const STATUS_OPTIONS = {
   ACCEPTED: 'ACCEPTED',
   REJECTED: 'REJECTED',
 };
-
-type JobRequestWithRelations = Prisma.JobRequestGetPayload<{
-  include: {
-    student: {
-      include: {
-        user: true;
-      };
-    };
-    job: {
-      include: {
-        company: true;
-      };
-    };
-  };
-}>;
 
 type FilterState = {
   statusFilter: string;
@@ -134,9 +116,11 @@ function RequestFilters({
 function JobRequestCard({
   request,
   onStatusChange,
+  onClick,
 }: {
   request: JobRequestWithRelations;
   onStatusChange: (id: string, status: string) => void;
+  onClick?: (request: JobRequestWithRelations) => void;
 }) {
   const { student, job, status, createdAt, id } = request;
   const { firstName, lastName } = student.user;
@@ -157,7 +141,7 @@ function JobRequestCard({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="cursor-pointer overflow-hidden" onClick={() => onClick && onClick(request)}>
       <CardContent className="p-4">
         <div className="flex justify-between">
           <div className="flex items-center gap-3">
@@ -204,65 +188,46 @@ function JobRequestCard({
   );
 }
 
-type Job = {
-  id: string;
-  companyId: string;
-  name: string;
-};
-
 export default function StudentsJobsRequestsList() {
   const { data: session } = useSession();
-  const { companyId, isLoading: isLoadingCompany } = useCompanyId(session);
-  const [requests, setRequests] = useState<JobRequestWithRelations[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { requests, isLoading, updateRequestStatus, companyId } = useCompanyJobRequests(session);
+
   const [state, dispatch] = useReducer(filterReducer, initialFilterState);
   const { statusFilter, searchTerm, currentPage } = state;
   const tabsRef = useRef<HTMLDivElement>(null);
-
-  const fetchJobRequests = useCallback(async () => {
-    if (!companyId) return;
-
-    setIsLoading(true);
-    try {
-      const response = await axios.get('/api/students/job-requests');
-
-      const jobsResponse = await axios.get('/api/jobs');
-      const companyJobs = jobsResponse.data.filter((job: Job) => job.companyId === companyId);
-      const companyJobIds = companyJobs.map((job: Job) => job.id);
-
-      const companyRequests = response.data.filter((req: JobRequestWithRelations) =>
-        companyJobIds.includes(req.jobId),
-      );
-
-      setRequests(companyRequests);
-    } catch {
-      toast.error('Erreur lors du chargement des candidatures');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [companyId]);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobTitle, setSelectedJobTitle] = useState<string | null>(null);
 
   useEffect(() => {
-    if (companyId) {
-      fetchJobRequests();
-    }
-  }, [companyId, fetchJobRequests]);
+    const handleJobSelected = (event: CustomEvent<{ jobId: string; jobTitle: string }>) => {
+      setSelectedJobId(event.detail.jobId);
+      setSelectedJobTitle(event.detail.jobTitle);
+
+      const currentStatus = state.statusFilter;
+      dispatch({ type: 'RESET_FILTERS' });
+      dispatch({ type: 'SET_STATUS_FILTER', payload: currentStatus });
+    };
+
+    window.addEventListener('job-selected', handleJobSelected as EventListener);
+
+    return () => {
+      window.removeEventListener('job-selected', handleJobSelected as EventListener);
+    };
+  }, [state.statusFilter]);
+
+  const handleRequestClick = (request: JobRequestWithRelations) => {
+    console.log('Request clicked:', request);
+  };
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
-    try {
-      await axios.put(`/api/students/job-requests/${requestId}`, { status: newStatus });
-
-      setRequests(
-        requests.map((req) => (req.id === requestId ? { ...req, status: newStatus } : req)),
-      );
-
-      toast.success('Statut mis à jour avec succès');
-    } catch {
-      toast.error('Erreur lors de la mise à jour du statut');
-    }
+    await updateRequestStatus(requestId, newStatus);
   };
 
   const filteredRequests = requests.filter((request) => {
+    if (selectedJobId && request.jobId !== selectedJobId) {
+      return false;
+    }
+
     if (statusFilter !== STATUS_OPTIONS.ALL && request.status !== statusFilter) {
       return false;
     }
@@ -287,7 +252,7 @@ export default function StudentsJobsRequestsList() {
     currentPage * REQUESTS_PER_PAGE,
   );
 
-  if (isLoadingCompany || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="flex flex-col items-center">
@@ -312,8 +277,25 @@ export default function StudentsJobsRequestsList() {
   }
 
   return (
-    <div className="w-1/3 space-y-4">
-      <h2 className="text-2xl font-bold">Candidatures reçues</h2>
+    <div id="students-jobs-requests" className="w-1/3 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">
+          {selectedJobTitle ? `Candidatures pour : ${selectedJobTitle}` : 'Candidatures reçues'}
+        </h2>
+        {selectedJobId && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedJobId(null);
+              setSelectedJobTitle(null);
+              window.dispatchEvent(new CustomEvent('reset-selected-job'));
+            }}
+          >
+            Voir toutes les candidatures
+          </Button>
+        )}
+      </div>
 
       <Card>
         <CardContent className="p-6">
@@ -334,7 +316,11 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
+                  <JobRequestCard
+                    request={req}
+                    onStatusChange={handleStatusChange}
+                    onClick={handleRequestClick}
+                  />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{
@@ -348,7 +334,11 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
+                  <JobRequestCard
+                    request={req}
+                    onStatusChange={handleStatusChange}
+                    onClick={handleRequestClick}
+                  />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{
@@ -362,7 +352,11 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
+                  <JobRequestCard
+                    request={req}
+                    onStatusChange={handleStatusChange}
+                    onClick={handleRequestClick}
+                  />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{
@@ -376,7 +370,11 @@ export default function StudentsJobsRequestsList() {
               <ItemGrid
                 items={currentRequests}
                 renderItem={(req) => (
-                  <JobRequestCard request={req} onStatusChange={handleStatusChange} />
+                  <JobRequestCard
+                    request={req}
+                    onStatusChange={handleStatusChange}
+                    onClick={handleRequestClick}
+                  />
                 )}
                 keyExtractor={(req) => req.id}
                 emptyState={{

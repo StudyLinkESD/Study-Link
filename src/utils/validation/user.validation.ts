@@ -152,7 +152,6 @@ export async function validateUser(
         break;
 
       case UserType.ADMIN:
-        // Pas de validation supplémentaire requise pour l'admin
         break;
 
       default:
