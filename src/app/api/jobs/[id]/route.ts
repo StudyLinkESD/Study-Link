@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 import { checkJobExists, validateJobData } from '@/utils/validation/job.validation';
 
-import { JobResponseDTO, UpdateJobDTO } from '@/dto/job.dto';
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
 
-const prisma = new PrismaClient();
+import { JobResponseDTO, UpdateJobDTO } from '@/dto/job.dto';
 
 /**
  * @swagger
@@ -36,26 +36,26 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       410:
  *         description: Offre d'emploi supprimée
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<JobResponseDTO | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<JobResponseDTO | ApiError>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     const jobCheck = await checkJobExists(id);
 
     if (!jobCheck.exists) {
@@ -69,7 +69,12 @@ export async function GET(
     const job = await prisma.job.findUnique({
       where: { id },
       include: {
-        company: true,
+        company: {
+          select: {
+            name: true,
+            logo: true,
+          },
+        },
       },
     });
 
@@ -81,10 +86,14 @@ export async function GET(
       id: job.id,
       companyId: job.companyId,
       name: job.name,
-      featuredImage: job.featuredImage || undefined,
       description: job.description,
-      skills: job.skills || undefined,
+      featuredImage: job.featuredImage || undefined,
+      company: {
+        name: job.company.name,
+        logo: job.company.logo || undefined,
+      },
       type: job.type,
+      skills: job.skills ? job.skills.split(',').map((s) => s.trim()) : [],
       availability: job.availability || undefined,
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
@@ -120,7 +129,7 @@ export async function GET(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateJobRequest'
+ *             $ref: '#/components/schemas/UpdateJobDTO'
  *     responses:
  *       200:
  *         description: Offre d'emploi mise à jour avec succès
@@ -133,56 +142,44 @@ export async function GET(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 details:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       field:
- *                         type: string
- *                       message:
- *                         type: string
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       401:
  *         description: Non authentifié
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       403:
- *         description: Accès non autorisé (utilisateur non propriétaire)
+ *         description: Accès non autorisé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       404:
  *         description: Offre d'emploi non trouvée
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       410:
  *         description: Offre d'emploi supprimée
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<JobResponseDTO | { error: string; details?: Record<string, string>[] }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<JobResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     const jobCheck = await checkJobExists(id);
 
     if (!jobCheck.exists) {
@@ -199,8 +196,11 @@ export async function PUT(
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation échouée',
+          details: Object.entries(validationResult.errors || {}).map(([field, message]) => ({
+            field,
+            message,
+          })),
         },
         { status: 400 },
       );
@@ -208,9 +208,17 @@ export async function PUT(
 
     const updatedJob = await prisma.job.update({
       where: { id },
-      data: body,
+      data: {
+        ...body,
+        skills: body.skills?.join(','),
+      },
       include: {
-        company: true,
+        company: {
+          select: {
+            name: true,
+            logo: true,
+          },
+        },
       },
     });
 
@@ -218,10 +226,14 @@ export async function PUT(
       id: updatedJob.id,
       companyId: updatedJob.companyId,
       name: updatedJob.name,
-      featuredImage: updatedJob.featuredImage || undefined,
       description: updatedJob.description,
-      skills: updatedJob.skills || undefined,
+      featuredImage: updatedJob.featuredImage || undefined,
+      company: {
+        name: updatedJob.company.name,
+        logo: updatedJob.company.logo || undefined,
+      },
       type: updatedJob.type,
+      skills: updatedJob.skills ? updatedJob.skills.split(',').map((s) => s.trim()) : [],
       availability: updatedJob.availability || undefined,
       createdAt: updatedJob.createdAt,
       updatedAt: updatedJob.updatedAt,
@@ -262,45 +274,43 @@ export async function PUT(
  *               properties:
  *                 message:
  *                   type: string
- *               example:
- *                 message: "Job supprimé avec succès"
  *       401:
  *         description: Non authentifié
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       403:
- *         description: Accès non autorisé (utilisateur non propriétaire)
+ *         description: Accès non autorisé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       404:
  *         description: Offre d'emploi non trouvée
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       410:
  *         description: Offre d'emploi déjà supprimée
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse<{ message: string } | { error: string }>> {
+  request: NextRequest,
+  { params }: { params: { id: string } },
+): Promise<NextResponse<{ message: string } | ApiError>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     const jobCheck = await checkJobExists(id);
 
     if (!jobCheck.exists) {

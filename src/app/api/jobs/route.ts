@@ -1,12 +1,14 @@
-import { Job, PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 import { validateJobData } from '@/utils/validation/job.validation';
 
-import { CreateJobDTO, JobResponseDTO } from '@/dto/job.dto';
+import { ApiError, ValidationErrorResponse } from '@/types/error.type';
+import { PaginatedResponse } from '@/types/filters.type';
 
-const prisma = new PrismaClient();
+import { CreateJobDTO, JobResponseDTO } from '@/dto/job.dto';
+import { FilterService } from '@/services/filter.service';
 
 /**
  * @swagger
@@ -16,101 +18,140 @@ const prisma = new PrismaClient();
  *       - Jobs
  *     summary: Récupère la liste des offres d'emploi
  *     description: Retourne toutes les offres d'emploi actives avec les informations de l'entreprise
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Numéro de la page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Recherche sur le titre, la description ou le nom de l'entreprise
+ *       - in: query
+ *         name: companyId
+ *         schema:
+ *           type: string
+ *         description: Filtrer par entreprise
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filtrer par type de contrat
+ *       - in: query
+ *         name: skills
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Filtrer par compétences requises
+ *       - in: query
+ *         name: availability
+ *         schema:
+ *           type: string
+ *         description: Filtrer par disponibilité
+ *       - in: query
+ *         name: orderBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, name]
+ *           default: createdAt
+ *         description: Champ de tri
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Ordre de tri
  *     responses:
  *       200:
  *         description: Liste des offres d'emploi récupérée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     format: uuid
- *                   offerTitle:
- *                     type: string
- *                   companyName:
- *                     type: string
- *                   description:
- *                     type: string
- *                   logoUrl:
- *                     type: string
- *                   status:
- *                     type: string
- *                   skills:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                         name:
- *                           type: string
- *                   availability:
- *                     type: string
+ *               $ref: '#/components/schemas/PaginatedJobResponse'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
-export async function GET(): Promise<
-  NextResponse<
-    | {
-        id: string;
-        companyId: string;
-        offerTitle: string;
-        companyName: string;
-        description: string;
-        logoUrl: string;
-        status: string;
-        skills: { id: string; name: string }[];
-        availability?: string;
-      }[]
-    | { error: string }
-  >
-> {
+export async function GET(
+  request: NextRequest,
+): Promise<NextResponse<PaginatedResponse<JobResponseDTO> | ApiError>> {
   try {
-    const jobs = await prisma.job.findMany({
-      where: {
-        deletedAt: null,
-      },
-      include: {
-        company: {
-          select: {
-            name: true,
-            logo: true,
+    const { searchParams } = new URL(request.url);
+    const filters = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: Math.min(parseInt(searchParams.get('limit') || '10'), 100),
+      orderBy: searchParams.get('orderBy') || 'createdAt',
+      order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
+      search: searchParams.get('search') || undefined,
+      companyId: searchParams.get('companyId') || undefined,
+      type: searchParams.get('type') || undefined,
+      skills: searchParams.getAll('skills'),
+      availability: searchParams.get('availability') || undefined,
+    };
+
+    const where = FilterService.buildJobWhereClause(filters);
+    const pagination = FilterService.buildPaginationOptions(filters);
+
+    const [jobs, total] = await prisma.$transaction([
+      prisma.job.findMany({
+        where,
+        include: {
+          company: {
+            select: {
+              name: true,
+              logo: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        ...pagination,
+      }),
+      prisma.job.count({ where }),
+    ]);
 
     const formattedJobs = jobs.map((job) => ({
       id: job.id,
       companyId: job.companyId,
-      offerTitle: job.name,
-      companyName: job.company.name,
+      name: job.name,
       description: job.description,
-      logoUrl: job.company.logo || '',
-      status: job.type,
-      skills: job.skills
-        ? job.skills.split(',').map((skill) => ({
-            id: skill.trim().toLowerCase(),
-            name: skill.trim(),
-          }))
-        : [],
+      featuredImage: job.featuredImage || undefined,
+      company: {
+        name: job.company.name,
+        logo: job.company.logo || undefined,
+      },
+      type: job.type,
+      skills: job.skills ? job.skills.split(',').map((s) => s.trim()) : [],
       availability: job.availability || undefined,
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
     }));
 
-    return NextResponse.json(formattedJobs);
-  } catch {
-    return NextResponse.json({ error: 'An error occurred while fetching jobs' }, { status: 500 });
+    return NextResponse.json({
+      items: formattedJobs,
+      total,
+      page: filters.page,
+      limit: filters.limit,
+      totalPages: Math.ceil(total / filters.limit),
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des jobs:', error);
+    return NextResponse.json({ error: 'Erreur lors de la récupération des jobs' }, { status: 500 });
   }
 }
 
@@ -129,7 +170,7 @@ export async function GET(): Promise<
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateJobRequest'
+ *             $ref: '#/components/schemas/CreateJobDTO'
  *     responses:
  *       201:
  *         description: Offre d'emploi créée avec succès
@@ -142,41 +183,29 @@ export async function GET(): Promise<
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 details:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       field:
- *                         type: string
- *                       message:
- *                         type: string
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       401:
  *         description: Non authentifié
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       403:
- *         description: Accès non autorisé (utilisateur non entreprise)
+ *         description: Accès non autorisé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ApiError'
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<JobResponseDTO | { error: string; details?: Record<string, string>[] }>> {
+): Promise<NextResponse<JobResponseDTO | ValidationErrorResponse | ApiError>> {
   try {
     const body = (await request.json()) as CreateJobDTO;
 
@@ -184,17 +213,28 @@ export async function POST(
     if (!validationResult.isValid) {
       return NextResponse.json(
         {
-          error: 'Données invalides',
-          details: validationResult.errors,
+          error: 'Validation échouée',
+          details: Object.entries(validationResult.errors || {}).map(([field, message]) => ({
+            field,
+            message,
+          })),
         },
         { status: 400 },
       );
     }
 
     const job = await prisma.job.create({
-      data: body,
+      data: {
+        ...body,
+        skills: body.skills?.join(','),
+      },
       include: {
-        company: true,
+        company: {
+          select: {
+            name: true,
+            logo: true,
+          },
+        },
       },
     });
 
@@ -202,17 +242,22 @@ export async function POST(
       id: job.id,
       companyId: job.companyId,
       name: job.name,
-      featuredImage: job.featuredImage || undefined,
       description: job.description,
-      skills: (job as Job).skills || undefined,
+      featuredImage: job.featuredImage || undefined,
+      company: {
+        name: job.company.name,
+        logo: job.company.logo || undefined,
+      },
       type: job.type,
+      skills: job.skills ? job.skills.split(',').map((s) => s.trim()) : [],
       availability: job.availability || undefined,
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
     };
 
     return NextResponse.json(formattedJob, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('Erreur lors de la création du job:', error);
     return NextResponse.json({ error: 'Erreur lors de la création du job' }, { status: 500 });
   }
 }

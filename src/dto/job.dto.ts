@@ -4,7 +4,11 @@ export interface JobResponseDTO {
   name: string;
   featuredImage?: string;
   description: string;
-  skills?: string;
+  company?: {
+    name: string;
+    logo?: string;
+  };
+  skills: string[];
   type: string;
   availability?: string;
   createdAt: Date;
@@ -16,7 +20,7 @@ export interface CreateJobDTO {
   name: string;
   featuredImage?: string;
   description: string;
-  skills?: string;
+  skills: string[];
   type: string;
   availability?: string;
 }
@@ -25,7 +29,7 @@ export interface UpdateJobDTO {
   name?: string;
   featuredImage?: string;
   description?: string;
-  skills?: string;
+  skills?: string[];
   type?: string;
   availability?: string;
 }

@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import {
   ExperienceFilters,
+  JobFilters,
   PaginationParams,
   SchoolDomainFilters,
   SchoolFilters,
@@ -329,6 +330,57 @@ export class FilterService {
               deletedAt: null,
             },
           };
+    }
+
+    return where;
+  }
+
+  static buildJobWhereClause(filters: JobFilters): Prisma.JobWhereInput {
+    const where: Prisma.JobWhereInput = {
+      deletedAt: null,
+    };
+
+    if (filters.companyId) {
+      where.companyId = filters.companyId;
+    }
+
+    if (filters.type) {
+      where.type = filters.type;
+    }
+
+    if (filters.availability) {
+      where.availability = filters.availability;
+    }
+
+    if (filters.skills?.length) {
+      where.AND = filters.skills.map((skill) => ({
+        skills: {
+          contains: skill,
+          mode: 'insensitive',
+        },
+      }));
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+        { company: { name: { contains: filters.search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const dateFilters: Prisma.JobWhereInput['createdAt'] = {};
+
+    if (filters.createdAfter) {
+      dateFilters.gte = filters.createdAfter;
+    }
+
+    if (filters.createdBefore) {
+      dateFilters.lte = filters.createdBefore;
+    }
+
+    if (Object.keys(dateFilters).length > 0) {
+      where.createdAt = dateFilters;
     }
 
     return where;

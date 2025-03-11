@@ -52,6 +52,15 @@ export interface SchoolDomainFilters extends BaseFilters {
   hasSchools?: boolean;
 }
 
+export interface JobFilters extends BaseFilters {
+  companyId?: string;
+  type?: string;
+  skills?: string[];
+  availability?: string;
+  createdAfter?: Date;
+  createdBefore?: Date;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
