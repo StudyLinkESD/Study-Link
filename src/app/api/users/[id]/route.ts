@@ -2,6 +2,9 @@ import { PrismaClient } from '@prisma/client';
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { EnrichedUserResponseDTO, UpdateUserDTO } from '@/dto/user.dto';
+import { FilterService } from '@/services/filter.service';
+
 const prisma = new PrismaClient();
 
 /**
@@ -11,7 +14,7 @@ const prisma = new PrismaClient();
  *     tags:
  *       - Users
  *     summary: Récupère les détails d'un utilisateur
- *     description: Retourne les informations détaillées d'un utilisateur avec ses relations (étudiant, école, entreprise, etc.)
+ *     description: Retourne les informations détaillées d'un utilisateur avec ses relations
  *     parameters:
  *       - in: path
  *         name: id
@@ -26,27 +29,38 @@ const prisma = new PrismaClient();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserResponseDTO'
+ *               $ref: '#/components/schemas/EnrichedUserResponseDTO'
  *       400:
  *         description: ID non fourni
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       404:
  *         description: Utilisateur non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(
+  request: NextRequest,
+): Promise<NextResponse<EnrichedUserResponseDTO | { error: string }>> {
   try {
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {
@@ -58,52 +72,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         id: id,
         deletedAt: null,
       },
-      include: {
-        student: {
-          include: {
-            school: true,
-            jobRequests: {
-              where: { deletedAt: null },
-              include: {
-                job: {
-                  include: {
-                    company: true,
-                  },
-                },
-              },
-            },
-            recommendations: true,
-          },
-        },
-        schoolOwner: {
-          include: {
-            school: {
-              include: {
-                domain: true,
-              },
-            },
-          },
-        },
-        companyOwner: {
-          include: {
-            company: {
-              include: {
-                jobs: {
-                  where: { deletedAt: null },
-                },
-              },
-            },
-          },
-        },
-        admin: true,
-      },
+      include: FilterService.getDefaultUserInclude(),
     });
 
     if (!user) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json(user as unknown as EnrichedUserResponseDTO);
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
     return NextResponse.json(
@@ -134,44 +110,53 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateUserRequest'
+ *             $ref: '#/components/schemas/UpdateUserDTO'
  *     responses:
  *       200:
  *         description: Utilisateur mis à jour avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserResponseDTO'
+ *               $ref: '#/components/schemas/EnrichedUserResponseDTO'
  *       400:
  *         description: ID non fourni ou données invalides
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       404:
  *         description: Utilisateur non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse> {
+  { params }: { params: { id: string } },
+): Promise<NextResponse<EnrichedUserResponseDTO | { error: string }>> {
   try {
-    const id = (await params).id;
+    const { id } = params;
     if (!id) {
       return NextResponse.json({ error: 'ID non fourni' }, { status: 400 });
     }
 
-    const data = await request.json();
+    const data = (await request.json()) as UpdateUserDTO;
 
     const existingUser = await prisma.user.findUnique({
       where: {
@@ -192,17 +177,12 @@ export async function PUT(
         firstName: data.firstName,
         lastName: data.lastName,
         profilePicture: data.profilePicture,
+        profileCompleted: data.profileCompleted,
       },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        profilePicture: true,
-      },
+      include: FilterService.getDefaultUserInclude(),
     });
 
-    return NextResponse.json(updatedUser);
+    return NextResponse.json(updatedUser as unknown as EnrichedUserResponseDTO);
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
@@ -238,25 +218,33 @@ export async function PUT(
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Utilisateur supprimé avec succès"
  *       400:
  *         description: ID non fourni
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       404:
  *         description: Utilisateur non trouvé
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {

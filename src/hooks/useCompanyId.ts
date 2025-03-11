@@ -3,19 +3,12 @@ import { Session } from 'next-auth';
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { EnrichedUserResponseDTO } from '@/types/user.dto';
+
 type CompanyData = {
   id: string;
   name: string;
   logo?: string | null;
-};
-
-type UserResponse = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  type: string;
-  company?: CompanyData;
 };
 
 export function useCompanyId(session: Session | null) {
@@ -33,7 +26,7 @@ export function useCompanyId(session: Session | null) {
       setIsLoading(true);
       setError(null);
 
-      const response = await axios.get<UserResponse>('/api/users/current');
+      const response = await axios.get<EnrichedUserResponseDTO>('/api/auth/me');
 
       if (response.data.company) {
         setCompany(response.data.company);

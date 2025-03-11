@@ -50,7 +50,7 @@ export interface UpdateUserDTO {
   profileCompleted?: boolean;
 }
 
-export interface UserResponseDTO {
+export interface BaseUserResponseDTO {
   id: string;
   email: string;
   firstName: string | null;
@@ -63,100 +63,81 @@ export interface UserResponseDTO {
   updatedAt: Date;
 }
 
-export interface UserByIdResponseDTO {
+export interface SchoolDTO {
   id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  profilePicture?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  student?: {
+  name: string;
+  logo: string | null;
+  domain: {
     id: string;
-    userId: string;
-    schoolId: string;
-    primaryRecommendationId?: string | null;
-    status: string;
-    skills: string;
-    apprenticeshipRhythm?: string | null;
-    description: string;
-    curriculumVitae?: string | null;
-    previousCompanies: string;
-    availability: boolean;
-    school: {
+    domain: string;
+  };
+}
+
+export interface CompanyDTO {
+  id: string;
+  name: string;
+  logo: string | null;
+}
+
+export interface JobRequestDTO {
+  id: string;
+  status: string;
+  createdAt: Date;
+  job: {
+    id: string;
+    name: string;
+    company: CompanyDTO;
+  };
+}
+
+export interface StudentDetailsDTO {
+  id: string;
+  schoolId: string;
+  status: string;
+  skills: string;
+  apprenticeshipRhythm: string | null;
+  description: string;
+  curriculumVitae: string | null;
+  previousCompanies: string;
+  availability: boolean;
+  school: SchoolDTO;
+  jobRequests: JobRequestDTO[];
+}
+
+export interface CompanyOwnerDetailsDTO {
+  id: string;
+  company: CompanyDTO & {
+    jobs: Array<{
       id: string;
       name: string;
-      domainId: string;
-      logo?: string | null;
-      createdAt: Date;
-      updatedAt: Date;
-      deletedAt?: Date | null;
-    };
-    jobRequests: Array<{
-      id: string;
-      studentId: string;
-      jobId: string;
       status: string;
       createdAt: Date;
-      updatedAt: Date;
-      job: {
-        id: string;
-        name: string;
-        description: string;
-        skills?: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        company: {
-          id: string;
-          name: string;
-          logo: string | null;
-        };
-        featuredImage: string | null;
-      };
     }>;
-    recommendations: Array<{
-      id: string;
-      studentId: string;
-      recommenderId: string;
-      content: string;
-      createdAt: Date;
-      updatedAt: Date;
-    }>;
-  } | null;
-  schoolOwner?: {
-    id: string;
-    userId: string;
-    schoolId: string;
-    school: {
-      id: string;
-      name: string;
-      domain: {
-        id: string;
-        domain: string;
-      };
-      logo: string | null;
-    };
-  } | null;
-  companyOwner?: {
-    id: string;
-    userId: string;
-    companyId: string;
-    company: {
-      id: string;
-      name: string;
-      logo: string | null;
-      jobs: Array<{
-        id: string;
-        name: string;
-        description: string;
-        skills?: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-      }>;
-    };
-  } | null;
-  admin?: {
-    id: string;
-    userId: string;
-  } | null;
+  };
+}
+
+export interface SchoolOwnerDetailsDTO {
+  id: string;
+  school: SchoolDTO;
+}
+
+export interface AdminDetailsDTO {
+  id: string;
+}
+
+export interface EnrichedUserResponseDTO extends BaseUserResponseDTO {
+  student?: StudentDetailsDTO | null;
+  companyOwner?: CompanyOwnerDetailsDTO | null;
+  schoolOwner?: SchoolOwnerDetailsDTO | null;
+  admin?: AdminDetailsDTO | null;
+}
+
+export interface PaginatedUserResponseDTO {
+  data: EnrichedUserResponseDTO[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }

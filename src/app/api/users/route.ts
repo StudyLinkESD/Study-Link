@@ -1,18 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { validateUserCreation, ValidationError } from '@/utils/validation/user.validation';
 
+import { UserFilters } from '@/types/filters.type';
 import { UserType } from '@/types/user.type';
 
-import {
-  CreateCompanyOwnerUserDTO,
-  CreateSchoolOwnerUserDTO,
-  CreateStudentUserDTO,
-  CreateUserDTO,
-  UserResponseDTO,
-} from '@/dto/user.dto';
+import { CreateUserDTO, EnrichedUserResponseDTO, PaginatedUserResponseDTO } from '@/dto/user.dto';
+import { FilterService } from '@/services/filter.service';
 
 const prisma = new PrismaClient();
 
@@ -23,7 +19,7 @@ const prisma = new PrismaClient();
  *     tags:
  *       - Users
  *     summary: Récupère la liste des utilisateurs
- *     description: Retourne la liste de tous les utilisateurs actifs (non supprimés)
+ *     description: Retourne la liste paginée des utilisateurs avec possibilité de filtrage
  *     parameters:
  *       - in: query
  *         name: page
@@ -40,46 +36,107 @@ const prisma = new PrismaClient();
  *           maximum: 100
  *           default: 10
  *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           $ref: '#/components/schemas/UserType'
+ *         description: Filtrer par type d'utilisateur
+ *       - in: query
+ *         name: schoolId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filtrer par école
+ *       - in: query
+ *         name: companyId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filtrer par entreprise
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Rechercher dans les noms et emails
+ *       - in: query
+ *         name: isProfileCompleted
+ *         schema:
+ *           type: boolean
+ *         description: Filtrer par profil complété
+ *       - in: query
+ *         name: isVerified
+ *         schema:
+ *           type: boolean
+ *         description: Filtrer par email vérifié
+ *       - in: query
+ *         name: orderBy
+ *         schema:
+ *           type: string
+ *         description: Champ de tri
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Ordre de tri
  *     responses:
  *       200:
  *         description: Liste des utilisateurs récupérée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UsersListResponse'
+ *               $ref: '#/components/schemas/PaginatedUserResponseDTO'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: string }>> {
+export async function GET(
+  request: NextRequest,
+): Promise<NextResponse<PaginatedUserResponseDTO | { error: string }>> {
   try {
-    const users = await prisma.user.findMany({
-      where: {
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        type: true,
-        profilePicture: true,
-        profileCompleted: true,
-        emailVerified: true,
-        createdAt: true,
-        updatedAt: true,
+    const { searchParams } = new URL(request.url);
+    const filters: UserFilters = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: parseInt(searchParams.get('limit') || '10'),
+      type: searchParams.get('type') as UserType,
+      schoolId: searchParams.get('schoolId') || undefined,
+      companyId: searchParams.get('companyId') || undefined,
+      search: searchParams.get('search') || undefined,
+      isProfileCompleted: searchParams.get('isProfileCompleted') === 'true',
+      isVerified: searchParams.get('isVerified') === 'true',
+      orderBy: searchParams.get('orderBy') || undefined,
+      order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
+    };
+
+    const where = FilterService.buildUserWhereClause(filters);
+    const pagination = FilterService.buildPaginationOptions(filters);
+    const include = FilterService.getDefaultUserInclude();
+
+    const [users, total] = await prisma.$transaction([
+      prisma.user.findMany({
+        where,
+        ...pagination,
+        include,
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      data: users as unknown as EnrichedUserResponseDTO[],
+      pagination: {
+        total,
+        page: filters.page || 1,
+        limit: filters.limit || 10,
+        totalPages: Math.ceil(total / (filters.limit || 10)),
       },
     });
-
-    const typedUsers = users.map((user) => ({
-      ...user,
-      type: user.type as UserType,
-    }));
-
-    return NextResponse.json(typedUsers);
   } catch (error) {
     console.error('Erreur lors de la récupération des utilisateurs:', error);
     return NextResponse.json(
@@ -98,40 +155,46 @@ export async function GET(): Promise<NextResponse<UserResponseDTO[] | { error: s
  *     summary: Crée un nouvel utilisateur
  *     description: |
  *       Crée un nouvel utilisateur avec les informations fournies.
- *       Le type d'utilisateur détermine les informations supplémentaires requises :
- *       - Student : schoolId et studentEmail requis
- *       - Company Owner : companyId requis
- *       - School Owner : schoolId requis
- *       - Admin : aucune information supplémentaire requise
+ *       Le type d'utilisateur détermine les informations supplémentaires requises.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateUserRequest'
+ *             $ref: '#/components/schemas/CreateUserDTO'
  *     responses:
  *       200:
  *         description: Utilisateur créé avec succès
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserResponseDTO'
+ *               $ref: '#/components/schemas/EnrichedUserResponseDTO'
  *       400:
  *         description: Données invalides
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ValidationError'
  *       500:
  *         description: Erreur serveur
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserError'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<UserResponseDTO | { error: string; details?: ValidationError[] }>> {
+): Promise<NextResponse<EnrichedUserResponseDTO | { error: string; details?: ValidationError[] }>> {
   try {
     const body = (await request.json()) as CreateUserDTO;
 
@@ -155,25 +218,16 @@ export async function POST(
       profileCompleted: body.profileCompleted ?? false,
     };
 
+    const include = FilterService.getDefaultUserInclude();
+
     const user = await prisma.user.create({
       data: userData,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        type: true,
-        profilePicture: true,
-        profileCompleted: true,
-        emailVerified: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      include,
     });
 
     switch (body.type) {
-      case UserType.COMPANY_OWNER:
-        const companyOwnerData = body as CreateCompanyOwnerUserDTO;
+      case UserType.COMPANY_OWNER: {
+        const companyOwnerData = body as CreateUserDTO & { companyId: string };
         await prisma.companyOwner.create({
           data: {
             userId: user.id,
@@ -181,9 +235,20 @@ export async function POST(
           },
         });
         break;
+      }
 
-      case UserType.STUDENT:
-        const studentData = body as CreateStudentUserDTO;
+      case UserType.STUDENT: {
+        const studentData = body as CreateUserDTO & {
+          schoolId: string;
+          studentEmail: string;
+          status: string;
+          skills: string;
+          apprenticeshipRhythm?: string;
+          description: string;
+          curriculumVitae?: string;
+          previousCompanies: string;
+          availability: boolean;
+        };
         await prisma.student.create({
           data: {
             userId: user.id,
@@ -199,9 +264,10 @@ export async function POST(
           },
         });
         break;
+      }
 
-      case UserType.SCHOOL_OWNER:
-        const schoolOwnerData = body as CreateSchoolOwnerUserDTO;
+      case UserType.SCHOOL_OWNER: {
+        const schoolOwnerData = body as CreateUserDTO & { schoolId: string };
         await prisma.schoolOwner.create({
           data: {
             userId: user.id,
@@ -209,20 +275,24 @@ export async function POST(
           },
         });
         break;
+      }
 
-      case UserType.ADMIN:
+      case UserType.ADMIN: {
         await prisma.admin.create({
           data: {
             userId: user.id,
           },
         });
         break;
+      }
     }
 
-    return NextResponse.json({
-      ...user,
-      type: user.type as UserType,
+    const createdUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      include,
     });
+
+    return NextResponse.json(createdUser as unknown as EnrichedUserResponseDTO);
   } catch (error) {
     console.error("Erreur lors de la création de l'utilisateur:", error);
     return NextResponse.json(
