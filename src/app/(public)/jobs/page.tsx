@@ -53,7 +53,7 @@ export default function JobsPage() {
 
   return (
     <JobProvider>
-      <main className="container mx-auto py-6">
+      <main className="container mx-auto px-6 py-6">
         <h1 className="mb-6 text-2xl font-bold">Offres d&apos;emploi</h1>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-5">

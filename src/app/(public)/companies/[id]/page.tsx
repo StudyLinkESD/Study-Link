@@ -163,7 +163,7 @@ export default function CompanyPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto px-8 py-10">
         <div className="flex h-[60vh] items-center justify-center">
           <Loader2 className="text-primary h-12 w-12 animate-spin" />
         </div>
@@ -173,7 +173,7 @@ export default function CompanyPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto px-8 py-10">
         <div className="flex h-[60vh] items-center justify-center">
           <p className="text-destructive">{error}</p>
         </div>
@@ -187,7 +187,7 @@ export default function CompanyPage() {
 
   return (
     <JobProvider>
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto px-8 py-10">
         <div className="mb-6">
           <BackButton href="/companies" />
         </div>
