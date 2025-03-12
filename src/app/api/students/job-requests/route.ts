@@ -66,7 +66,7 @@ export async function GET() {
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Seul les étudients peuvent postuler' }, { status: 403 });
+      return NextResponse.json({ error: 'Seul les étudiants peuvent postuler' }, { status: 403 });
     }
 
     const jobRequests = await prisma.jobRequest.findMany({
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Seul les étudients peuvent postuler' }, { status: 403 });
+      return NextResponse.json({ error: 'Seul les étudiants peuvent postuler' }, { status: 403 });
     }
 
     const job = await prisma.job.findUnique({
