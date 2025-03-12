@@ -7,19 +7,20 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
 const studentProfileSchema = z.object({
-  firstName: z.string().min(2, { message: 'Le prénom doit contenir au moins 2 caractères' }),
-  lastName: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
+  userId: z.string(),
+  schoolId: z.string(),
   studentEmail: z.string().email({ message: "L'email étudiant doit être valide" }),
-  school: z.string().min(1, { message: "L'école est requise" }),
-  status: z.string().min(1, { message: 'Le statut est requis' }),
-  skills: z.string().min(2, { message: 'Les compétences sont requises' }),
-  description: z
-    .string()
-    .min(10, { message: 'La description doit contenir au moins 10 caractères' }),
+  status: z.enum(['Alternant', 'Stagiaire']),
+  skills: z.string(),
+  description: z.string(),
   previousCompanies: z.string().optional(),
   availability: z.boolean().default(true),
-  apprenticeshipRhythm: z.string().optional(),
-  curriculumVitae: z.string().optional(),
+  apprenticeshipRhythm: z.string().nullable(),
+  curriculumVitae: z.string().nullable(),
+  user: z.object({
+    firstName: z.string().min(2, { message: 'Le prénom doit contenir au moins 2 caractères' }),
+    lastName: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
+  }),
 });
 
 export async function POST(request: NextRequest) {
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     const validationResult = studentProfileSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.error('Erreurs de validation:', validationResult.error.errors);
       return NextResponse.json(
         {
           message: 'Données invalides',
@@ -84,8 +86,8 @@ export async function POST(request: NextRequest) {
         id: session.user.id,
       },
       data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
         type: 'student',
         profileCompleted: true,
       },
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest) {
     const student = await prisma.student.create({
       data: {
         userId: session.user.id,
-        schoolId: data.school,
+        schoolId: data.schoolId,
         studentEmail: data.studentEmail,
         status: data.status,
         skills: data.skills,
@@ -194,8 +196,8 @@ export async function PUT(request: NextRequest) {
         id: session.user.id,
       },
       data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
         profileCompleted: true,
       },
     });
@@ -205,7 +207,7 @@ export async function PUT(request: NextRequest) {
         id: existingUser.student.id,
       },
       data: {
-        schoolId: data.school,
+        schoolId: data.schoolId,
         studentEmail: data.studentEmail,
         status: data.status,
         skills: data.skills,

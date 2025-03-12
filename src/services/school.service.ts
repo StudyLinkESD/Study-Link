@@ -42,7 +42,7 @@ export async function getSchoolByEmailDomain(email: string) {
 
 export async function validateSchoolEmail(email: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/school-domains/validate-school-email', {
+    const response = await fetch('/api/school-domains/validate-and-create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export async function validateSchoolEmail(email: string): Promise<boolean> {
       return false;
     }
 
-    return data.isValid;
+    return true;
   } catch (error) {
     console.error('Error validating school email:', error);
     return false;
