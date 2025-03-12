@@ -1,13 +1,10 @@
 'use client';
 
-import { ChevronRight } from 'lucide-react';
-
-import Link from 'next/link';
 import React from 'react';
 
 import StatusBadge from '@/components/app/common/StatusBadge';
 import ProfileAvatar from '@/components/app/profileForm/ProfileAvatar';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 import { useJob } from '@/context/job.context';
 
@@ -24,7 +21,7 @@ export type JobCardProps = {
 
 export default function JobCard(props: JobCardProps) {
   const { setSelectedJob } = useJob();
-  const { id, offerTitle, companyName, logoUrl, status, skills, availability, description } = props;
+  const { offerTitle, companyName, logoUrl, status, skills, availability, description } = props;
 
   const handleClick = () => {
     setSelectedJob(props);
@@ -75,16 +72,6 @@ export default function JobCard(props: JobCardProps) {
           <p className="mt-2 text-gray-500">◦ {description}</p>
         </div>
       </CardContent>
-
-      <CardFooter className="p-3">
-        <Link
-          href={`/jobs/${id}`}
-          className="text-primary ml-auto flex items-center text-sm hover:underline"
-        >
-          Voir l&apos;offre
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Link>
-      </CardFooter>
     </Card>
   );
 }
