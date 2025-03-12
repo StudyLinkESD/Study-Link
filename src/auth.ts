@@ -39,33 +39,90 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     error: '/auth/error',
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === 'email') {
-        return true;
-      }
+    async signIn({ user, account, profile }) {
+      console.log('Tentative de connexion :', {
+        userEmail: user?.email,
+        accountProvider: account?.provider,
+        profileSub: profile?.sub,
+      });
 
-      try {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-        });
-
-        if (!existingUser) {
-          await prisma.user.create({
-            data: {
-              email: user.email!,
-              firstName: user.name?.split(' ')[0] || null,
-              lastName: user.name?.split(' ').slice(1).join(' ') || null,
-              profilePicture: user.image,
-              type: UserType.STUDENT,
-            },
-          });
-        }
-
-        return true;
-      } catch (error) {
-        console.error("Erreur lors de la création de l'utilisateur:", error);
+      if (!user?.email || !account || !profile) {
+        console.error('Paramètres manquants pour la connexion', { user, account, profile });
         return false;
       }
+
+      if (account.provider === 'google') {
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: {
+              Account: true,
+            },
+          });
+
+          console.log('Utilisateur existant :', existingUser);
+
+          if (existingUser) {
+            const googleAccountLinked = existingUser.Account.some(
+              (acc) => acc.provider === 'google',
+            );
+
+            if (!googleAccountLinked) {
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  provider: 'google',
+                  providerAccountId: profile.sub as string,
+                  type: account.type || 'oauth',
+                  access_token: account.access_token || undefined,
+                  refresh_token: account.refresh_token || undefined,
+                  scope: account.scope || undefined,
+                  id_token: account.id_token || undefined,
+                  token_type: account.token_type || undefined,
+                  expires_at: account.expires_at || undefined,
+                },
+              });
+
+              console.log('Compte Google lié avec succès');
+              return true;
+            }
+
+            console.log('Compte Google déjà lié');
+            return true;
+          } else {
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email,
+                firstName: user.name?.split(' ')[0] || null,
+                lastName: user.name?.split(' ').slice(1).join(' ') || null,
+                profilePicture: user.image || null,
+                type: UserType.STUDENT,
+                Account: {
+                  create: {
+                    provider: 'google',
+                    providerAccountId: profile.sub as string,
+                    type: account.type || 'oauth',
+                    access_token: account.access_token || undefined,
+                    refresh_token: account.refresh_token || undefined,
+                    scope: account.scope || undefined,
+                    id_token: account.id_token || undefined,
+                    token_type: account.token_type || undefined,
+                    expires_at: account.expires_at || undefined,
+                  },
+                },
+              },
+            });
+
+            console.log('Nouvel utilisateur créé avec le compte Google', newUser);
+            return true;
+          }
+        } catch (error) {
+          console.error('Erreur lors de la gestion de la connexion Google :', error);
+          return false;
+        }
+      }
+
+      return true;
     },
 
     async jwt({ token, user, trigger, session }) {
