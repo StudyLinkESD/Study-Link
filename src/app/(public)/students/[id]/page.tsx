@@ -1,7 +1,5 @@
 'use client';
 
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import {
   Award,
   BookOpen,
@@ -92,106 +90,37 @@ export default function StudentPage() {
           return;
         }
 
-        const skillsArray = studentData.skills
-          .split(',')
-          .map((s: string) => ({ id: s.trim(), name: s.trim() }));
-
-        let status: 'Alternant' | 'Stagiaire' = 'Stagiaire';
-
-        const alternanceKeywords = ['alternance', 'apprentissage', 'alternant', 'apprenti'];
-        if (
-          skillsArray.some((skill: Skill) =>
-            alternanceKeywords.some((keyword) => skill.name.toLowerCase().includes(keyword)),
-          )
-        ) {
-          status = 'Alternant';
-        }
-
         setStudent({
           id: studentData.id,
           firstName: studentData.user?.firstName || '',
           lastName: studentData.user?.lastName || '',
           photoUrl: studentData.user?.profilePicture || '',
           email: studentData.user?.email || '',
-          status,
+          status: studentData.status as 'Alternant' | 'Stagiaire',
           school: studentData.school?.name || '',
-          skills: skillsArray,
+          skills: (studentData.skills || '').split(',').map((s: string) => ({
+            id: s.trim(),
+            name: s.trim(),
+          })),
           alternanceRhythm: studentData.apprenticeshipRhythm || '',
-          description: studentData.description,
+          description: studentData.description || '',
           cvUrl: studentData.curriculumVitae || undefined,
           availability: studentData.availability ? 'Disponible' : 'Non disponible',
           recommendations: [],
         });
 
         try {
-          const storedExperiences = localStorage.getItem('userExperiences');
-          if (storedExperiences) {
-            const parsedExperiences = JSON.parse(storedExperiences);
-            const formattedExperiences = parsedExperiences.map(
-              (exp: {
-                id: string;
-                company: string;
-                position: string;
-                period: string;
-                type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
-                startDate?: string;
-                endDate?: string;
-              }) => ({
-                ...exp,
-                startDate: exp.startDate ? new Date(exp.startDate) : undefined,
-                endDate: exp.endDate ? new Date(exp.endDate) : undefined,
-              }),
-            );
-            setExperiences(formattedExperiences);
-          } else if (studentData.experiences && studentData.experiences.length > 0) {
-            const structuredExperiences = studentData.experiences.map(
-              (exp: {
-                id?: string;
-                company: string;
-                position: string;
-                type: 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre';
-                startDate?: string;
-                endDate?: string;
-                description?: string;
-              }) => {
-                const startDate = exp.startDate ? new Date(exp.startDate) : undefined;
-                const endDate = exp.endDate ? new Date(exp.endDate) : undefined;
-
-                const startDateStr = startDate ? format(startDate, 'MMM yyyy', { locale: fr }) : '';
-                const endDateStr = endDate
-                  ? format(endDate, 'MMM yyyy', { locale: fr })
-                  : 'Présent';
-                const period =
-                  startDateStr && (endDateStr || 'Présent')
-                    ? `${startDateStr} - ${endDateStr}`
-                    : '';
-
-                return {
-                  id: exp.id || `exp-${Math.random().toString(36).substr(2, 9)}`,
-                  company: exp.company,
-                  position: exp.position,
-                  period: period,
-                  type: exp.type as 'Stage' | 'Alternance' | 'CDI' | 'CDD' | 'Autre',
-                  startDate,
-                  endDate,
-                };
-              },
-            );
-
-            setExperiences(structuredExperiences);
-          } else {
+          if (studentData.previousCompanies) {
             const oldExperiences = studentData.previousCompanies
-              ? studentData.previousCompanies
-                  .split(',')
-                  .map((company: string, index: number) => ({
-                    id: `exp-${index}`,
-                    company: company.trim(),
-                    position: 'Stage/Alternance',
-                    period: 'Non spécifié',
-                    type: 'Stage' as const,
-                  }))
-                  .filter((exp: SimpleExperience) => exp.company)
-              : [];
+              .split(',')
+              .map((company: string, index: number) => ({
+                id: `exp-${index}`,
+                company: company.trim(),
+                position: 'Stage/Alternance',
+                period: 'Non spécifié',
+                type: 'Stage' as const,
+              }))
+              .filter((exp: SimpleExperience) => exp.company);
 
             setExperiences(oldExperiences);
           }

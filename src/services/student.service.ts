@@ -114,8 +114,7 @@ export async function getStudentById(id: string) {
       }
       throw new Error("Erreur lors de la récupération de l'étudiant");
     }
-    const data = await response.json();
-    return data.student;
+    return await response.json();
   } catch (error) {
     console.error("Erreur lors de la récupération de l'étudiant:", error);
     throw error;
