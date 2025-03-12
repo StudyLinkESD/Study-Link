@@ -214,7 +214,7 @@ export default function JobsList({
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">{title}</h1>
         <p className="text-muted-foreground" aria-live="polite">
-          {`${filteredJobs.length} étudiant${filteredJobs.length !== 1 ? 's' : ''} trouvé${
+          {`${filteredJobs.length} offre(s) de poste${filteredJobs.length !== 1 ? 's' : ''}${
             filteredJobs.length !== 1 ? 's' : ''
           }`}
         </p>
