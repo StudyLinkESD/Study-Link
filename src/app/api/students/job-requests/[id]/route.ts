@@ -234,7 +234,7 @@ export async function DELETE(
 
     if (!student) {
       return NextResponse.json(
-        { error: 'Seul les étudients peuvent supprimer leurs demandes' },
+        { error: 'Seul les étudiants peuvent supprimer leurs demandes' },
         { status: 403 },
       );
     }
