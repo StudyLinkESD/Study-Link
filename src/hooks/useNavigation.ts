@@ -50,7 +50,7 @@ export const useNavigation = () => {
 
   const studentLinks: NavigationLink[] = [
     {
-      href: 'students/dashboard',
+      href: '/students/dashboard',
       label: 'Tableau de bord',
       requireAuth: true,
       roles: ['student'],
